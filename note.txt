@@ -1,0 +1,21 @@
+Setting up tailwindcss v4.
+* for vite visit this site https://tailwindcss.com/docs/installation/using-vite
+* run this command in your frontend project directory npm install tailwindcss @tailwindcss/vite to install tailwind.
+* in your vite.config.js file add tailwind() to the plugins and make sure it is imported.
+*in your index.css file just paste this @import "tailwindcss"; this will import tailwind css.
+*Go to your App.js file and style anything to taste whether it is working.
+run npm run dev.
+
+
+Adding Custom font.
+*Go to https://fonts.google.com/ and search for any font you want (we use poppins)
+*Click on get font button.
+*Click on get embed code button.
+*you will see link and import radio button select import and copy the code.remove the style tag element.
+*Paste what you copied at the top of your index.css file.
+*We added theme and layer base styles.
+
+
+Installation of Dependencies.
+in our frontend project directory we ran the command  npm i axios moment react-hot-toast react-icons react-router-dom recharts to install the following packages
+axios, moment, react-hot-toast, react-router-dom, react-icons,recharts.
