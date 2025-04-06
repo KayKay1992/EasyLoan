@@ -1,21 +1,65 @@
-Setting up tailwindcss v4.
-* for vite visit this site https://tailwindcss.com/docs/installation/using-vite
-* run this command in your frontend project directory npm install tailwindcss @tailwindcss/vite to install tailwind.
-* in your vite.config.js file add tailwind() to the plugins and make sure it is imported.
-*in your index.css file just paste this @import "tailwindcss"; this will import tailwind css.
-*Go to your App.js file and style anything to taste whether it is working.
-run npm run dev.
+CREATING FOLDERS AND FILE FOR FRONTEND.
 
 
-Adding Custom font.
-*Go to https://fonts.google.com/ and search for any font you want (we use poppins)
-*Click on get font button.
-*Click on get embed code button.
-*you will see link and import radio button select import and copy the code.remove the style tag element.
-*Paste what you copied at the top of your index.css file.
-*We added theme and layer base styles.
+example of what we will create.
 
-
-Installation of Dependencies.
-in our frontend project directory we ran the command  npm i axios moment react-hot-toast react-icons react-router-dom recharts to install the following packages
-axios, moment, react-hot-toast, react-router-dom, react-icons,recharts.
+frontend/
+│
+├── public/                      # Public files
+│   ├── index.html               # Main HTML file
+│   ├── favicon.ico              # Favicon
+│   └── ...                      # Other static files like robots.txt
+│
+├── src/                         # Source code for React app
+│   ├── assets/                  # Static assets (images, fonts, etc.)
+│   │   ├── images/              # Image files
+│   │   └── fonts/               # Font files
+│   │
+│   ├── components/              # Reusable React components
+│   │   ├── Header.js            # Header component
+│   │   ├── Footer.js            # Footer component
+│   │   ├── LoanForm.js          # Loan application form component
+│   │   ├── UserCard.js          # Card showing user details in the admin dashboard
+│   │   └── LoanCard.js          # Card showing loan details in the admin dashboard
+│   │
+│   ├── pages/                   # React components representing pages
+│   │   ├── Home.js              # Home page component
+│   │   ├── LoanCalculator.js    # Loan calculator page component
+│   │   ├── LoanDetails.js       # Loan details page
+│   │   ├── ApplyLoan.js         # Apply for loan page
+│   │   ├── AdminDashboard.js    # Admin dashboard page (view and manage users/loans)
+│   │   └── ManageLoans.js       # Loan management page for approving/changing status
+│   │   └── ManageUsers.js       # User management page for admin (create, delete, update)
+│   │
+│   ├── context/                 # React Context for state management
+│   │   ├── AuthContext.js       # For handling authentication state
+│   │   ├── LoanContext.js       # For loan-related data and actions
+│   │   └── UserContext.js       # For user management (admin-side)
+│   │
+│   ├── services/                # API calls (Axios, Fetch API, etc.)
+│   │   ├── loanService.js       # Service for loan-related API requests
+│   │   ├── authService.js       # Service for authentication API requests
+│   │   ├── userService.js       # Service for user-related API requests
+│   │   └── adminService.js      # Service for admin-related API requests (managing users/loans)
+│   │
+│   ├── hooks/                   # Custom hooks
+│   │   ├── useAuth.js           # Custom hook for auth-related tasks
+│   │   ├── useLoan.js           # Custom hook for loan-related logic
+│   │   ├── useUser.js           # Custom hook for user management
+│   │   └── useForm.js           # Custom hook for form handling
+│   │
+│   ├── utils/                   # Utility functions and constants
+│   │   ├── validate.js          # Form validation utility
+│   │   ├── constants.js         # Constants (loan types, terms, etc.)
+│   │   └── helpers.js           # Helper functions
+│   │
+│   ├── App.js                   # Main app component
+│   ├── index.js                 # Entry point to the React app
+│   └── setupTests.js            # Jest setup for testing (if using Jest)
+│
+├── .env                          # Environment variables (API URLs, keys)
+├── .gitignore                    # Git ignore file
+├── package.json                  # Project dependencies and scripts
+├── package-lock.json             # Lock file for npm dependencies
+├── README.md                     # Project documentation
+└── yarn.lock                     # If using Yarn for package management
