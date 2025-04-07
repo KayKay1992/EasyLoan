@@ -1,107 +1,62 @@
-Backend project set up
+ Configuring MongoDb
 
-steps.
-1. Navigate to your backend project directory and initialise it by running npm init -y
+ Great! Let’s walk through how to configure MongoDB for your MERN backend. This will include connecting your backend (Node.js + Express) to MongoDB using Mongoose.
 
-2.Install dependencies by running this command  npm i express jsonwebtoken mongoose 
-multer bcryptjs cors dotenv exceljs
+ 1. Install Mongoose: weve already installed it at the beginning of the project setup. but you inmstall it by running this command npm install mongoose
 
-3. set up your server.js file which is your entry file.
+2. Create a Config File for DB Connection: In your backend folder, create a file:
+📁 config/db.js. This file safely connects your app to MongoDB and handles errors if something goes wrong.
 
- Summary of the Entry File (Plain English)
+3. 3. Create .env File.
+Create a .env file in your root directory:
+set up your mongodb atlas and pass the string to the .env file. MONGO_URI.
 
-Loads environment variables using dotenv, like port number or frontend URL.
-Imports needed packages:
-express to create the server
-cors to allow requests from other origins (like frontend)
-path (not used here but useful for file paths)
-Creates the Express app.
-Enables CORS so the frontend (like React) can communicate with this backend.
-Parses JSON in incoming requests.
-Sets up routes (commented out for now) — for auth, users, tasks, etc.
-Starts the server on the given port and logs a message.
+4. Connect to MongoDB in index.js
+Update your index.js or server.js:
 
-4.set up nodemon
-a. run this command npm install --save-dev nodemon
-b. update your package.json file like this
-   "scripts": {
-  "start": "node index.js",
-  "dev": "nodemon index.js"
-}
+✅ Done!
+Now every time your server starts, it connects to MongoDB. If anything goes wrong, you'll see the error in your terminal.
 
-5. 🗂️ Project Structure. write down the files and folders for backend.
+*******************************************************
 
-6. 🧪 Run the Server with this command npm run dev
+SeETTING UP MONGODB ATLAS.
 
+🧰 What is MongoDB Atlas?
+MongoDB Atlas is a cloud-based MongoDB service — so you don’t need to install MongoDB on your local machine. It gives you a secure, scalable, online database.
 
-*********************************************************
-EXPLAINING MY MODEL FILES.
-userModels: Stores information about customers/admins using the system.
-loan model: Represents a customer's loan request.
-repayment model: Tracks monthly payments for each loan.
-transaction model: Stores each payment attempt or history.
-notification model:Useful for reminding users of upcoming repayments or system alerts.
-document model: if you need to upload identity proofs, etc.
-settings model: to manage loan interest rates, term options, etc.
-**********************************************************
+⚙️ How to Set It Up (Step-by-Step)
+✅ 1. Create a MongoDB Atlas Account
+Go to: https://www.mongodb.com/cloud/atlas
+Sign up (it's free for basic usage)
 
-EXPLAINING MY ROUTE FILES.
-1. ✅ 1. Auth Routes (/api/auth)
-       Handles registration, login, and token verification.
+✅ 2. Create a New Project & Cluster
+Click "New Project" → Give it a name
+Inside the project, click "Build a Database"
+Choose Shared (Free) tier
+Pick a Cloud Provider + Region (e.g., AWS + your nearest region)
+Name your Cluster (optional) and click "Create Cluster"
 
- Method   Endpoint	    Description
-POST	    /register	    Create new user account
-POST	    /login	      Authenticate user
-GET	      /me        	Get logged-in user data (using token)
+✅ 3. Create a Database User
+Go to Database Access → Click “Add New Database User”
+Set:
+Username + Password
+Role: Keep default (readWriteAnyDatabase)
+Click Create User
 
-2.✅ 2. User Routes (/api/users)
-Manages user profiles (accessible to users or admins).
-Method	Endpoint	Description
-GET	      /	      Get all users (admin only)
-GET	      /:id	   Get a single user's details
-PUT	      /:id	  Update user profile
-DELETE	  /:id	   Delete user (admin only)
+✅ 4. Allow Your IP Address
+Go to Network Access → Click "Add IP Address"
+Choose:
+“Allow Access from Anywhere” (0.0.0.0/0) for dev use
+Or enter your current IP
+Click Confirm
 
-3.✅ 3. Loan Routes (/api/loans)
-Handles loan applications and management.
-Method	Endpoint	Description
-POST	  /apply	  Apply for a new loan
-GET   	/	        Get all loans (admin or own loans)
-GET	    /:id	    Get specific loan details
-PUT	   /:id/status	Update loan status (admin)
-DELETE	/:id	     Delete/cancel loan (user/admin)
+✅ 5. Get Your Connection URI
+Go to Clusters → Click "Connect"
+Choose “Connect Your Application”
+Copy the connection string, e.g.:
+mongodb+srv://<username>:<password>@cluster0.abcd.mongodb.net/loan-app?retryWrites=true&w=majority
+Replace <username> and <password> with the ones you created.
 
-4.✅ 4. Repayment Routes (/api/repayments)
-Handles loan repayment schedules and status.
-Method	Endpoint	     Description
-GET	     /	         Get all repayments (for a user)
-GET 	/loan/:loanId	  Get repayments for a specific loan
-POST	/pay/:id	      Mark a repayment as paid
-
-✅ 5. Transaction Routes (/api/transactions) 
-Track each payment made or failed.
-Method	Endpoint	   Description
-GET	      /	       Get all transactions
-POST	    /	       Create a transaction record
-
-📩 6. Notification Routes (/api/notifications)
-Useful for reminding users of upcoming repayments or system alerts.
-Method	Endpoint	Description
-GET	    /	        Get all notifications for user
-POST	  /	        Create a notification (system/admin)
-PUT	    /:id/read	  Mark notification as read
-DELETE	/:id	    Delete notification
-
-📄 7. Document Routes (/api/documents)
-To handle ID proof, income proof, etc., often needed for loan approval.
-Method	Endpoint	Description
-POST	/upload    	Upload user documents
-GET	  /	          Get all documents (admin)
-GET	   /:id	     view/download document
-DELETE	/:id	   Delete document
-
-⚙️ 8. Settings Routes (/api/settings)
-For managing global settings like interest rates, loan terms, etc. Usually only accessed by admins.
-Method	Endpoint	Description
-GET    	/	        Get current settings (admin)
-PUT	    /       	Update settings (admin)
+✅ 6. Use It in Your App
+In your .env file:
+MONGO_URI=mongodb+srv://yourUser:yourPassword@cluster0.abcd.mongodb.net/loan-app?retryWrites=true&w=majority
