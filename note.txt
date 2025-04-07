@@ -1,83 +1,107 @@
-Defining App Routes For frontend applications
+Backend project set up
 
-Defining App Routes: Explanation and Example
-In web development, routes define how your application responds to client requests to specific endpoints (URLs). When a user navigates to a URL, the application checks its routes to determine what content to serve or what action to perform.
+steps.
+1. Navigate to your backend project directory and initialise it by running npm init -y
 
-💡 What is a Route?
-A route typically consists of:
-A path (like /home or /products/:id)
-An HTTP method (like GET, POST, etc. — mainly for backend)
-A handler — a function or component that gets rendered or executed
+2.Install dependencies by running this command  npm i express jsonwebtoken mongoose 
+multer bcryptjs cors dotenv exceljs
 
-📍 Frontend (React Router Example)
-In frontend applications (like React), you define routes to display different components depending on the URL.
+3. set up your server.js file which is your entry file.
 
-✅ Example: React Router
+ Summary of the Entry File (Plain English)
 
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import Home from './pages/Home';
-import About from './pages/About';
-import Product from './pages/Product';
+Loads environment variables using dotenv, like port number or frontend URL.
+Imports needed packages:
+express to create the server
+cors to allow requests from other origins (like frontend)
+path (not used here but useful for file paths)
+Creates the Express app.
+Enables CORS so the frontend (like React) can communicate with this backend.
+Parses JSON in incoming requests.
+Sets up routes (commented out for now) — for auth, users, tasks, etc.
+Starts the server on the given port and logs a message.
 
-function App() {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/product/:id" element={<Product />} />
-      </Routes>
-    </Router>
-  );
+4.set up nodemon
+a. run this command npm install --save-dev nodemon
+b. update your package.json file like this
+   "scripts": {
+  "start": "node index.js",
+  "dev": "nodemon index.js"
 }
 
-export default App;
+5. 🗂️ Project Structure. write down the files and folders for backend.
+
+6. 🧪 Run the Server with this command npm run dev
 
 
-🔍 Explanation:
-/ → Renders the Home component.
-/about → Renders the About component.
-/product/:id → Dynamic route; :id is a placeholder (e.g., /product/42).
+*********************************************************
+EXPLAINING MY MODEL FILES.
+userModels: Stores information about customers/admins using the system.
+loan model: Represents a customer's loan request.
+repayment model: Tracks monthly payments for each loan.
+transaction model: Stores each payment attempt or history.
+notification model:Useful for reminding users of upcoming repayments or system alerts.
+document model: if you need to upload identity proofs, etc.
+settings model: to manage loan interest rates, term options, etc.
+**********************************************************
 
+EXPLAINING MY ROUTE FILES.
+1. ✅ 1. Auth Routes (/api/auth)
+       Handles registration, login, and token verification.
 
-*********************************************8
-FOR BACKEND.
-*******************************************
+ Method   Endpoint	    Description
+POST	    /register	    Create new user account
+POST	    /login	      Authenticate user
+GET	      /me        	Get logged-in user data (using token)
 
-🧠 Backend (Express.js Example)
-On the backend, routes handle logic and send responses.
+2.✅ 2. User Routes (/api/users)
+Manages user profiles (accessible to users or admins).
+Method	Endpoint	Description
+GET	      /	      Get all users (admin only)
+GET	      /:id	   Get a single user's details
+PUT	      /:id	  Update user profile
+DELETE	  /:id	   Delete user (admin only)
 
-✅ Example: Express.js (Node.js)
+3.✅ 3. Loan Routes (/api/loans)
+Handles loan applications and management.
+Method	Endpoint	Description
+POST	  /apply	  Apply for a new loan
+GET   	/	        Get all loans (admin or own loans)
+GET	    /:id	    Get specific loan details
+PUT	   /:id/status	Update loan status (admin)
+DELETE	/:id	     Delete/cancel loan (user/admin)
 
-const express = require('express');
-const app = express();
+4.✅ 4. Repayment Routes (/api/repayments)
+Handles loan repayment schedules and status.
+Method	Endpoint	     Description
+GET	     /	         Get all repayments (for a user)
+GET 	/loan/:loanId	  Get repayments for a specific loan
+POST	/pay/:id	      Mark a repayment as paid
 
-app.get('/', (req, res) => {
-  res.send('Welcome to Home Page');
-});
+✅ 5. Transaction Routes (/api/transactions) 
+Track each payment made or failed.
+Method	Endpoint	   Description
+GET	      /	       Get all transactions
+POST	    /	       Create a transaction record
 
-app.get('/about', (req, res) => {
-  res.send('About Page');
-});
+📩 6. Notification Routes (/api/notifications)
+Useful for reminding users of upcoming repayments or system alerts.
+Method	Endpoint	Description
+GET	    /	        Get all notifications for user
+POST	  /	        Create a notification (system/admin)
+PUT	    /:id/read	  Mark notification as read
+DELETE	/:id	    Delete notification
 
-app.get('/product/:id', (req, res) => {
-  res.send(`Product ID: ${req.params.id}`);
-});
+📄 7. Document Routes (/api/documents)
+To handle ID proof, income proof, etc., often needed for loan approval.
+Method	Endpoint	Description
+POST	/upload    	Upload user documents
+GET	  /	          Get all documents (admin)
+GET	   /:id	     view/download document
+DELETE	/:id	   Delete document
 
-app.listen(3000, () => {
-  console.log('Server running on port 3000');
-});
-
-
-🔍 Explanation:
-app.get() defines a route for HTTP GET requests.
-/product/:id accesses dynamic values via req.params.id.
-
-
-🧩 Summary
-
-Frontend (React Router)	      Backend (Express.js)
-
-Used to render components	  Used to handle HTTP requests
-URL determines UI shown	      URL + method determine logic
-Uses <Route path="..." />	  Uses app.get('/path', handler)
+⚙️ 8. Settings Routes (/api/settings)
+For managing global settings like interest rates, loan terms, etc. Usually only accessed by admins.
+Method	Endpoint	Description
+GET    	/	        Get current settings (admin)
+PUT	    /       	Update settings (admin)
