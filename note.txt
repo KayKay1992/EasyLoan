@@ -1,17 +1,20 @@
-Defining setting mongodb schema
+Defining repayment mongodb schema
 
-🔍 What This Covers:
-Field	Purpose
-interestRate	Global default interest rate (%)
-loanTermOptions	Allowed loan durations (in months)
-maxLoanAmount	Upper cap for any loan
-minLoanAmount	Minimum allowed loan
-currency	App-wide default currency
-gracePeriodDays	Time before a payment is considered late
-latePaymentPenalty	Percentage penalty for late payment
-updatedAt	When settings were last modified
+Here's a well-structured Repayment schema for a loan app using MongoDB and Mongoose. This will help you track each repayment made toward a loan.
 
-✅ Why Use a Settings Schema?
-Easy admin access to tweak loan rules without changing code
-Can store one global document and update it when needed
-Centralized config for frontend + backend
+🔍 Field Breakdown
+Field	Description
+loan	Refers to the loan being repaid
+user	The person making the payment
+amountPaid	How much they paid
+paymentDate	When the payment was made
+dueDate	When it was due (used for checking lateness)
+status	Tracks if it was paid on time or late
+paymentMethod	How the payment was made
+referenceId	Unique ID for tracking the payment
+
+✅ Why This Schema is Useful
+Tracks partial payments over time
+Helps in generating repayment schedules
+Used to show repayment history in user dashboards
+Easy to calculate remaining balance or penalties
