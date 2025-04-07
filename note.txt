@@ -1,21 +1,19 @@
-Defining loan mongodb schema
+Defining document mongodb schema
 
-Here’s a full and clean definition of a Loan schema using Mongoose — tailored for a loan management system in a MERN stack project.
+Here's a clean and useful Document schema for handling uploaded documents in your loan app — like ID proofs, income statements, etc.
 
 🔍 Field Breakdown
 Field	Description
-user	Reference to the user who took the loan
-amount	Principal loan amount
-interestRate	Interest rate for this loan (e.g. 5%)
-termMonths	Loan duration in months
-monthlyPayment	Monthly installment amount (can be calculated at approval)
-totalRepayable	Total amount user will repay (principal + interest)
-status	Current status of the loan
-startDate	When the loan starts (on approval)
-endDate	When the loan should end
-createdAt	When the loan application was created
+user	Reference to the user who uploaded the document
+type	Type of document (for classification & validation)
+fileUrl	Path or URL to where the file is stored (e.g., S3, Cloudinary, local)
+fileName	Original file name (for reference)
+status	Admin review status
+uploadedAt	Timestamp for sorting or display
 
 ✅ Why This Schema Works
-Tracks everything from application to final repayment
-Connects easily with Repayments, Transactions, and User
+Helps organize user documents for KYC, loan approval, or compliance
+Admins can review and change status
+Easily integrates with Cloud storage or file upload middleware (like multer)
+
 
