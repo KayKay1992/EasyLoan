@@ -1,14 +1,17 @@
-Defining transaction mongodb schema
+Defining setting mongodb schema
 
-Here’s a clean and practical example of how to define a Transaction schema using Mongoose — perfect for a loan or finance app.
+🔍 What This Covers:
+Field	Purpose
+interestRate	Global default interest rate (%)
+loanTermOptions	Allowed loan durations (in months)
+maxLoanAmount	Upper cap for any loan
+minLoanAmount	Minimum allowed loan
+currency	App-wide default currency
+gracePeriodDays	Time before a payment is considered late
+latePaymentPenalty	Percentage penalty for late payment
+updatedAt	When settings were last modified
 
-🔍 Fields Explained:
-Field	Description
-user	Reference to the user making the transaction
-loan	Reference to the related loan
-amount	Amount involved in the transaction
-type	Transaction type (payment, disbursement, etc.)
-status	Status of the transaction
-method	How the payment was made
-transactionDate	When it happened
-referenceId	Unique ID for tracking (e.g. from payment gateway)
+✅ Why Use a Settings Schema?
+Easy admin access to tweak loan rules without changing code
+Can store one global document and update it when needed
+Centralized config for frontend + backend
