@@ -1,17 +1,21 @@
-Defining notification mongodb schema
+Defining loan mongodb schema
 
-Here’s a clean and practical Notification schema using Mongoose — perfect for alerting users about loan updates, due dates, approvals, etc.
+Here’s a full and clean definition of a Loan schema using Mongoose — tailored for a loan management system in a MERN stack project.
 
 🔍 Field Breakdown
 Field	Description
-user	The user who will receive the notification
-message	Text of the notification
-type	Style/type of message: info, warning, success, etc.
-read	Whether the user has seen it
-createdAt	Timestamp for when it was created
+user	Reference to the user who took the loan
+amount	Principal loan amount
+interestRate	Interest rate for this loan (e.g. 5%)
+termMonths	Loan duration in months
+monthlyPayment	Monthly installment amount (can be calculated at approval)
+totalRepayable	Total amount user will repay (principal + interest)
+status	Current status of the loan
+startDate	When the loan starts (on approval)
+endDate	When the loan should end
+createdAt	When the loan application was created
 
-✅ Why It’s Useful
-Alert users about upcoming due dates, loan approval, rejection, etc.
-Build a notification center in your frontend
-Can use it for push/email notifications later
+✅ Why This Schema Works
+Tracks everything from application to final repayment
+Connects easily with Repayments, Transactions, and User
 
