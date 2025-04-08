@@ -58,7 +58,32 @@ const registerUser = asyncHandler(async (req, res) => {
 // @access  Public
 const loginUser = asyncHandler(async (req, res) => {
   // TODO: handle login
-  res.status(200).json({ message: 'Login user' });
+  const {email, password} = req.body
+
+  //check for a user with this particular email
+  const user = await User.findOne({email})
+
+  //if no user return an error
+  if(!user){
+      return res.status(401).json({message: 'Invalid Email or Password'})
+  }
+
+  //compare password and if it doesnt match return error
+  const isMatch = await bcrypt.compare(password, user.password);
+  if(!isMatch){
+      return res.status(401).json({message: 'Invalid Email or Password'})  
+  }
+
+  //return user data with jwt
+  res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      profileImageUrl: user.profileImageUrl,
+      token: generateToken(user._id)
+  })
+
 });
 
 // @desc    Get current logged-in user (basic info)

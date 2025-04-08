@@ -1,13 +1,8 @@
-Register user function integration auth controller
+login user function integration in auth controller
 
-explain the code
+1. The `loginUser` function extracts the `email` and `password` from the request body to handle user login.
+2. It checks if a **user exists** with the provided email, returning a **401 error** if no user is found.
+3. It compares the **entered password** with the stored hashed password using `bcrypt.compare()`, returning a **401 error** if they don’t match.
+4. If the password is correct, the user data (e.g., name, email, role) is returned in the response.
+5. Along with the user data, a **JWT token** is generated and returned for **authentication**.
 
-The registerUser function handles user registration by first extracting the name, email, password, profileImageUrl, and adminInviteToken from the request body.
-
-It checks if the user already exists by querying the database for a matching email, and if found, returns a 400 error.
-
-The user's role is determined based on the presence of an admin invite token, setting the role to 'admin' if valid, otherwise defaulting to 'user'.
-
-The password is hashed using bcrypt for secure storage.
-
-After successfully creating the new user, it returns the user data along with a JWT token for authentication in the response.
