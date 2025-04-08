@@ -1,11 +1,12 @@
-get users by idfunction controller
+Creating routes for loan management
 
-It’s an async function wrapped with asyncHandler to handle errors automatically.
-
-It uses User.findById() to find a user by the ID in the request URL.
-
-The .select("-password") ensures the password field is excluded from the response.
-
-If no user is found, it returns a 404 error with a "user not found" message.
-
-If the user exists, it sends the user data as a JSON response.
+🧠 Route Summary:
+Method	Route	Description	Access
+GET	/dashboard-data	Admin loan overview data	Admin only
+GET	/user-dashboard-data	Logged-in user’s loan summary	Protected
+GET	/	Get all loans	Protected
+GET	/:id	Get loan details by ID	Protected
+POST	/	Create a loan	Admin only
+PUT	/:id	Update a loan	Protected
+DELETE	/:id	Delete a loan	Admin only
+PUT	/:id/status	Update loan status (approved, completed)	Protected
