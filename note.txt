@@ -1,19 +1,11 @@
-get all users function controller
+get users by idfunction controller
 
-explanation of the updated getUsers controller:
+It’s an async function wrapped with asyncHandler to handle errors automatically.
 
-Find all users with the role "member", excluding their passwords for security.
+It uses User.findById() to find a user by the ID in the request URL.
 
-For each user, fetch loan-related data using the Loan model.
+The .select("-password") ensures the password field is excluded from the response.
 
-Count the total number of loans the user has.
+If no user is found, it returns a 404 error with a "user not found" message.
 
-Count active loans (e.g., not yet repaid or still ongoing).
-
-Count completed loans (e.g., fully repaid).
-
-Combine the user info with their loan stats into a single object.
-
-Return the full list of users, each enriched with their loan summary.
-
-If any error occurs, return a 500 server error with the message.
+If the user exists, it sends the user data as a JSON response.

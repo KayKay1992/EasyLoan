@@ -36,15 +36,11 @@ const getUsers = asyncHandler(async (req, res) => {
 //@desc  Get user by id
 //@route Get /api/users/:id
 //@access private
-const getUserById = async (req, res) => {
-  try {
-  } catch (error) {
-    res.status(500).json({
-      message: "server error",
-      error: error.message,
-    });
-  }
-};
+const getUserById = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id).select("-password");
+  if (!user) return res.status(404).json({ message: "user not found" });
+  res.json(user);
+});
 
 //@desc  Delete a user
 //@route Delete /api/users/:id
