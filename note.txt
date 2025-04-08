@@ -1,9 +1,1 @@
-Integrating user route.
-
-🧠 Route Summary (1-liners):
-Method	Route	Description	Access
-
-GET	      /	   Get all users	Admin only
-GET	    /:id	Get user by ID	Admin and private user only
-PUT	    /:id	Update user by ID	Admin only
-DELETE	/:id	Delete user by ID	Admin only
+User route skeleton
