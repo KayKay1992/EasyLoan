@@ -127,7 +127,27 @@ const getUserProfile = asyncHandler(async (req, res) => {
 // @access  Private
 const updateUserProfile = asyncHandler(async (req, res) => {
   // TODO: update and return updated profile
-  res.status(200).json({ message: 'Profile updated' });
+  const user = await User.findById(req.user.id);
+  if(!user){
+      return res.status(404).json({message: 'User not found'})
+  }
+  user.name = req.body.name || user.name;
+  user.email= req.body.email || user.email;
+  user.role=req.body.role||user.role;
+
+  if(req.body.password){
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(req.body.password, salt)
+  }
+
+  const updatedUser = await user.save()
+  res.json({
+      _id: updatedUser._id,
+      name:updatedUser.name,
+      email: updatedUser.email,
+      role: updatedUser.role,
+      token: generateToken(updatedUser._id)
+  })
 });
 
 module.exports = {

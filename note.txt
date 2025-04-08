@@ -1,7 +1,9 @@
-Get  user profile function integration in auth controller
+Update user profile function integration in auth controller
 
-The getUserProfile function fetches the current user's profile from the database using the user's ID stored in req.user.id (set by the authentication middleware).
-
-It excludes the password field from the result using .select('-password') for security and returns a 404 error if the user is not found.
-
-If the user exists, it returns the user profile data as a JSON response.
+1. The `updateUserProfile` function retrieves the current user from the database using `req.user.id`, which is set by the auth middleware.  
+2. If the user isn't found, it returns a **404 Not Found** error.  
+3. It updates the user's `name`, `email`, and `role` only if new values are provided in the request body.  
+4. If a new `password` is provided, it hashes it using `bcrypt` before saving it.  
+5. The updated user data is then saved to the database using `user.save()`.  
+6. After saving, it returns the updated user info along with a fresh JWT token.  
+7. This allows users to manage and update their own profile securely.
