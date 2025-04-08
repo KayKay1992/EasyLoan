@@ -1,19 +1,37 @@
-const Task = require("../models/Task");
-const User = require("../models/User");
-const bcrypt = require("bcryptjs");
+const asyncHandler = require("express-async-handler");
+const User = require("../models/user.model");
+// const bcrypt = require("bcryptjs");
+const Loan = require("../models/loan.model");
 
 //@desc  Get All Users (adminOnly)
 //@route Get /api/users/
 //@access admin only
-const getUsers = async (req, next) => {
-  try {
-  } catch (error) {
-    res.status(500).json({
-      message: "server error",
-      error: error.message,
-    });
-  }
-};
+const getUsers = asyncHandler(async (req, res) => {
+  const users = await User.find({ role: "user" }).select("-password");
+
+  const usersWithLoanData = await Promise.all(
+    users.map(async (user) => {
+      const totalLoans = await Loan.countDocuments({ user: user._id });
+      const activeLoans = await Loan.countDocuments({
+        user: user._id,
+        status: "active",
+      });
+      const completedLoans = await Loan.countDocuments({
+        user: user._id,
+        status: "completed",
+      });
+
+      return {
+        ...user._doc,
+        totalLoans,
+        activeLoans,
+        completedLoans,
+      };
+    })
+  );
+
+  res.json(usersWithLoanData);
+});
 
 //@desc  Get user by id
 //@route Get /api/users/:id
@@ -41,4 +59,4 @@ const deleteUser = async (req, res) => {
   }
 };
 
-module.exports= {getUsers, getUserById, deleteUser}
+module.exports = { getUsers, getUserById, deleteUser };
