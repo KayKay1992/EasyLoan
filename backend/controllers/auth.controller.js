@@ -113,7 +113,13 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 // @access  Private
 const getUserProfile = asyncHandler(async (req, res) => {
   // TODO: fetch and return user profile
-  res.status(200).json({ message: 'User profile' });
+  const user = await User.findById(req.user.id).select('-password')
+  if(!user){
+      return res.status(404).json({
+          message: 'User Not Found'
+      })
+  }
+  res.json(user);
 });
 
 // @desc    Update user profile
