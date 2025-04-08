@@ -1,27 +1,14 @@
-Integrating express-async-handler 
+Defining the structure of auth controller
 
-🔁 What is asyncHandler?
-asyncHandler is a middleware function from the express-async-handler package that helps you catch errors in async route handlers automatically.
+🧠 Notes:
+asyncHandler handles async errors cleanly (install with npm i express-async-handler)
 
-🔎 What it does again?
-It allows you to write cleaner async route controllers without try/catch blocks, by automatically handling errors from async functions.
+Each controller matches one of your routes
 
-🧠 Bonus: import it to your controllers
-At the top of your controller file (like authController.js), import it:
-const asyncHandler = require('express-async-handler'); if you are using require.
+You can now replace the TODOs with logic like:
 
-Then wrap your functions: e.g const loginUser = asyncHandler(async (req, res) => {
-  // your async code here
-});
+Hash password with bcrypt
 
-🚀 Benefits
-Clean & readable controllers
+Generate JWT
 
-No repetitive try/catch
-
-Catches all async errors (like DB fails, undefined data, etc.)
-
-Works well with centralized error handling middleware
-
-
-we will use it next.
+Fetch and update user data
