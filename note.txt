@@ -1,13 +1,13 @@
-Getting our jwt secret key,setting the authmiddleware, and initializing the authroute in server.js
+Register user function integration auth controller
 
-to generate the secret key we run this function in our terminal and copy the values generated to our .env file saved in JWT_SECRET variable node -e "console.log(require('crypto').randomBytes(64).toString('hex'))".
+explain the code
 
-****    
-We import our auth controllers to the auth route.
+The registerUser function handles user registration by first extracting the name, email, password, profileImageUrl, and adminInviteToken from the request body.
 
-***
-We then create the authMidlleware which houses both protect and adminOnly middleware.
-we make sure we use the protected routes as where it should be in our routes.
+It checks if the user already exists by querying the database for a matching email, and if found, returns a 400 error.
 
-***
-Initialise the auth route in srver.js and make sure it is imported.
+The user's role is determined based on the presence of an admin invite token, setting the role to 'admin' if valid, otherwise defaulting to 'user'.
+
+The password is hashed using bcrypt for secure storage.
+
+After successfully creating the new user, it returns the user data along with a JWT token for authentication in the response.

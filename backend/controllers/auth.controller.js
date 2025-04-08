@@ -1,7 +1,7 @@
 const asyncHandler = require('express-async-handler');
-// const User = require('../models/userModel');
+const User = require('../models/user.model');
 const jwt = require('jsonwebtoken');
-// const bcrypt = require('bcryptjs');
+const bcrypt = require('bcryptjs');
 
 // Generate JWT Token
 const generateToken = (userId) => {
@@ -15,7 +15,42 @@ const generateToken = (userId) => {
 // @access  Public
 const registerUser = asyncHandler(async (req, res) => {
   // TODO: handle registration
-  res.status(200).json({ message: 'Register user' });
+  const {name, email, password, profileImageUrl,adminInviteToken }=req.body
+
+        //check if user already exists
+        const userExists = await User.findOne({email});
+        if(userExists){
+            return res.status(400).json({message: 'user already exist'})
+        }
+        
+        //Determine user role: if correct, token is provided, otherwise memeber.
+        let role = 'user'
+        if(adminInviteToken && adminInviteToken == process.env.ADMIN_INVITE_TOKEN){
+            role = 'admin'
+        }
+
+        //hash password
+        const salt = await bcrypt.genSalt(10)
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        //Create New User
+        const user = await User.create({
+            name,
+            email,
+            password: hashedPassword,
+            profileImageUrl,
+            role
+        })
+
+        //return user data with jwt 
+        res.status(201).json({
+            _id: user._id,
+            name:user.name,
+            email: user.email,
+            profileImageUrl: user.profileImageUrl,
+            role:user.role,
+            token: generateToken(user._id)
+        })
 });
 
 // @desc    Login user & get token

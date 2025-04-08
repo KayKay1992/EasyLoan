@@ -17,10 +17,10 @@ const UserSchema = new mongoose.Schema({
     password:{
         type: String,
         required: true,
-        profileImageUrl:{
-            type:String,
-            default: null
-        }
+    },
+    profileImageUrl:{
+        type:String,
+        default: null
     },
     role:{
         type: String,
