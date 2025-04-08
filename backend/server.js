@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const connectDB = require('./config/db');
+const authRoute = require('./routes/auth.route');
 
 const app = express();
 
@@ -19,8 +20,8 @@ connectDB()
 //Middleware
 app.use(express.json());
 
-//Routes
-// app.use("/api/auth", authRoutes);
+// Routes
+app.use("/api/auth", authRoute);
 // app.use("/api/users", userRoutes);
 // app.use("/api/tasks", taskRoutes);
 // app.use("/api/reports", reportRoutes);
