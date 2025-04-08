@@ -1,24 +1,27 @@
-Auth Routes skeleton and defining
+Integrating express-async-handler 
 
-Sure! Here's a complete and clean Auth route setup using Express for your MERN loan app. This will include basic routes for:
-User registration
-User login
-(Optional) Logout
-(Optional) Get current user
-✅ Get user profile (GET /profile)
-🔄 Update user profile (PUT /profile)
+🔁 What is asyncHandler?
+asyncHandler is a middleware function from the express-async-handler package that helps you catch errors in async route handlers automatically.
 
-router.post('/register', registerUser);
-// 📝 Register a new user account
+🔎 What it does again?
+It allows you to write cleaner async route controllers without try/catch blocks, by automatically handling errors from async functions.
 
-router.post('/login', loginUser);
-// 🔑 Log in and receive a JWT token
+🧠 Bonus: import it to your controllers
+At the top of your controller file (like authController.js), import it:
+const asyncHandler = require('express-async-handler'); if you are using require.
 
-router.get('/me', protect, getCurrentUser);
-// 👤 Get basic info about the currently logged-in user
+Then wrap your functions: e.g const loginUser = asyncHandler(async (req, res) => {
+  // your async code here
+});
 
-router.get('/profile', protect, getUserProfile);
-// 📄 Fetch the full profile of the authenticated user
+🚀 Benefits
+Clean & readable controllers
 
-router.put('/profile', protect, updateUserProfile);
-// ✏️ Update the authenticated user’s profile details
+No repetitive try/catch
+
+Catches all async errors (like DB fails, undefined data, etc.)
+
+Works well with centralized error handling middleware
+
+
+we will use it next.
