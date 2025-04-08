@@ -1,19 +1,24 @@
-Defining document mongodb schema
+Auth Routes skeleton and defining
 
-Here's a clean and useful Document schema for handling uploaded documents in your loan app — like ID proofs, income statements, etc.
+Sure! Here's a complete and clean Auth route setup using Express for your MERN loan app. This will include basic routes for:
+User registration
+User login
+(Optional) Logout
+(Optional) Get current user
+✅ Get user profile (GET /profile)
+🔄 Update user profile (PUT /profile)
 
-🔍 Field Breakdown
-Field	Description
-user	Reference to the user who uploaded the document
-type	Type of document (for classification & validation)
-fileUrl	Path or URL to where the file is stored (e.g., S3, Cloudinary, local)
-fileName	Original file name (for reference)
-status	Admin review status
-uploadedAt	Timestamp for sorting or display
+router.post('/register', registerUser);
+// 📝 Register a new user account
 
-✅ Why This Schema Works
-Helps organize user documents for KYC, loan approval, or compliance
-Admins can review and change status
-Easily integrates with Cloud storage or file upload middleware (like multer)
+router.post('/login', loginUser);
+// 🔑 Log in and receive a JWT token
 
+router.get('/me', protect, getCurrentUser);
+// 👤 Get basic info about the currently logged-in user
 
+router.get('/profile', protect, getUserProfile);
+// 📄 Fetch the full profile of the authenticated user
+
+router.put('/profile', protect, updateUserProfile);
+// ✏️ Update the authenticated user’s profile details
