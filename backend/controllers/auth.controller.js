@@ -91,7 +91,21 @@ const loginUser = asyncHandler(async (req, res) => {
 // @access  Private
 const getCurrentUser = asyncHandler(async (req, res) => {
   // TODO: return req.user (set in middleware)
-  res.status(200).json({ message: 'Current user' });
+   // The user info is attached to req.user by the protect middleware
+   const user = await User.findById(req.user._id).select('-password'); // Exclude password from response
+
+   if (!user) {
+     res.status(404);
+     throw new Error('User not found');
+   }
+ 
+   res.status(200).json({
+     _id: user._id,
+     name: user.name,
+     email: user.email,
+     profileImageUrl: user.profileImageUrl,
+     role: user.role,
+   });
 });
 
 // @desc    Get full user profile

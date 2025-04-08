@@ -1,8 +1,10 @@
-login user function integration in auth controller
+Get current user function integration in auth controller
 
-1. The `loginUser` function extracts the `email` and `password` from the request body to handle user login.
-2. It checks if a **user exists** with the provided email, returning a **401 error** if no user is found.
-3. It compares the **entered password** with the stored hashed password using `bcrypt.compare()`, returning a **401 error** if they don’t match.
-4. If the password is correct, the user data (e.g., name, email, role) is returned in the response.
-5. Along with the user data, a **JWT token** is generated and returned for **authentication**.
+Explanation:
+Middleware (protect) ensures that the route is protected and the user is authenticated, attaching the user’s data (like user._id) to the req.user object.
 
+The controller uses User.findById(req.user._id) to fetch the current user’s data from the database, excluding the password for security (.select('-password')).
+
+If no user is found, it throws a 404 error.
+
+If the user is found, it returns the user details (e.g., name, email, role, profile image) in the response.
