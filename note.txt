@@ -1,9 +1,29 @@
-Update user profile function integration in auth controller
+Working on my uploadMiddleware and using it in my upload-image route in authroutes.
 
-1. The `updateUserProfile` function retrieves the current user from the database using `req.user.id`, which is set by the auth middleware.  
-2. If the user isn't found, it returns a **404 Not Found** error.  
-3. It updates the user's `name`, `email`, and `role` only if new values are provided in the request body.  
-4. If a new `password` is provided, it hashes it using `bcrypt` before saving it.  
-5. The updated user data is then saved to the database using `user.save()`.  
-6. After saving, it returns the updated user info along with a fresh JWT token.  
-7. This allows users to manage and update their own profile securely.
+Your uploadMiddleware using multer looks great! Here's a quick explanation in simple terms to confirm everything:
+
+✅ What Your Code Does:
+Storage Setup:
+Uses multer.diskStorage to define where files are stored (uploads/ folder) and names them uniquely with the current timestamp + original filename.
+
+File Filter:
+Limits uploads to only images of type .jpeg, .jpg, or .png by checking the MIME type.
+
+Multer Config:
+Combines the storage and filter rules into the upload middleware, which can now be used in routes.
+
+Export:
+Makes upload available for import and use in other files (e.g., your route files).
+
+🔍 What Your Route Does:
+Route: POST /upload-image
+Middleware: Uses upload.single('image') to handle a single file upload under the field name image.
+Validation: Checks if a file was uploaded. If not, returns a 400 Bad Request.
+Image URL Creation: Builds a public URL to access the uploaded image using:
+Response: Sends back the image URL in the response JSON.
+
+
+📁 Final Tip:
+Make sure your server is set to serve static files from the uploads folder. Add this in server.js or app.js:
+That way, when the browser requests the image URL, it can actually access the file.
+

@@ -20,6 +20,10 @@ connectDB()
 //Middleware
 app.use(express.json());
 
+//for static files
+app.use('/uploads', express.static('uploads'));
+
+
 // Routes
 app.use("/api/auth", authRoute);
 // app.use("/api/users", userRoutes);
