@@ -45,14 +45,14 @@ const getUserById = asyncHandler(async (req, res) => {
 //@desc  Delete a user
 //@route Delete /api/users/:id
 //@access admin
-const deleteUser = async (req, res) => {
-  try {
-  } catch (error) {
-    res.status(500).json({
-      message: "server error",
-      error: error.message,
-    });
-  }
-};
+// const deleteUser = async (req, res) => {
+//   try {
+//   } catch (error) {
+//     res.status(500).json({
+//       message: "server error",
+//       error: error.message,
+//     });
+//   }
+// };
 
-module.exports = { getUsers, getUserById, deleteUser };
+module.exports = { getUsers, getUserById };

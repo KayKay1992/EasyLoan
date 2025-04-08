@@ -3,7 +3,7 @@ const router = express.Router();
 const {
   getUsers,
   getUserById,
-  deleteUser,
+//   deleteUser,
 } = require('../controllers/user.controller');
 
 const { protect, adminOnly } = require('../middleware/authMiddleware');
@@ -15,6 +15,6 @@ const { protect, adminOnly } = require('../middleware/authMiddleware');
 router.get('/', protect, adminOnly, getUsers); // Get all users
 router.get('/:id', protect, getUserById); // Get user by ID
 // router.put('/:id', protect, adminOnly, updateUser); // Update user by ID
-router.delete('/:id', protect, adminOnly, deleteUser); // Delete user by ID
+// router.delete('/:id', protect, adminOnly, deleteUser); // Delete user by ID
 
 module.exports = router;
