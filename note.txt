@@ -1,11 +1,11 @@
-Adding updateLoan controller
+Adding DeleteLoan controller
 
-Finds the loan using the ID from the URL.
+Retrieves the loan by its ID from the database.
 
-Checks if the loan exists, and throws an error if not.
+Returns a 404 error if the loan doesn't exist.
 
-Verifies that the user is either an admin or the owner of the loan.
+Checks if the requesting user is an admin.
 
-Updates loan fields and recalculates payment details if needed.
+If authorized, deletes the loan record from the database.
 
-Saves the updated loan and returns the updated data in the response.
+Sends a success response confirming the loan was deleted.

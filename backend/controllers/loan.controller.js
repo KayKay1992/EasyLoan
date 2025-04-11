@@ -141,9 +141,28 @@ const updateLoan = asyncHandler(async (req, res) => {
 // @route   DELETE /api/loans/:id
 // @access  Protected/Admin
 const deleteLoan = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  // Implement your logic here to delete the loan with the given ID
-  res.status(200).json({ message: `Loan deleted successfully: ${id}` });
+    const { id } = req.params;
+
+    // Find the loan by its ID
+    const loan = await Loan.findById(id);
+  
+    // If loan not found, return error
+    if (!loan) {
+      res.status(404);
+      throw new Error('Loan not found');
+    }
+  
+    // Only admin can delete a loan
+    if (req.user.role !== 'admin') {
+      res.status(403);
+      throw new Error('Not authorized to delete this loan');
+    }
+  
+    // Delete the loan
+    await loan.deleteOne();
+  
+    // Send success response
+    res.status(200).json({ message: `Loan deleted successfully: ${id}` });
 });
 
 // @desc    Update loan status
