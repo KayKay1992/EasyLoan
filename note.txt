@@ -1,11 +1,11 @@
-Adding getAllLoan controller
+Adding get Loan by ID controller
 
-It defines a function to retrieve all loan records from the database.
+It extracts the loan ID from the URL parameters (req.params.id).
 
-It checks if the user making the request is an admin.
+It searches the database for a loan with that ID and includes the user's name and email.
 
-If not an admin, it returns a "Not authorized" error with status 403.
+If no loan is found, it returns a 404 error with the message "Loan not found".
 
-If authorized, it fetches all loans and includes user name and email.
+If the loan exists, it sends the loan data back in the response.
 
-It sends the list of loans back in the response, sorted by newest first.
+This route is protected, meaning only authenticated users can access it.

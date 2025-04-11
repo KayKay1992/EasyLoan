@@ -25,9 +25,19 @@ const getAllLoans = asyncHandler(async (req, res) => {
 // @route   GET /api/loans/:id
 // @access  Protected
 const getLoanById = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  // Implement your logic here to retrieve the loan by its ID
-  res.status(200).json({ message: `Get loan by ID: ${id}` });
+    const { id } = req.params;
+
+    // Find the loan by its ID and populate user name and email
+    const loan = await Loan.findById(id).populate('user', 'name email');
+  
+    // If loan not found, return 404 error
+    if (!loan) {
+      res.status(404);
+      throw new Error('Loan not found');
+    }
+  
+    // Return the found loan
+    res.status(200).json(loan);
 });
 
 // @desc    Create a new loan
