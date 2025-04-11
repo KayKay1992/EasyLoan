@@ -1,11 +1,11 @@
-Adding get Loan by ID controller
+Adding updateLoan controller
 
-It extracts the loan ID from the URL parameters (req.params.id).
+Finds the loan using the ID from the URL.
 
-It searches the database for a loan with that ID and includes the user's name and email.
+Checks if the loan exists, and throws an error if not.
 
-If no loan is found, it returns a 404 error with the message "Loan not found".
+Verifies that the user is either an admin or the owner of the loan.
 
-If the loan exists, it sends the loan data back in the response.
+Updates loan fields and recalculates payment details if needed.
 
-This route is protected, meaning only authenticated users can access it.
+Saves the updated loan and returns the updated data in the response.

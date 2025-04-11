@@ -85,9 +85,56 @@ const createLoan = asyncHandler(async (req, res) => {
 // @route   PUT /api/loans/:id
 // @access  Protected (Admin or Owner)
 const updateLoan = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  // Implement your logic here to update the loan with the given ID
-  res.status(200).json({ message: `Loan updated successfully: ${id}` });
+    const { id } = req.params;
+
+    // Find the loan by ID
+    const loan = await Loan.findById(id);
+  
+    // If loan not found, return error
+    if (!loan) {
+      res.status(404);
+      throw new Error('Loan not found');
+    }
+  
+    // Optional: Only allow admin or the loan owner to update
+    if (
+      req.user.role !== 'admin' &&
+      loan.user.toString() !== req.user._id.toString()
+    ) {
+      res.status(403);
+      throw new Error('Not authorized to update this loan');
+    }
+  
+    // Update allowed fields
+    const updatedFields = {
+      amount: req.body.amount ?? loan.amount,
+      interestRate: req.body.interestRate ?? loan.interestRate,
+      termMonths: req.body.termMonths ?? loan.termMonths,
+      loanType: req.body.loanType ?? loan.loanType,
+      status: req.body.status ?? loan.status,
+      startDate: req.body.startDate ?? loan.startDate,
+      endDate: req.body.endDate ?? loan.endDate,
+    };
+  
+    // Recalculate monthlyPayment and totalRepayable if related fields changed
+    if (req.body.amount || req.body.interestRate || req.body.termMonths) {
+      const monthlyInterestRate = updatedFields.interestRate / 100 / 12;
+      const monthlyPayment = (
+        updatedFields.amount *
+        monthlyInterestRate /
+        (1 - Math.pow(1 + monthlyInterestRate, -updatedFields.termMonths))
+      ).toFixed(2);
+  
+      updatedFields.monthlyPayment = monthlyPayment;
+      updatedFields.totalRepayable = (monthlyPayment * updatedFields.termMonths).toFixed(2);
+    }
+  
+    // Apply updates and save
+    Object.assign(loan, updatedFields);
+    const updatedLoan = await loan.save();
+  
+    res.status(200).json(updatedLoan);
+  
 });
 
 // @desc    Delete a loan
