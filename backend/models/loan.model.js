@@ -11,7 +11,11 @@ const loanSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
-
+  loanType: {
+    type: String,
+    enum: ['personal', 'business', 'student', 'mortgage', 'car loan','quickie loan'], // You can add more
+    required: true
+  },
   interestRate: {
     type: Number,
     required: true

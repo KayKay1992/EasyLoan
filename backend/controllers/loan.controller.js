@@ -1,4 +1,5 @@
 const asyncHandler = require('express-async-handler');
+const Loan = require('../models/loan.model');
 
 // @desc    Get all loans
 // @route   GET /api/loans
@@ -21,10 +22,44 @@ const getLoanById = asyncHandler(async (req, res) => {
 // @route   POST /api/loans
 // @access  Protected/Admin
 const createLoan = asyncHandler(async (req, res) => {
-  // Extract data from req.body
-  // Implement your logic here to create a new loan
-  res.status(201).json({ message: 'Loan created successfully' });
+  const { amount, interestRate, termMonths, loanType } = req.body;
+
+  // Check if user is an admin
+  if (!req.user || req.user.role !== 'admin') {
+    res.status(403); // Forbidden
+    throw new Error('Not authorized to create a loan');
+  }
+
+  // Validate required fields
+  if (!amount || !interestRate || !termMonths || !loanType) {
+    res.status(400);
+    throw new Error('Please provide all required loan fields');
+  }
+
+  const monthlyInterestRate = interestRate / 100 / 12;
+
+  const monthlyPayment = (
+    amount *
+    monthlyInterestRate /
+    (1 - Math.pow(1 + monthlyInterestRate, -termMonths))
+  ).toFixed(2);
+
+  const totalRepayable = (monthlyPayment * termMonths).toFixed(2);
+
+  const loan = await Loan.create({
+    user: req.user._id, // Automatically assign to the logged-in admin
+    amount,
+    loanType,
+    interestRate,
+    termMonths,
+    monthlyPayment,
+    totalRepayable,
+    status: 'pending',
+  });
+
+  res.status(201).json(loan);
 });
+
 
 // @desc    Update a loan
 // @route   PUT /api/loans/:id

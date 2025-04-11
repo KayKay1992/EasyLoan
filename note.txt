@@ -1,10 +1,17 @@
-SETTING THE STRUCTURE OF LOAN CONTROLLER
+Adding Create Loan controller
 
-This structure uses the express-async-handler package to simplify error handling in asynchronous routes. You can later fill in your own business logic for each function.
+What this code does:
+It creates a new loan when an admin makes a POST request to /api/loans.
 
-Explanation
-asyncHandler: This middleware wraps each asynchronous function and automatically passes any errors to the Express error handler.
+✅ TL;DR:
+This function:
 
-Route Descriptions: Each controller function is commented with a description, HTTP method, route, and access level. This helps to maintain clarity especially as the project grows.
+Takes loan details.
 
-Function Skeletons: All functions have placeholders where you can implement your business logic. The responses are simply sample messages that you would replace with actual functionality such as interacting with a database.
+Checks if everything's provided.
+
+Calculates monthly payment & total repayable.
+
+Saves the loan to the database.
+
+Sends back the created loan.
