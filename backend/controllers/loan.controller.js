@@ -330,8 +330,70 @@ const getAdminLoanDashboard = asyncHandler(async (req, res) => {
 // @route   GET /api/loans/user-dashboard-data
 // @access  Protected
 const getUserLoanDashboard = asyncHandler(async (req, res) => {
-  // Implement your logic to gather loan data specific to the logged in user
-  res.status(200).json({ message: "User loan dashboard data" });
+     // Get the authenticated user's ID from the request
+     const userId = req.user._id;
+
+     // 1. FETCH BASIC STATISTICS FOR USER'S LOANS
+     // Count all loans taken by the user
+     const totalLoans = await Loan.countDocuments({ user: userId });
+ 
+     // Count active loans for the user
+     const activeLoans = await Loan.countDocuments({
+       user: userId,
+       status: 'active'
+     });
+ 
+     // Count completed loans for the user
+     const completedLoans = await Loan.countDocuments({
+       user: userId,
+       status: 'completed'
+     });
+ 
+     // Count defaulted loans (not completed and overdue)
+     const defaultedLoans = await Loan.countDocuments({
+       user: userId,
+       status: 'defaulted'
+     });
+ 
+     // 2. LOAN TYPES DISTRIBUTION
+     // All possible loan types to track
+     const loanTypes = ['personal', 'business', 'student', 'mortgage', 'car loan', 'quickie loan'];
+ 
+     // Get raw count of loans grouped by type for the user
+     const loanTypesRaw = await Loan.aggregate([
+       { $match: { user: userId } }, // Filter loans by the user
+       { $group: { 
+         _id: '$loanType',  // Group by loan type
+         count: { $sum: 1 }  // Count loans in each group
+       }}
+     ]);
+ 
+     // Transform data to include all loan types (even with 0 count)
+     const loanTypesDistribution = loanTypes.reduce((acc, type) => {
+       acc[type] = loanTypesRaw.find((item) => item._id === type)?.count || 0;
+       return acc;
+     }, {});
+ 
+     // 3. RECENT LOANS
+     // Get 5 most recent loans for the user with selected fields
+     const recentLoans = await Loan.find({ user: userId })
+       .sort({ createdAt: -1 })  // Newest first
+       .limit(5)                 // Only 5 most recent loans
+       .select("amount loanType status createdAt"); // Selected fields
+ 
+     // 4. RETURN COMPREHENSIVE LOAN DATA FOR THE USER
+     res.status(200).json({
+       statistics: {
+         totalLoans,      // Total loans for the user
+         activeLoans,     // Active loans count
+         completedLoans,  // Completed loans count
+         defaultedLoans   // Defaulted loans count
+       },
+       loanTypes: loanTypesDistribution,  // Loan distribution by type
+       recentLoans  // List of recent loans
+     });
+ 
+ 
 });
 
 module.exports = {

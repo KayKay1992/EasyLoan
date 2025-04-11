@@ -1,16 +1,32 @@
-Adding Admin Dashboard controller
+Adding User Dashboard controller
 
 
-Fetch Basic Statistics: It counts the total number of loans and segregates them based on loan statuses (pending, approved, active, etc.).
+User ID Extraction: The function retrieves the user’s ID from the authenticated request (req.user._id).
 
-Loan Distribution by Status: Aggregates loans by status (such as pending, approved, etc.) and returns this data in a consistent format.
+Loan Statistics: It calculates total loans, active loans, completed loans, and defaulted loans for the user.
 
-Loan Types Distribution: It aggregates the loans by loan types (e.g., personal, business) and returns the count of each type.
+Loan Type Distribution: It aggregates loans by type (personal, business, etc.) to give the user an overview of the loan types they have.
 
-Recent Loans: Retrieves the 10 most recent loans to display recent loan activity on the admin dashboard.
+Recent Loans: It fetches the 5 most recent loans the user has taken, sorted by creation date.
 
-Return Data: Sends a comprehensive JSON response with loan statistics, loan status distribution, loan type distribution, and recent loans.
+Return Data: The function responds with a JSON containing statistics, loan types distribution, and recent loans.
 
-Error Handling: If something goes wrong during data fetching, an error message is logged and a server error response is sent.
+Loan Counting: Uses countDocuments to calculate how many loans are active, completed, or defaulted.
 
-This approach provides a detailed view of loan status, types, and recent activity for the admin to monitor the loan system effectively.
+Loan Type Aggregation: It uses MongoDB's aggregate function to group loans by type for the user.
+
+Loan Distribution: It ensures all loan types are represented in the result, even if the user doesn't have that type.
+
+Recent Loans Selection: The function limits the result to the 5 most recent loans the user has engaged with.
+
+Error Handling: If an error occurs, the function logs it and returns a 500 server error response.
+
+This setup provides a detailed loan dashboard for the user, showing statistics, types of loans they have, and recent activities related to their loans.
+
+
+
+
+
+
+
+
