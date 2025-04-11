@@ -20,12 +20,17 @@ const getUsers = asyncHandler(async (req, res) => {
         user: user._id,
         status: "completed",
       });
+      const defaultLoans = await Loan.countDocuments({
+        user: user._id,
+        status: "defaulted", // make sure this status exists in your model
+      });
 
       return {
         ...user._doc,
         totalLoans,
         activeLoans,
         completedLoans,
+        defaultLoans,
       };
     })
   );
