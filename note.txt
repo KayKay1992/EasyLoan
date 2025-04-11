@@ -1,17 +1,11 @@
-Adding Create Loan controller
+Adding getAllLoan controller
 
-What this code does:
-It creates a new loan when an admin makes a POST request to /api/loans.
+It defines a function to retrieve all loan records from the database.
 
-✅ TL;DR:
-This function:
+It checks if the user making the request is an admin.
 
-Takes loan details.
+If not an admin, it returns a "Not authorized" error with status 403.
 
-Checks if everything's provided.
+If authorized, it fetches all loans and includes user name and email.
 
-Calculates monthly payment & total repayable.
-
-Saves the loan to the database.
-
-Sends back the created loan.
+It sends the list of loans back in the response, sorted by newest first.

@@ -18,7 +18,7 @@ router.get('/dashboard-data', protect, adminOnly, getAdminLoanDashboard); // Adm
 router.get('/user-dashboard-data', protect, getUserLoanDashboard); // User-specific loan stats
 
 // Loan management
-router.get('/', protect, getAllLoans); // Get all loans
+router.get('/', protect, adminOnly, getAllLoans); // Get all loans
 router.get('/:id', protect, getLoanById); // Get loan by ID
 router.post('/', protect, adminOnly, createLoan); // Create new loan (admin only)
 router.put('/:id', protect, updateLoan); // Update loan (admin or owner)

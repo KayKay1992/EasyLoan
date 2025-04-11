@@ -1,12 +1,24 @@
-const asyncHandler = require('express-async-handler');
-const Loan = require('../models/loan.model');
+const asyncHandler = require("express-async-handler");
+const Loan = require("../models/loan.model");
 
 // @desc    Get all loans
 // @route   GET /api/loans
 // @access  Protected (User/Admin)
 const getAllLoans = asyncHandler(async (req, res) => {
-  // Implement your logic here to retrieve all loans
-  res.status(200).json({ message: 'Get all loans' });
+  // Check if the logged-in user is an admin
+  if (!req.user || req.user.role !== 'admin') {
+    res.status(403); // Forbidden
+    throw new Error('Not authorized to access all loans');
+  }
+
+  // Fetch all loans, including user name & email, sorted by latest
+  const loans = await Loan.find()
+    .populate('user', 'name email')
+    .sort({ createdAt: -1 });
+
+  // Return loans to admin
+  res.status(200).json(loans);
+
 });
 
 // @desc    Get a loan by ID
@@ -25,22 +37,21 @@ const createLoan = asyncHandler(async (req, res) => {
   const { amount, interestRate, termMonths, loanType } = req.body;
 
   // Check if user is an admin
-  if (!req.user || req.user.role !== 'admin') {
+  if (!req.user || req.user.role !== "admin") {
     res.status(403); // Forbidden
-    throw new Error('Not authorized to create a loan');
+    throw new Error("Not authorized to create a loan");
   }
 
   // Validate required fields
   if (!amount || !interestRate || !termMonths || !loanType) {
     res.status(400);
-    throw new Error('Please provide all required loan fields');
+    throw new Error("Please provide all required loan fields");
   }
 
   const monthlyInterestRate = interestRate / 100 / 12;
 
   const monthlyPayment = (
-    amount *
-    monthlyInterestRate /
+    (amount * monthlyInterestRate) /
     (1 - Math.pow(1 + monthlyInterestRate, -termMonths))
   ).toFixed(2);
 
@@ -54,12 +65,11 @@ const createLoan = asyncHandler(async (req, res) => {
     termMonths,
     monthlyPayment,
     totalRepayable,
-    status: 'pending',
+    status: "pending",
   });
 
   res.status(201).json(loan);
 });
-
 
 // @desc    Update a loan
 // @route   PUT /api/loans/:id
@@ -93,7 +103,7 @@ const updateLoanStatus = asyncHandler(async (req, res) => {
 // @access  Protected/Admin
 const getAdminLoanDashboard = asyncHandler(async (req, res) => {
   // Implement your logic to gather dashboard data for admin
-  res.status(200).json({ message: 'Admin loan dashboard data' });
+  res.status(200).json({ message: "Admin loan dashboard data" });
 });
 
 // @desc    Get user-specific loan dashboard data
@@ -101,7 +111,7 @@ const getAdminLoanDashboard = asyncHandler(async (req, res) => {
 // @access  Protected
 const getUserLoanDashboard = asyncHandler(async (req, res) => {
   // Implement your logic to gather loan data specific to the logged in user
-  res.status(200).json({ message: 'User loan dashboard data' });
+  res.status(200).json({ message: "User loan dashboard data" });
 });
 
 module.exports = {
@@ -112,5 +122,5 @@ module.exports = {
   deleteLoan,
   updateLoanStatus,
   getAdminLoanDashboard,
-  getUserLoanDashboard
+  getUserLoanDashboard,
 };
