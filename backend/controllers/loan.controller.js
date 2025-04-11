@@ -169,9 +169,47 @@ const deleteLoan = asyncHandler(async (req, res) => {
 // @route   PUT /api/loans/:id/status
 // @access  Protected
 const updateLoanStatus = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  // Implement your logic here to update the status of the loan (e.g., approved, completed)
-  res.status(200).json({ message: `Loan status updated successfully: ${id}` });
+    const { id } = req.params;
+    const { status } = req.body;
+  
+    // Valid statuses allowed in the loan schema
+    const validStatuses = ['pending', 'approved', 'rejected', 'active', 'completed'];
+  
+    // Check if provided status is valid
+    if (!validStatuses.includes(status)) {
+      res.status(400);
+      throw new Error('Invalid loan status');
+    }
+  
+    // Find the loan by ID
+    const loan = await Loan.findById(id);
+  
+    // If not found, return an error
+    if (!loan) {
+      res.status(404);
+      throw new Error('Loan not found');
+    }
+  
+    // Only admin can update loan status
+    if (req.user.role !== 'admin') {
+      res.status(403);
+      throw new Error('Not authorized to update loan status');
+    }
+  
+    // Update the loan status
+    loan.status = status;
+  
+    // Optionally, set start and end dates for 'active' or 'completed' statuses
+    if (status === 'active') {
+      loan.startDate = new Date();
+    } else if (status === 'completed') {
+      loan.endDate = new Date();
+    }
+  
+    const updatedLoan = await loan.save();
+  
+    // Send updated loan as response
+    res.status(200).json(updatedLoan);
 });
 
 // @desc    Get admin dashboard loan data
