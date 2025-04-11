@@ -1,12 +1,16 @@
-Adding update loan status controller
+Adding Admin Dashboard controller
 
 
-t extracts the loan ID and new status from the request.
+Fetch Basic Statistics: It counts the total number of loans and segregates them based on loan statuses (pending, approved, active, etc.).
 
-It checks if the new status is valid based on allowed values.
+Loan Distribution by Status: Aggregates loans by status (such as pending, approved, etc.) and returns this data in a consistent format.
 
-It finds the loan by ID and returns a 404 error if not found.
+Loan Types Distribution: It aggregates the loans by loan types (e.g., personal, business) and returns the count of each type.
 
-It ensures only an admin can update the loan's status.
+Recent Loans: Retrieves the 10 most recent loans to display recent loan activity on the admin dashboard.
 
-If valid, it updates the status (and dates if applicable), saves, and returns the updated loan.
+Return Data: Sends a comprehensive JSON response with loan statistics, loan status distribution, loan type distribution, and recent loans.
+
+Error Handling: If something goes wrong during data fetching, an error message is logged and a server error response is sent.
+
+This approach provides a detailed view of loan status, types, and recent activity for the admin to monitor the loan system effectively.

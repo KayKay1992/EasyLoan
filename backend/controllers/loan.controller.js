@@ -216,9 +216,115 @@ const updateLoanStatus = asyncHandler(async (req, res) => {
 // @route   GET /api/loans/dashboard-data
 // @access  Protected/Admin
 const getAdminLoanDashboard = asyncHandler(async (req, res) => {
-  // Implement your logic to gather dashboard data for admin
-  res.status(200).json({ message: "Admin loan dashboard data" });
-});
+    try {
+      // 1. FETCH BASIC STATISTICS
+      // Count all loans in the database
+      const totalLoans = await Loan.countDocuments();
+  
+      // Count loans with "Pending" status
+      const pendingLoans = await Loan.countDocuments({
+        status: "pending",
+      });
+  
+      // Count loans with "Approved" status
+      const approvedLoans = await Loan.countDocuments({
+        status: "approved",
+      });
+  
+      // Count loans with "Active" status
+      const activeLoans = await Loan.countDocuments({
+        status: "active",
+      });
+  
+      // Count loans with "Completed" status
+      const completedLoans = await Loan.countDocuments({
+        status: "completed",
+      });
+  
+      // Count loans with "Defaulted" status
+      const defaultedLoans = await Loan.countDocuments({
+        status: "defaulted",
+      });
+  
+      // 2. LOAN DISTRIBUTION BY STATUS
+      // Define all possible status values we want to track
+      const loanStatuses = ["pending", "approved", "active", "completed", "rejected", "defaulted"];
+      
+      // Aggregate loans by status (raw data from MongoDB)
+      const loanDistributionRaw = await Loan.aggregate([
+        {
+          $group: {
+            _id: "$status", // Group by status field
+            count: { $sum: 1 }, // Count documents in each group
+          },
+        },
+      ]);
+  
+      // Transform raw data into a consistent format including all statuses
+      const loanDistribution = loanStatuses.reduce((acc, status) => {
+        const formattedKey = status.replace(/\s+/g, ""); // Remove spaces for response keys
+        acc[formattedKey] =
+          loanDistributionRaw.find((item) => item._id === status)?.count || 0;
+        return acc;
+      }, {});
+  
+      loanDistribution["All"] = totalLoans; // Add total count
+  
+      // 3. LOAN TYPES DISTRIBUTION
+      // Define expected loan types (personal, business, etc.)
+      const loanTypes = ["personal", "business", "student", "mortgage", "car loan", "quickie loan"];
+      
+      // Aggregate loans by loan type
+      const loanTypeLevelsRaw = await Loan.aggregate([
+        {
+          $group: {
+            _id: "$loanType",
+            count: { $sum: 1 }, // Count loans in each type
+          },
+        },
+      ]);
+  
+      // Transform loan type data to include all types
+      const loanTypeLevels = loanTypes.reduce((acc, type) => {
+        acc[type] =
+          loanTypeLevelsRaw.find((item) => item._id === type)?.count || 0;
+        return acc;
+      }, {});
+  
+      // 4. RECENT LOANS
+      // Get 10 most recent loans with selected fields
+      const recentLoans = await Loan.find()
+        .sort({ createdAt: -1 }) // Newest first
+        .limit(10)
+        .select("amount loanType status createdAt user");
+  
+      // 5. RETURN COMPREHENSIVE DASHBOARD DATA
+      res.status(200).json({
+        statistics: {
+          totalLoans,
+          pendingLoans,
+          approvedLoans,
+          activeLoans,
+          completedLoans,
+          defaultedLoans, // Include defaulted loans in the statistics
+        },
+        charts: {
+          loanDistribution, // By status
+          loanTypeLevels, // By loan type
+        },
+        recentLoans, // Recent loan activity
+      });
+    } catch (error) {
+      // 6. ERROR HANDLING
+      console.error("Admin loan dashboard error:", error); // Log for debugging
+      res.status(500).json({
+        message: "Server Error", // Return server error message
+        error: error.message, // Return error message for debugging
+      });
+    }
+  });
+
+  
 
 // @desc    Get user-specific loan dashboard data
 // @route   GET /api/loans/user-dashboard-data
