@@ -1,12 +1,10 @@
-Creating routes for loan management
+SETTING THE STRUCTURE OF LOAN CONTROLLER
 
-🧠 Route Summary:
-Method	Route	Description	Access
-GET	/dashboard-data	Admin loan overview data	Admin only
-GET	/user-dashboard-data	Logged-in user’s loan summary	Protected
-GET	/	Get all loans	Protected
-GET	/:id	Get loan details by ID	Protected
-POST	/	Create a loan	Admin only
-PUT	/:id	Update a loan	Protected
-DELETE	/:id	Delete a loan	Admin only
-PUT	/:id/status	Update loan status (approved, completed)	Protected
+This structure uses the express-async-handler package to simplify error handling in asynchronous routes. You can later fill in your own business logic for each function.
+
+Explanation
+asyncHandler: This middleware wraps each asynchronous function and automatically passes any errors to the Express error handler.
+
+Route Descriptions: Each controller function is commented with a description, HTTP method, route, and access level. This helps to maintain clarity especially as the project grows.
+
+Function Skeletons: All functions have placeholders where you can implement your business logic. The responses are simply sample messages that you would replace with actual functionality such as interacting with a database.

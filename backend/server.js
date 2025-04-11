@@ -5,6 +5,7 @@ const path = require('path');
 const connectDB = require('./config/db');
 const authRoute = require('./routes/auth.route');
 const userRoute = require('./routes/user.route');
+const loanRoute = require('./routes/loan.route');
 
 const app = express();
 
@@ -28,7 +29,7 @@ app.use('/uploads', express.static('uploads'));
 // Routes
 app.use("/api/auth", authRoute);
 app.use("/api/users", userRoute);
-// app.use("/api/tasks", taskRoutes);
+app.use("/api/loan", loanRoute);
 // app.use("/api/reports", reportRoutes);
 
 

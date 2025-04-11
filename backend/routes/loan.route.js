@@ -1,15 +1,16 @@
 const express = require('express');
-const { protect, adminOnly } = require('../middlewares/authMiddleware');
-// const {
-//   getAllLoans,
-//   getLoanById,
-//   createLoan,
-//   updateLoan,
-//   deleteLoan,
-//   updateLoanStatus,
-//   getAdminLoanDashboard,
-//   getUserLoanDashboard
-// } = require('../controllers/loanController');
+const { protect, adminOnly } = require('../middleware/authMiddleware');
+// const { protect, adminOnly } = require('../middlewares/authMiddleware');
+const {
+  getAllLoans,
+  getLoanById,
+  createLoan,
+  updateLoan,
+  deleteLoan,
+  updateLoanStatus,
+  getAdminLoanDashboard,
+  getUserLoanDashboard
+} = require('../controllers/loan.controller');
 
 const router = express.Router();
 
