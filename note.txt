@@ -1,23 +1,14 @@
-Integrating the getTransactionByUser controller.
+Integrating the getTransactionByloan controller.
 
-Here's a 10-line explanation of the getTransactionByUser controller:
+Here's an explanation of the `getTransactionByLoan` controller in 10 lines:
 
-The function retrieves all transactions made by a specific user based on their userId.
-
-It extracts the userId from the route parameters (req.params.userId).
-
-It first validates that the userId is a valid MongoDB ObjectId using a regex.
-
-If the ID is invalid, it returns a 400 Bad Request with an error message.
-
-It queries the database for all transactions linked to the given userId.
-
-The query uses Transaction.find({ user: userId }).
-
-Optionally, it can populate the loan field to include full loan info instead of just the ID.
-
-If transactions are found, it returns them with a 200 OK response.
-
-The response includes the total count and an array of transaction data.
-
-This is useful for showing users or admins all the financial activity related to that user.
+1. This function handles requests to retrieve all transactions linked to a specific loan.
+2. It first extracts the `loanId` from the route parameters.
+3. It validates that the `loanId` is a valid MongoDB ObjectId using a regex check.
+4. If the `loanId` is invalid, it sends a 400 Bad Request error.
+5. It then queries the `Transaction` collection for records where the `loan` field matches the given `loanId`.
+6. The result is populated with user details like `name` and `email` for better context.
+7. If no transactions are found, it returns a 404 error with a message.
+8. If transactions are found, it returns them in a JSON response.
+9. The response includes a count of transactions and the transaction data.
+10. The route is intended for admin access to monitor loan-related financial activity.

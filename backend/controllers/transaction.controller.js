@@ -216,6 +216,25 @@ const getTransactionsByUser = asyncHandler(async (req, res) => {
 // @access  Admin & User (self)
 const getTransactionsByLoan = asyncHandler(async (req, res) => {
   // Implementation here
+  const { loanId } = req.params;
+
+  // Validate loanId format
+  if (!loanId.match(/^[0-9a-fA-F]{24}$/)) {
+    res.status(400);
+    throw new Error("Invalid loan ID");
+  }
+
+  const transactions = await Transaction.find({ loan: loanId }).populate('user', 'name email');
+
+  if (!transactions || transactions.length === 0) {
+    res.status(404);
+    throw new Error('No transactions found for this loan');
+  }
+
+  res.status(200).json({
+    count: transactions.length,
+    transactions,
+  });
 });
 
 module.exports = {
