@@ -1,9 +1,12 @@
-Integrating the getAllTransactions controller.
+Integrating the getTransactionById controller.
 
-Sure! Here's a 5-line explanation of the `getAllTransactions` controller:
+Sure! Here's an 8-line explanation of the `getTransactionById` controller:
 
-1. This controller retrieves all transaction records from the database.  
-2. It uses Mongoose's `populate()` to include user name/email and loan details in the response.  
-3. Only admins should have access to this route for security reasons.  
-4. The result is returned as a JSON response with a success message.  
-5. It's wrapped in `asyncHandler` to handle async errors cleanly.
+1. It defines an async route handler to fetch a specific transaction by its ID from the database.  
+2. `req.params.id` is used to extract the transaction ID from the request URL.  
+3. `Transaction.findById()` searches for the transaction in the database.  
+4. It uses `.populate()` to include user details (name, email) and loan info in the response.  
+5. If no transaction is found, a 404 error is thrown.  
+6. If found, it returns a success response with the transaction data.  
+7. The response includes a helpful message and the transaction details.  
+8. The route is meant for admin or the user who owns the transaction (based on access control).

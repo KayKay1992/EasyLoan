@@ -94,6 +94,19 @@ const getAllTransactions = asyncHandler(async (req, res) => {
 // @access  Admin
 const getTransactionById = asyncHandler(async (req, res) => {
   // Implementation here
+  const transaction = await Transaction.findById(req.params.id)
+    .populate('user', 'name email')
+    .populate('loan');
+
+  if (!transaction) {
+    res.status(404);
+    throw new Error('Transaction not found');
+  }
+
+  res.status(200).json({
+    message: 'Transaction fetched successfully',
+    transaction,
+  });
 });
 
 // @desc    Update a transaction

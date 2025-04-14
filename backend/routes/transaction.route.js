@@ -23,7 +23,7 @@ router.get('/', protect, adminOnly, getAllTransactions);
 
 // @route   GET /api/transactions/:id
 // @access  Admin - View single transaction by ID
-router.get('/:id', protect, adminOnly, getTransactionById);
+router.get('/:id', protect, getTransactionById);
 
 // @route   PUT /api/transactions/:id
 // @access  Admin - Update a transaction
