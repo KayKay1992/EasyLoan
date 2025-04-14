@@ -1,16 +1,17 @@
-Integrating the updateTransaction controller.
+Integrating the deleteTransaction controller.
 
-Here’s a 12-line explanation of the `updateTransaction` controller:
+! Here's a 7-line explanation of the deleteTransaction controller:
 
-1. It’s an Express async controller that handles updating a transaction by ID.  
-2. It extracts the transaction ID from the route params and fields to update from the request body.  
-3. Only specific fields (`amount`, `type`, `status`, `method`) are allowed to be updated.  
-4. It validates that the fields provided are among the allowed ones.  
-5. If invalid fields are detected, it throws an error.  
-6. It fetches the transaction from the database using the ID.  
-7. If the transaction doesn't exist, it returns a 404 error.  
-8. It performs strict validation for each allowed field (e.g., `amount` must be a positive number).  
-9. It also checks that `type`, `status`, and `method` match expected enums.  
-10. Once validated, it updates only the allowed fields.  
-11. It saves the transaction to the database.  
-12. Finally, it returns a success message with the updated transaction.
+The function deletes a transaction based on the ID provided in the request URL.
+
+It uses express-async-handler to handle asynchronous errors cleanly.
+
+It fetches the transaction from the database using findById.
+
+If the transaction doesn't exist, it sends a 404 error response.
+
+If found, it deletes the transaction from the database using deleteOne().
+
+A success response is returned with a confirmation message and the deleted ID.
+
+This route should be protected so only admins can perform this action.
