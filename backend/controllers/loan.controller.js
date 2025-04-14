@@ -418,6 +418,9 @@ const applyForLoan = asyncHandler(async (req, res) => {
     });
   }
 
+   // Generate a unique Loan ID (example: LOAN-1687984353463)
+  const loanId = `LOAN-${Date.now()}`
+
   // STEP 2: Calculate monthly payment and total repayable
   const monthlyInterestRate = interestRate / 100 / 12;
   const termMonths = duration;
@@ -427,6 +430,7 @@ const applyForLoan = asyncHandler(async (req, res) => {
   // STEP 3: Create new loan application
   const newLoan = await Loan.create({
     user: req.user._id,
+    loanId, // Store the generated loan ID
     amount,
     duration,
     reason,

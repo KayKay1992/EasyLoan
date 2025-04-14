@@ -7,6 +7,7 @@ const authRoute = require('./routes/auth.route');
 const userRoute = require('./routes/user.route');
 const loanRoute = require('./routes/loan.route');
 const transactionRoute = require('./routes/transaction.route');
+const errorHandler = require('./middleware/errorHanlerMiddleware');
 
 const app = express();
 
@@ -31,8 +32,11 @@ app.use('/uploads', express.static('uploads'));
 app.use("/api/auth", authRoute);
 app.use("/api/users", userRoute);
 app.use("/api/loan", loanRoute);
-app.use("/transaction", transactionRoute)
+app.use("/api/transaction", transactionRoute)
 // app.use("/api/reports", reportRoutes);
+
+// Global error handler (this should be added at the end, after all routes)
+app.use(errorHandler);
 
 
 //start server
