@@ -6,6 +6,7 @@ const connectDB = require('./config/db');
 const authRoute = require('./routes/auth.route');
 const userRoute = require('./routes/user.route');
 const loanRoute = require('./routes/loan.route');
+const repaymentRoute = require('./routes/repayment.route');
 const transactionRoute = require('./routes/transaction.route');
 const errorHandler = require('./middleware/errorHanlerMiddleware');
 
@@ -33,7 +34,7 @@ app.use("/api/auth", authRoute);
 app.use("/api/users", userRoute);
 app.use("/api/loan", loanRoute);
 app.use("/api/transaction", transactionRoute)
-// app.use("/api/reports", reportRoutes);
+app.use("/api/repayment", repaymentRoute);
 
 // Global error handler (this should be added at the end, after all routes)
 app.use(errorHandler);

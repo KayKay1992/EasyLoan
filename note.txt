@@ -1,14 +1,35 @@
-Integrating the getTransactionByloan controller.
+Integrating repayment routes and repayment controller skeleton.
 
-Here's an explanation of the `getTransactionByLoan` controller in 10 lines:
+✅ repayment.routes.js
+This file defines the routes (endpoints) for repayment-related operations. It's where we map HTTP methods (GET, POST, PUT, DELETE) to controller functions.
 
-1. This function handles requests to retrieve all transactions linked to a specific loan.
-2. It first extracts the `loanId` from the route parameters.
-3. It validates that the `loanId` is a valid MongoDB ObjectId using a regex check.
-4. If the `loanId` is invalid, it sends a 400 Bad Request error.
-5. It then queries the `Transaction` collection for records where the `loan` field matches the given `loanId`.
-6. The result is populated with user details like `name` and `email` for better context.
-7. If no transactions are found, it returns a 404 error with a message.
-8. If transactions are found, it returns them in a JSON response.
-9. The response includes a count of transactions and the transaction data.
-10. The route is intended for admin access to monitor loan-related financial activity.
+Each route includes:
+
+The HTTP method (e.g. GET, POST)
+
+The endpoint path (e.g. /api/repayments/:id)
+
+The access level (e.g. User, Admin)
+
+A controller function that executes the logic for that route
+
+✅ repayment.controller.js
+This file defines the core logic for handling repayments using asyncHandler to manage async errors cleanly.
+
+It includes these controller functions:
+
+createRepayment: To log a repayment by a user.
+
+getAllRepayments: Admin can view all repayment records.
+
+getRepaymentById: Fetch details of a specific repayment.
+
+getRepaymentsByUser: Get repayments made by a particular user.
+
+getRepaymentsByLoan: View repayments tied to a specific loan.
+
+updateRepayment: Admin can update/verify a repayment.
+
+deleteRepayment: Admin can remove a repayment record.
+
+Each function currently sends a simple JSON message and status code — this is a skeleton setup, ready to be filled in with business logic.
