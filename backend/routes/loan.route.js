@@ -8,8 +8,10 @@ const {
   deleteLoan,
   updateLoanStatus,
   getAdminLoanDashboard,
-  getUserLoanDashboard
+  getUserLoanDashboard,
+  applyForLoan
 } = require('../controllers/loan.controller');
+const upload = require('../middleware/uploadMiddleware');
 
 const router = express.Router();
 
@@ -24,5 +26,7 @@ router.post('/', protect, adminOnly, createLoan); // Create new loan (admin only
 router.put('/:id', protect, updateLoan); // Update loan (admin or owner)
 router.delete('/:id', protect, adminOnly, deleteLoan); // Delete loan (admin only)
 router.put('/:id/status', protect, updateLoanStatus); // Update loan status (e.g., approved, completed)
+router.post('/apply', protect, upload.array('documents'), applyForLoan);
+
 
 module.exports = router;

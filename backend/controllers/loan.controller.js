@@ -396,6 +396,64 @@ const getUserLoanDashboard = asyncHandler(async (req, res) => {
  
 });
 
+const applyForLoan = asyncHandler(async (req, res) => {
+  const { amount, duration, reason, loanType, interestRate, bankName,
+    accountName,
+    accountNumber,
+    BVN, phone, email} = req.body;
+
+  // STEP 1: Check if user has defaulted within the last 3 months
+  const threeMonthsAgo = new Date();
+  threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
+  const recentDefaultedLoan = await Loan.findOne({
+    user: req.user._id,
+    status: 'defaulted',
+    defaultedAt: { $gte: threeMonthsAgo } // Must exist in your schema
+  });
+
+  if (recentDefaultedLoan) {
+    return res.status(403).json({
+      message: "You cannot apply for a new loan within 3 months of defaulting."
+    });
+  }
+
+  // STEP 2: Calculate monthly payment and total repayable
+  const monthlyInterestRate = interestRate / 100 / 12;
+  const termMonths = duration;
+  const monthlyPayment = (amount * monthlyInterestRate) / (1 - Math.pow(1 + monthlyInterestRate, -termMonths));
+  const totalRepayable = monthlyPayment * termMonths;
+
+  // STEP 3: Create new loan application
+  const newLoan = await Loan.create({
+    user: req.user._id,
+    amount,
+    duration,
+    reason,
+    loanType,
+    interestRate,
+    termMonths,
+    monthlyPayment,
+    totalRepayable,
+    status: 'pending',
+    applicationDate: new Date(),
+    bankName,
+    accountName,
+    accountNumber,
+    BVN,
+    phone,
+    email, // assuming your schema supports this
+    documents: req.files ? req.files.map(file => file.path) : [], // Multer required
+  });
+
+  res.status(201).json({
+    message: "Loan application submitted successfully",
+    loan: newLoan,
+  });
+});
+
+
+
 module.exports = {
   getAllLoans,
   getLoanById,
@@ -405,4 +463,5 @@ module.exports = {
   updateLoanStatus,
   getAdminLoanDashboard,
   getUserLoanDashboard,
+  applyForLoan
 };

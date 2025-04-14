@@ -1,32 +1,27 @@
-Adding User Dashboard controller
+Adding applyForLoan controller.
 
+adding bank details and contact details to loan model including defaultedAt 
 
-User ID Extraction: The function retrieves the user’s ID from the authenticated request (req.user._id).
+then we added the route to loan route
 
-Loan Statistics: It calculates total loans, active loans, completed loans, and defaulted loans for the user.
+. Explaing applyForLoan Controller
 
-Loan Type Distribution: It aggregates loans by type (personal, business, etc.) to give the user an overview of the loan types they have.
+Here’s a 15-line explanation of the updated `applyForLoan` controller:
 
-Recent Loans: It fetches the 5 most recent loans the user has taken, sorted by creation date.
+1. The controller handles a loan application from an authenticated user.  
+2. It extracts necessary fields from the request body, including loan and contact details.  
+3. It calculates a date 3 months in the past to check recent defaults.  
+4. It checks if the user has any defaulted loans within the last 3 months.  
+5. If a recent default is found, it blocks the loan application and returns a 403 error.  
+6. It calculates the **monthly interest rate** from the annual `interestRate`.  
+7. Using the **PMT formula**, it computes the monthly repayment amount.  
+8. The total amount repayable is calculated by multiplying monthly payment by duration.  
+9. A new loan document is created in the database using all the provided and calculated data.  
+10. Bank details (name, account number, etc.) are stored for future disbursement.  
+11. Contact information (phone, email, preferred method) is also saved.  
+12. If verification documents were uploaded, their paths are saved in the `documents` field.  
+13. After successful creation, a 201 response is sent back with a success message.  
+14. The full loan record is included in the response so the frontend can show it immediately.  
+15. This process ensures validation, risk control (via default check), and proper loan setup.  
 
-Return Data: The function responds with a JSON containing statistics, loan types distribution, and recent loans.
-
-Loan Counting: Uses countDocuments to calculate how many loans are active, completed, or defaulted.
-
-Loan Type Aggregation: It uses MongoDB's aggregate function to group loans by type for the user.
-
-Loan Distribution: It ensures all loan types are represented in the result, even if the user doesn't have that type.
-
-Recent Loans Selection: The function limits the result to the 5 most recent loans the user has engaged with.
-
-Error Handling: If an error occurs, the function logs it and returns a 500 server error response.
-
-This setup provides a detailed loan dashboard for the user, showing statistics, types of loans they have, and recent activities related to their loans.
-
-
-
-
-
-
-
-
+Let me know if you want a diagram or a simplified version for documentation or team sharing!

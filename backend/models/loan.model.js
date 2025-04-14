@@ -49,11 +49,45 @@ const loanSchema = new mongoose.Schema({
   endDate: {
     type: Date
   },
-
+  documents: [
+    {
+      type: String, // Path to uploaded file
+    },
+  ],
+  bankName: {
+    type: String,
+    required: true,
+  },
+  accountName: {
+    type: String,
+    required: true,
+  },
+  accountNumber: {
+    type: String,
+    required: true,
+  },
+  BVN: {
+    type: String,
+    required: true,
+  },
+  phone: {
+    type: String,
+    required: true,
+  },
+  
+  email: {
+    type: String,
+    required: true,
+  },
+  
   createdAt: {
     type: Date,
     default: Date.now
+  },
+  defaultedAt: {
+    type: Date,
   }
+  
 });
 
 module.exports = mongoose.model('Loan', loanSchema);
