@@ -1,12 +1,16 @@
-Integrating the getTransactionById controller.
+Integrating the updateTransaction controller.
 
-Sure! Here's an 8-line explanation of the `getTransactionById` controller:
+Here’s a 12-line explanation of the `updateTransaction` controller:
 
-1. It defines an async route handler to fetch a specific transaction by its ID from the database.  
-2. `req.params.id` is used to extract the transaction ID from the request URL.  
-3. `Transaction.findById()` searches for the transaction in the database.  
-4. It uses `.populate()` to include user details (name, email) and loan info in the response.  
-5. If no transaction is found, a 404 error is thrown.  
-6. If found, it returns a success response with the transaction data.  
-7. The response includes a helpful message and the transaction details.  
-8. The route is meant for admin or the user who owns the transaction (based on access control).
+1. It’s an Express async controller that handles updating a transaction by ID.  
+2. It extracts the transaction ID from the route params and fields to update from the request body.  
+3. Only specific fields (`amount`, `type`, `status`, `method`) are allowed to be updated.  
+4. It validates that the fields provided are among the allowed ones.  
+5. If invalid fields are detected, it throws an error.  
+6. It fetches the transaction from the database using the ID.  
+7. If the transaction doesn't exist, it returns a 404 error.  
+8. It performs strict validation for each allowed field (e.g., `amount` must be a positive number).  
+9. It also checks that `type`, `status`, and `method` match expected enums.  
+10. Once validated, it updates only the allowed fields.  
+11. It saves the transaction to the database.  
+12. Finally, it returns a success message with the updated transaction.

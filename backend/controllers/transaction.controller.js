@@ -114,6 +114,60 @@ const getTransactionById = asyncHandler(async (req, res) => {
 // @access  Admin
 const updateTransaction = asyncHandler(async (req, res) => {
   // Implementation here
+  const { id } = req.params;
+
+  // Fields allowed to be updated
+  const allowedUpdates = ["amount", "type", "status", "method"];
+  const updates = Object.keys(req.body);
+
+  // Check for disallowed fields
+  const isValidOperation = updates.every((key) => allowedUpdates.includes(key));
+  if (!isValidOperation) {
+    res.status(400);
+    throw new Error("Invalid updates. Only amount, type, status, and method are allowed.");
+  }
+
+  // Find the transaction
+  const transaction = await Transaction.findById(id);
+  if (!transaction) {
+    res.status(404);
+    throw new Error("Transaction not found");
+  }
+
+  const { amount, type, status, method } = req.body;
+
+  // Validations
+  if (amount !== undefined && (!Number(amount) || amount <= 0)) {
+    res.status(400);
+    throw new Error("Amount must be a positive number");
+  }
+
+  if (type && !["payment", "disbursement", "refund"].includes(type)) {
+    res.status(400);
+    throw new Error("Invalid transaction type");
+  }
+
+  if (status && !["pending", "completed", "failed"].includes(status)) {
+    res.status(400);
+    throw new Error("Invalid status value");
+  }
+
+  if (method && !["bank", "card", "mobile_money", "cash"].includes(method)) {
+    res.status(400);
+    throw new Error("Invalid payment method");
+  }
+
+  // Apply updates
+  updates.forEach((field) => {
+    transaction[field] = req.body[field];
+  });
+
+  await transaction.save();
+
+  res.status(200).json({
+    message: "Transaction updated successfully",
+    transaction,
+  });
 });
 
 // @desc    Delete a transaction
