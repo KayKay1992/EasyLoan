@@ -1,27 +1,16 @@
-Adding applyForLoan controller.
+Adding Transaction routes registering the route in server.js and creating the Transaction conroller skeleton 
 
-adding bank details and contact details to loan model including defaultedAt 
+Transaction routes explained.
+Sure! Here's a **10-line explanation** of the code:
 
-then we added the route to loan route
+1. These routes manage loan-related financial transactions (like disbursements, payments).
+2. `POST /api/transactions` lets **admins** create a new transaction (e.g., when approving a loan).
+3. `GET /api/transactions` allows **admins** to view all transactions in the system.
+4. `GET /api/transactions/:id` lets **admins** fetch a specific transaction by its ID.
+5. `PUT /api/transactions/:id` is for **admins** to update a transaction's details (e.g., status).
+6. `DELETE /api/transactions/:id` enables **admins** to remove a transaction record.
+7. `GET /api/transactions/user/:userId` allows **admins** to view all transactions by a specific user.
+8. `GET /api/transactions/loan/:loanId` can be accessed by **both admins and users** (for their own loans) to view related transactions.
+9. Middleware like `protect` ensures only authenticated users access the routes, and `adminOnly` limits actions to admins.
+10. This setup maintains a secure and well-structured transaction system within a loan management app.
 
-. Explaing applyForLoan Controller
-
-Here’s a 15-line explanation of the updated `applyForLoan` controller:
-
-1. The controller handles a loan application from an authenticated user.  
-2. It extracts necessary fields from the request body, including loan and contact details.  
-3. It calculates a date 3 months in the past to check recent defaults.  
-4. It checks if the user has any defaulted loans within the last 3 months.  
-5. If a recent default is found, it blocks the loan application and returns a 403 error.  
-6. It calculates the **monthly interest rate** from the annual `interestRate`.  
-7. Using the **PMT formula**, it computes the monthly repayment amount.  
-8. The total amount repayable is calculated by multiplying monthly payment by duration.  
-9. A new loan document is created in the database using all the provided and calculated data.  
-10. Bank details (name, account number, etc.) are stored for future disbursement.  
-11. Contact information (phone, email, preferred method) is also saved.  
-12. If verification documents were uploaded, their paths are saved in the `documents` field.  
-13. After successful creation, a 201 response is sent back with a success message.  
-14. The full loan record is included in the response so the frontend can show it immediately.  
-15. This process ensures validation, risk control (via default check), and proper loan setup.  
-
-Let me know if you want a diagram or a simplified version for documentation or team sharing!
