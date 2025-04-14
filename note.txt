@@ -1,18 +1,9 @@
-Integrating the createTransaction controller.
+Integrating the getAllTransactions controller.
 
-Here’s an explanation of the `createTransaction` controller in 15 lines:
+Sure! Here's a 5-line explanation of the `getAllTransactions` controller:
 
-1. **Input Validation**: The controller first checks if all required fields (`user`, `loan`, `amount`, `type`, `method`) are present in the request body. If any are missing, it returns a 400 error.
-2. **Loan Existence Check**: It checks if the provided `loan` exists in the database. If not, it returns a 404 error.
-3. **Prevent Double Approval**: Before proceeding with the transaction, it checks if the loan is already approved or active. If true, it prevents further disbursement and returns an error.
-4. **Disbursement Check**: If the transaction type is `disbursement`, it verifies that the amount provided matches the loan amount. If it doesn’t match, it returns an error.
-5. **Loan Status Update**: If the transaction is a disbursement and the amount is correct, the loan status is updated to `active`.
-6. **Transaction Status Mapping**: A status map is used to set the transaction status based on its type (`disbursement`, `payment`, or `refund`).
-7. **Unique Reference ID**: A unique reference ID is generated for the transaction using the current timestamp.
-8. **Transaction Creation**: The new transaction is created in the database with the provided data and status.
-9. **Success Response**: Upon successful creation, the controller responds with a 201 status and includes the transaction data.
-10. **Error Handling**: If any validation or check fails, an error is thrown, and the response will include the error message. 
-
-This ensures proper validation, checks, and status management during transaction creation.
-
-errorhandler middleware was created and used globally to enable proper message handling
+1. This controller retrieves all transaction records from the database.  
+2. It uses Mongoose's `populate()` to include user name/email and loan details in the response.  
+3. Only admins should have access to this route for security reasons.  
+4. The result is returned as a JSON response with a success message.  
+5. It's wrapped in `asyncHandler` to handle async errors cleanly.

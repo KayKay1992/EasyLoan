@@ -73,14 +73,20 @@ const errorHandler = require("../middleware/errorHanlerMiddleware");
   errorHandler
   });
 
-  module.exports = { createTransaction };
-
 
 // @desc    Get all transactions
 // @route   GET /api/transactions
 // @access  Admin
 const getAllTransactions = asyncHandler(async (req, res) => {
   // Implementation here
+  const transactions = await Transaction.find()
+    .populate('user', 'name email')        // Optionally populate user details
+    .populate('loan', 'amount status');    // Optionally populate loan details
+
+  res.status(200).json({
+    message: 'All transactions retrieved successfully',
+    transactions,
+  });
 });
 
 // @desc    Get a single transaction
