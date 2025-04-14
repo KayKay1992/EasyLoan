@@ -1,17 +1,23 @@
-Integrating the deleteTransaction controller.
+Integrating the getTransactionByUser controller.
 
-! Here's a 7-line explanation of the deleteTransaction controller:
+Here's a 10-line explanation of the getTransactionByUser controller:
 
-The function deletes a transaction based on the ID provided in the request URL.
+The function retrieves all transactions made by a specific user based on their userId.
 
-It uses express-async-handler to handle asynchronous errors cleanly.
+It extracts the userId from the route parameters (req.params.userId).
 
-It fetches the transaction from the database using findById.
+It first validates that the userId is a valid MongoDB ObjectId using a regex.
 
-If the transaction doesn't exist, it sends a 404 error response.
+If the ID is invalid, it returns a 400 Bad Request with an error message.
 
-If found, it deletes the transaction from the database using deleteOne().
+It queries the database for all transactions linked to the given userId.
 
-A success response is returned with a confirmation message and the deleted ID.
+The query uses Transaction.find({ user: userId }).
 
-This route should be protected so only admins can perform this action.
+Optionally, it can populate the loan field to include full loan info instead of just the ID.
+
+If transactions are found, it returns them with a 200 OK response.
+
+The response includes the total count and an array of transaction data.
+
+This is useful for showing users or admins all the financial activity related to that user.

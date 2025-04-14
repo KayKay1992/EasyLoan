@@ -197,6 +197,18 @@ const deleteTransaction = asyncHandler(async (req, res) => {
 // @access  Admin
 const getTransactionsByUser = asyncHandler(async (req, res) => {
   // Implementation here
+  const { userId } = req.params;
+
+  // Find transactions linked to the user
+  const transactions = await Transaction.find({ user: userId }).populate('loan');
+
+  // If no transactions found, respond with empty array or message
+  if (!transactions || transactions.length === 0) {
+    res.status(404).json({ message: "No transactions found for this user" });
+    return;
+  }
+
+  res.status(200).json(transactions);
 });
 
 // @desc    Get transactions by loan
