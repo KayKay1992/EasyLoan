@@ -4,7 +4,7 @@ const loanSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    // required: true
   },
 
   amount: {
@@ -28,12 +28,12 @@ const loanSchema = new mongoose.Schema({
 
   monthlyPayment: {
     type: Number,
-    required: true
+    // required: true
   },
 
   totalRepayable: {
     type: Number,
-    required: true
+    // required: true
   },
 
   status: {
@@ -56,28 +56,28 @@ const loanSchema = new mongoose.Schema({
   ],
   bankName: {
     type: String,
-    required: true,
+    // required: true,
   },
   accountName: {
     type: String,
-    required: true,
+    // required: true,
   },
   accountNumber: {
     type: String,
-    required: true,
+    // required: true,
   },
   BVN: {
     type: String,
-    required: true,
+    // required: true,
   },
   phone: {
     type: String,
-    required: true,
+    // required: true,
   },
   
   email: {
     type: String,
-    required: true,
+    // required: true,
   },
   
   createdAt: {
@@ -86,6 +86,11 @@ const loanSchema = new mongoose.Schema({
   },
   defaultedAt: {
     type: Date,
+  },
+  repaymentBalance: {
+    type: Number,
+   
+    default: 0
   }
   
 });

@@ -40,46 +40,46 @@ const getLoanById = asyncHandler(async (req, res) => {
     res.status(200).json(loan);
 });
 
-// @desc    Create a new loan
-// @route   POST /api/loans
-// @access  Protected/Admin
+// @desc    Admin creates loan template (not assigned to user)
+// @route   POST /api/loan-templates
+// @access  Admin
 const createLoan = asyncHandler(async (req, res) => {
   const { amount, interestRate, termMonths, loanType } = req.body;
 
-  // Check if user is an admin
   if (!req.user || req.user.role !== "admin") {
-    res.status(403); // Forbidden
-    throw new Error("Not authorized to create a loan");
+    res.status(403);
+    throw new Error("Not authorized to create a loan template");
   }
 
-  // Validate required fields
   if (!amount || !interestRate || !termMonths || !loanType) {
     res.status(400);
-    throw new Error("Please provide all required loan fields");
+    throw new Error("All fields are required");
   }
 
-  const monthlyInterestRate = interestRate / 100 / 12;
+  const parsedAmount = parseFloat(amount);
+  const parsedInterestRate = parseFloat(interestRate);
+  const parsedTermMonths = parseInt(termMonths);
 
-  const monthlyPayment = (
-    (amount * monthlyInterestRate) /
-    (1 - Math.pow(1 + monthlyInterestRate, -termMonths))
-  ).toFixed(2);
-
-  const totalRepayable = (monthlyPayment * termMonths).toFixed(2);
+  if (isNaN(parsedAmount) || isNaN(parsedInterestRate) || isNaN(parsedTermMonths)) {
+    res.status(400);
+    throw new Error("Invalid numeric input");
+  }
 
   const loan = await Loan.create({
-    user: req.user._id, // Automatically assign to the logged-in admin
-    amount,
     loanType,
-    interestRate,
-    termMonths,
-    monthlyPayment,
-    totalRepayable,
-    status: "pending",
+    amount: parsedAmount,
+    interestRate: parsedInterestRate,
+    termMonths: parsedTermMonths,
+    createdBy: req.user._id,
   });
 
-  res.status(201).json(loan);
+  res.status(201).json({
+    message: "Loan created successfully",
+    loan,
+  });
 });
+
+
 
 // @desc    Update a loan
 // @route   PUT /api/loans/:id
@@ -418,6 +418,8 @@ const applyForLoan = asyncHandler(async (req, res) => {
     });
   }
 
+  const documentPath = req.file?.path; // for loan documents
+
    // Generate a unique Loan ID (example: LOAN-1687984353463)
   const loanId = `LOAN-${Date.now()}`
 
@@ -447,7 +449,7 @@ const applyForLoan = asyncHandler(async (req, res) => {
     BVN,
     phone,
     email, // assuming your schema supports this
-    documents: req.files ? req.files.map(file => file.path) : [], // Multer required
+    documents:  documentPath // Add path to uploaded file, // Multer required
   });
 
   res.status(201).json({

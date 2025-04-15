@@ -12,11 +12,12 @@ const {
   deleteRepayment,
 } = require('../controllers/repayment.controller');
 const { protect, adminOnly } = require('../middleware/authMiddleware');
+const { uploadRepayment } = require('../middleware/fileUploadMiddleware');
 
 // @route   POST /api/repayments
 // @desc    User creates a repayment (make payment)
 // @access  User
-router.post('/', protect, createRepayment);
+router.post('/', protect, uploadRepayment.single('evidence'), createRepayment);
 
 // @route   GET /api/repayments
 // @desc    Get all repayments

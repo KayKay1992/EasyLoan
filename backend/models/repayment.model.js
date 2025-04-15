@@ -44,6 +44,9 @@ const repaymentSchema = new mongoose.Schema({
     type: String,
     unique: true,
     required: true
+  },
+  evidence: {
+    type: String,
   }
 });
 

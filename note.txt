@@ -1,35 +1,15 @@
-Integrating repayment routes and repayment controller skeleton.
+Integrating create repayment controller
 
-✅ repayment.routes.js
-This file defines the routes (endpoints) for repayment-related operations. It's where we map HTTP methods (GET, POST, PUT, DELETE) to controller functions.
+Here's a 10-line explanation of the `createRepayment` controller:
 
-Each route includes:
+1. It starts by extracting repayment details (`loanId`, `amountPaid`, `paymentMethod`, `dueDate`) from the request body.
+2. It checks that all required fields are present; if not, it throws an error.
+3. The controller verifies that the specified loan exists.
+4. It ensures the logged-in user owns the loan to prevent unauthorized access.
+5. It only allows repayment if the loan status is `"active"`.
+6. It ensures the repayment amount doesn’t exceed the remaining loan balance.
+7. It determines whether the repayment is `"late"` or `"paid"` based on the due date.
+8. It creates a repayment record with a unique reference ID.
+9. It updates the loan’s repayment balance and status (to `"completed"` if fully paid).
+10. It returns a response with the repayment details, remaining balance, and updated loan status.
 
-The HTTP method (e.g. GET, POST)
-
-The endpoint path (e.g. /api/repayments/:id)
-
-The access level (e.g. User, Admin)
-
-A controller function that executes the logic for that route
-
-✅ repayment.controller.js
-This file defines the core logic for handling repayments using asyncHandler to manage async errors cleanly.
-
-It includes these controller functions:
-
-createRepayment: To log a repayment by a user.
-
-getAllRepayments: Admin can view all repayment records.
-
-getRepaymentById: Fetch details of a specific repayment.
-
-getRepaymentsByUser: Get repayments made by a particular user.
-
-getRepaymentsByLoan: View repayments tied to a specific loan.
-
-updateRepayment: Admin can update/verify a repayment.
-
-deleteRepayment: Admin can remove a repayment record.
-
-Each function currently sends a simple JSON message and status code — this is a skeleton setup, ready to be filled in with business logic.

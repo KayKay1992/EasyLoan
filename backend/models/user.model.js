@@ -22,6 +22,11 @@ const UserSchema = new mongoose.Schema({
         type:String,
         default: null
     },
+    repayableBalance: {
+        type: Number,
+        default: 0
+      },
+      
     role:{
         type: String,
         enum: ['admin', 'user'],
