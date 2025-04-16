@@ -26,9 +26,41 @@ const getSettings = asyncHandler(async (req, res) => {
 // @route   POST /api/settings
 // @access  Admin
 const createSettings = asyncHandler(async (req, res) => {
-  // Logic to create default or initial settings
-  res.status(201).json({ message: "Settings created successfully" });
-});
+    // Check if settings already exist
+    const existing = await Settings.findOne();
+    if (existing) {
+      res.status(400);
+      throw new Error("Settings already exist. You can update them instead.");
+    }
+  
+    // Create new settings with provided values or defaults
+    const {
+      interestRate = 5.0,
+      loanTermOptions = [6, 12, 24, 36],
+      maxLoanAmount = 10000000,
+      minLoanAmount = 10000,
+      currency = 'NGN',
+      gracePeriodDays = 7,
+      latePaymentPenalty = 2.5,
+    } = req.body;
+  
+    const settings = await Settings.create({
+      interestRate,
+      loanTermOptions,
+      maxLoanAmount,
+      minLoanAmount,
+      currency,
+      gracePeriodDays,
+      latePaymentPenalty,
+      updatedAt: new Date(),
+    });
+  
+    res.status(201).json({
+      message: "Settings created successfully",
+      settings,
+    });
+  });
+  
 
 // @desc    Update settings
 // @route   PUT /api/settings
