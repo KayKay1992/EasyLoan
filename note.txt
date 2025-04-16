@@ -1,15 +1,17 @@
-Integrating deleteNotification controller
+Integrating Settings
 
 
-Here’s a 10-line explanation of the `deleteNotification` controller:
+Here’s a 10-line explanation of the **Settings** module: model, routes, and controller skeleton:
 
-1. It handles the deletion of a specific notification using its ID from the request URL.  
-2. The notification ID is retrieved from `req.params.id`.  
-3. The logged-in user's ID is obtained from `req.user._id`.  
-4. It searches the database for the notification using `Notification.findById`.  
-5. If the notification doesn't exist, a 404 error is returned.  
-6. It checks if the user owns the notification or is an admin.  
-7. If the user is unauthorized, a 403 error is thrown.  
-8. If authorized, the notification is deleted using `deleteOne()`.  
-9. A 200 success response is sent back with a message and the deleted ID.  
-10. This ensures only rightful users or admins can delete notifications securely.
+1. The **Settings model** defines key configurations for the loan system, like interest rate, loan terms, max/min amounts, penalties, etc.
+2. It uses a Mongoose schema with sensible defaults (e.g., 5% interest, 7-day grace period).
+3. The model allows central configuration control for how loans behave in the app.
+4. The **routes file** includes endpoints to get, create, and update settings.
+5. `GET /api/settings` allows users/admins to retrieve the current system configuration.
+6. `POST /api/settings` is for initial setup (only used once or restricted to admin).
+7. `PUT /api/settings` allows updating values (like changing interest rate) by admin.
+8. The **controller skeleton** prepares the logic for each route but leaves implementations blank for now.
+9. It uses `asyncHandler` to handle async/await with error catching.
+10. Together, this module gives the app flexible and maintainable control over financial rules and configurations.
+
+Let me know if you want to auto-load settings during loan creation or display them in the dashboard.

@@ -9,6 +9,7 @@ const loanRoute = require('./routes/loan.route');
 const repaymentRoute = require('./routes/repayment.route');
 const transactionRoute = require('./routes/transaction.route');
 const notificationRoute = require('./routes/notification.route');
+const settingRoute = require('./routes/settings.route');
 const errorHandler = require('./middleware/errorHanlerMiddleware');
 
 const app = express();
@@ -37,6 +38,7 @@ app.use("/api/loan", loanRoute);
 app.use("/api/transaction", transactionRoute)
 app.use("/api/repayment", repaymentRoute);
 app.use("/api/notification", notificationRoute);
+app.use("/api/setting", settingRoute);
 
 // Global error handler (this should be added at the end, after all routes)
 app.use(errorHandler);
