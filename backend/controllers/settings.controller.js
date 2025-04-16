@@ -7,9 +7,20 @@ const Settings = require('../models/settings.model');
 // @route   GET /api/settings
 // @access  Public or Protected
 const getSettings = asyncHandler(async (req, res) => {
-  // Logic to fetch the current system settings
-  res.status(200).json({ message: "Fetched system settings" });
-});
+    // Fetch the latest settings document
+    const settings = await Settings.findOne().sort({ updatedAt: -1 });
+  
+    if (!settings) {
+      res.status(404);
+      throw new Error("Settings not found. Please initialize system settings.");
+    }
+  
+    res.status(200).json({
+      message: "Fetched system settings",
+      settings,
+    });
+  });
+  
 
 // @desc    Create initial settings (if none exists)
 // @route   POST /api/settings
