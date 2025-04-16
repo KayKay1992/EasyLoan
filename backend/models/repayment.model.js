@@ -36,7 +36,7 @@ const repaymentSchema = new mongoose.Schema({
 
   paymentMethod: {
     type: String,
-    enum: ['bank', 'card', 'mobile_money', 'cash'],
+    enum: ['bank', 'card', 'mobile_money', 'cash', 'bank transfer'],
     default: 'bank'
   },
 

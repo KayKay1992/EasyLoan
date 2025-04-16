@@ -32,7 +32,7 @@ const transactionSchema = new mongoose.Schema({
 
   method: {
     type: String,
-    enum: ['bank', 'card', 'mobile_money', 'cash'],
+    enum: ['bank', 'card', 'mobile_money', 'cash', 'bank transfer'],
     required: true
   },
 

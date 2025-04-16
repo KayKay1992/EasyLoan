@@ -349,7 +349,31 @@ const getRepaymentsByLoan = asyncHandler(async (req, res) => {
 // @access  Admin
 const updateRepayment = asyncHandler(async (req, res) => {
   // Logic to update repayment (e.g., verification)
-  res.status(200).json({ message: "Repayment updated successfully" });
+  const repaymentId = req.params.id;
+  const { status, amountPaid, paymentMethod, dueDate, evidence } = req.body;
+
+  // Find repayment by ID
+  const repayment = await Repayment.findById(repaymentId);
+  if (!repayment) {
+    res.status(404);
+    throw new Error("Repayment not found");
+  }
+
+  // Update fields if provided
+  if (status) repayment.status = status;
+  if (amountPaid) repayment.amountPaid = Number(amountPaid);
+  if (paymentMethod) repayment.paymentMethod = paymentMethod;
+  if (dueDate) repayment.dueDate = dueDate;
+  if (evidence) repayment.evidence = evidence;
+
+  // Save updated repayment
+  const updatedRepayment = await repayment.save();
+
+  res.status(200).json({
+    message: "Repayment updated successfully",
+    repayment: updatedRepayment,
+  });
+
 });
 
 // @desc    Delete repayment

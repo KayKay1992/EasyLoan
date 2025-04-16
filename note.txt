@@ -1,22 +1,30 @@
-Integrating getRepaymentByLoan controller
+Integrating updateRepayment controller
 
 ✅ 10-Line Explanation:
-This controller fetches all repayments tied to a specific loan ID.
+This controller allows admin to update a repayment record.
 
-It populates both the loan and the user who made each repayment.
+It fetches the repayment by its unique ID from the database.
 
-If no repayments exist, it throws a 404 error to notify that none were found.
+If the repayment doesn’t exist, it returns a 404 error.
 
-It calculates the total amount paid for that loan by summing all repayments.
+The admin can update the status, amount paid, due date, method, and evidence.
 
-The repayment balance is only shown if the loan is still active.
+Only the fields provided in the request will be updated.
 
-All monetary amounts are rounded to avoid decimals.
+The amountPaid is safely converted to a number.
 
-The data is structured into a clean response showing loan info and payments.
+The repayment object is saved back to the database after updates.
 
-Each repayment includes who made it, how much, when, and how.
+The updated record is returned in the response.
 
-This is useful for admins reviewing a specific loan’s payment history.
+This endpoint is useful for verifying or correcting repayment details.
 
-It can also be reused for user-facing views to see repayment progress per loan.
+It's designed to ensure admins can maintain accurate repayment records.
+
+
+
+
+
+
+
+
