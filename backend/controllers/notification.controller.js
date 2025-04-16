@@ -15,6 +15,19 @@ const getAllNotifications = asyncHandler(async (req, res) => {
 // @access  Private
 const getUnreadNotifications = asyncHandler(async (req, res) => {
   // Logic to fetch unread notifications
+  const userId = req.user._id;
+
+  // Fetch unread notifications for the logged-in user
+  const unreadNotifications = await Notification.find({
+    user: userId,
+    isRead: false,
+  }).sort({ createdAt: -1 });
+
+  res.status(200).json({
+    message: "Unread notifications fetched successfully",
+    total: unreadNotifications.length,
+    notifications: unreadNotifications,
+  });
 });
 
 // @desc    Get a single notification by ID

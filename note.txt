@@ -1,31 +1,25 @@
-Integrating getNotificationById controller
-
-Sure! Here's a 10-line explanation of the getNotificationById controller:
-
-The controller fetches a specific notification using its ID from the request parameters.
-
-It uses Notification.findById() to query the database for that notification.
-
-It calls .populate('user', 'name email') to include basic user info (name and email).
-
-It uses .populate('referenceId') to include the associated Loan or Repayment document.
-
-The dynamic reference is resolved via the refPath: 'referenceModel' in the schema.
-
-This ensures that the correct model (Loan or Repayment) is populated automatically.
-
-If no matching notification is found, it returns a 404 error.
-
-If found, it returns a success response along with the full notification object.
-
-The populated data helps admins or users understand the context of the notification.
-
-This controller is useful for viewing detailed info about a specific notification in the UI.
+Integrating getUnreadNotification controller
 
 
+10-Line Explanation:
+This controller fetches all unread notifications for the currently authenticated user.
 
+It retrieves the user's ID from the req.user object (assuming authentication middleware is in place).
 
+It queries the Notification collection where user matches and isRead is false.
 
+The results are sorted by createdAt in descending order (most recent first).
 
+It returns a JSON response with a success message and the notifications.
 
+The total key provides the count of unread notifications.
 
+This allows users to be alerted of new or unseen events (e.g., loan status, repayments).
+
+Useful for showing notification badges in the UI.
+
+Ensures users don’t miss important actions or alerts in the system.
+
+Helps drive engagement by showing up-to-date info about their loan activities.
+
+Let me know if you want to add pagination or mark notifications as read!
