@@ -151,6 +151,29 @@ const markAsRead = asyncHandler(async (req, res) => {
 // @access  Private
 const deleteNotification = asyncHandler(async (req, res) => {
   // Logic to delete a notification
+  const notificationId = req.params.id;
+  const userId = req.user._id;
+
+  // Find the notification
+  const notification = await Notification.findById(notificationId);
+  if (!notification) {
+    res.status(404);
+    throw new Error("Notification not found");
+  }
+
+  // Ensure user owns the notification or is an admin
+  if (notification.user.toString() !== userId.toString() && !req.user.isAdmin) {
+    res.status(403);
+    throw new Error("You are not authorized to delete this notification");
+  }
+
+  // Delete the notification
+  await notification.deleteOne();
+
+  res.status(200).json({
+    message: "Notification deleted successfully",
+    notificationId,
+  });
 });
 
 module.exports = {

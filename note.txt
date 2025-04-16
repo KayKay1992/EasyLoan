@@ -1,23 +1,15 @@
-Integrating markAsRead controller
+Integrating deleteNotification controller
 
 
-Explanation (10 lines):
-This function allows users to mark a notification as read.
+Here’s a 10-line explanation of the `deleteNotification` controller:
 
-It pulls the notification ID from the request parameters.
-
-It checks whether the notification exists in the database.
-
-It ensures the logged-in user owns the notification.
-
-If not found or unauthorized, appropriate errors are thrown.
-
-The isRead property is set to true.
-
-The updated notification is saved to the database.
-
-A success message and updated notification are returned.
-
-This improves UX by letting users track read/unread items.
-
-It reinforces user-specific access control for notifications.
+1. It handles the deletion of a specific notification using its ID from the request URL.  
+2. The notification ID is retrieved from `req.params.id`.  
+3. The logged-in user's ID is obtained from `req.user._id`.  
+4. It searches the database for the notification using `Notification.findById`.  
+5. If the notification doesn't exist, a 404 error is returned.  
+6. It checks if the user owns the notification or is an admin.  
+7. If the user is unauthorized, a 403 error is thrown.  
+8. If authorized, the notification is deleted using `deleteOne()`.  
+9. A 200 success response is sent back with a message and the deleted ID.  
+10. This ensures only rightful users or admins can delete notifications securely.
