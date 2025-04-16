@@ -174,7 +174,51 @@ const getAllRepayments = asyncHandler(async (req, res) => {
 // @access  Admin/User
 const getRepaymentById = asyncHandler(async (req, res) => {
   // Logic to fetch repayment by ID
-  res.status(200).json({ message: "Fetched repayment by ID" });
+  const repaymentId = req.params.id;
+
+  // Find repayment by ID and populate associated user and loan
+  const repayment = await Repayment.findById(repaymentId)
+    .populate('user', 'name email phone')
+    .populate('loan', 'amount loanType status repaymentBalance');
+
+  // If not found, return 404
+  if (!repayment) {
+    res.status(404);
+    throw new Error("Repayment not found");
+  }
+
+  // Build the response payload
+  const response = {
+    _id: repayment._id,
+    loan: {
+      _id: repayment.loan._id,
+      type: repayment.loan.loanType,
+      amount: repayment.loan.amount,
+      status: repayment.loan.status,
+    },
+    user: {
+      _id: repayment.user._id,
+      name: repayment.user.name,
+      email: repayment.user.email,
+      phone: repayment.user.phone,
+    },
+    amountPaid: Math.round(repayment.amountPaid),
+    repaymentBalance: repayment.loan.status === 'active' 
+      ? Math.round(repayment.loan.repaymentBalance) 
+      : 0,
+    paymentMethod: repayment.paymentMethod,
+    dueDate: repayment.dueDate,
+    paymentDate: repayment.paymentDate,
+    status: repayment.status,
+    referenceId: repayment.referenceId,
+    evidence: repayment.evidence,
+  };
+
+  // Send the response
+  res.status(200).json({
+    message: "Fetched repayment by ID",
+    repayment: response,
+  });
 });
 
 // @desc    Get repayments by User
