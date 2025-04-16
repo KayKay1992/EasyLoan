@@ -1,26 +1,26 @@
-Create Notification logic
+Integrating getNotificationById controller
 
-Your createNotification controller logic looks solid! Here's a quick 10-line explanation of what it's doing:
+Sure! Here's a 10-line explanation of the getNotificationById controller:
 
-It extracts type, title, message, and userId from the request body.
+The controller fetches a specific notification using its ID from the request parameters.
 
-It validates that all required fields are present.
+It uses Notification.findById() to query the database for that notification.
 
-It ensures the type is one of the allowed enum values: "system", "reminder", or "alert".
+It calls .populate('user', 'name email') to include basic user info (name and email).
 
-It checks if the user exists using the provided userId.
+It uses .populate('referenceId') to include the associated Loan or Repayment document.
 
-If the user doesn't exist, it throws a 404 error.
+The dynamic reference is resolved via the refPath: 'referenceModel' in the schema.
 
-If everything is valid, it creates a new notification in the database.
+This ensures that the correct model (Loan or Repayment) is populated automatically.
 
-It defaults the notification's read status to false and adds a createdAt timestamp.
+If no matching notification is found, it returns a 404 error.
 
-It responds with a 201 Created status.
+If found, it returns a success response along with the full notification object.
 
-The created notification object is returned in the response.
+The populated data helps admins or users understand the context of the notification.
 
-This route is secured for Admin use only (as noted in the comment).
+This controller is useful for viewing detailed info about a specific notification in the UI.
 
 
 

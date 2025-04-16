@@ -21,8 +21,23 @@ const getUnreadNotifications = asyncHandler(async (req, res) => {
 // @route   GET /api/notifications/:id
 // @access  Private
 const getNotificationById = asyncHandler(async (req, res) => {
-  // Logic to get a specific notification by ID
-});
+    const notificationId = req.params.id;
+
+  // Fetch the notification by ID
+  const notification = await Notification.findById(notificationId)
+    .populate('user', 'name email') // Populate user info
+    .populate('referenceId'); // Automatically resolves using refPath
+
+  if (!notification) {
+    res.status(404);
+    throw new Error("Notification not found");
+  }
+
+  res.status(200).json({
+    message: "Notification fetched successfully",
+    notification,
+  });
+  });
 
 // @desc    Create a notification
 // @route   POST /api/notifications
@@ -55,7 +70,7 @@ const createNotification = asyncHandler(async (req, res) => {
       res.status(404);
       throw new Error("User not found");
     }
-    
+
   
     // Create notification
     const notification = await Notification.create({
