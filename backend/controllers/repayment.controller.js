@@ -288,7 +288,60 @@ const getRepaymentsByUser = asyncHandler(async (req, res) => {
 // @access  Admin/User
 const getRepaymentsByLoan = asyncHandler(async (req, res) => {
   // Logic to get repayments for a loan
-  res.status(200).json({ message: "Fetched repayments for loan" });
+  const { loanId } = req.params;
+
+  // Fetch repayments linked to the specified loan
+  const repayments = await Repayment.find({ loan: loanId })
+    .populate('user', 'name email phone')
+    .populate('loan', 'amount loanType status repaymentBalance')
+    .sort({ paymentDate: -1 });
+
+  if (!repayments || repayments.length === 0) {
+    res.status(404);
+    throw new Error("No repayments found for this loan.");
+  }
+
+  // Calculate totalPaid for this loan
+  let totalPaid = 0;
+  repayments.forEach(rep => {
+    totalPaid += rep.amountPaid;
+  });
+
+  // Use the loan data from the first repayment
+  const loanInfo = repayments[0].loan;
+
+  const response = {
+    loan: {
+      _id: loanInfo._id,
+      type: loanInfo.loanType,
+      amount: loanInfo.amount,
+      status: loanInfo.status,
+      repaymentBalance: loanInfo.status === 'active' ? Math.round(loanInfo.repaymentBalance) : 0,
+    },
+    totalPaid: Math.round(totalPaid),
+    repayments: repayments.map(rep => ({
+      _id: rep._id,
+      user: {
+        _id: rep.user._id,
+        name: rep.user.name,
+        email: rep.user.email,
+        phone: rep.user.phone,
+      },
+      amountPaid: Math.round(rep.amountPaid),
+      paymentMethod: rep.paymentMethod,
+      dueDate: rep.dueDate,
+      paymentDate: rep.paymentDate,
+      status: rep.status,
+      referenceId: rep.referenceId,
+      evidence: rep.evidence,
+    })),
+  };
+
+  res.status(200).json({
+    message: "Fetched repayments for loan",
+    ...response,
+  });
+
 });
 
 // @desc    Update repayment

@@ -1,22 +1,22 @@
-Integrating getRepaymentByUser controller
+Integrating getRepaymentByLoan controller
 
 ✅ 10-Line Explanation:
-This controller fetches all repayment records tied to a specific user ID.
+This controller fetches all repayments tied to a specific loan ID.
 
-It populates the linked loan details like amount, type, status, and repayment balance.
+It populates both the loan and the user who made each repayment.
 
-If no repayments are found for that user, it returns a 404 error.
+If no repayments exist, it throws a 404 error to notify that none were found.
 
-It groups repayments by loan to calculate how much the user has paid per loan.
+It calculates the total amount paid for that loan by summing all repayments.
 
-The totalPaid and repaymentBalance values are calculated for each loan.
+The repayment balance is only shown if the loan is still active.
 
-All monetary values like amountPaid and balances are rounded to whole numbers.
+All monetary amounts are rounded to avoid decimals.
 
-The result is mapped into a user-friendly format with enhanced repayment details.
+The data is structured into a clean response showing loan info and payments.
 
-The loan and repayment status are included to help track repayment progress.
+Each repayment includes who made it, how much, when, and how.
 
-The logic supports both admins and users accessing their repayment history.
+This is useful for admins reviewing a specific loan’s payment history.
 
-The final JSON response is structured and easy to integrate into a frontend dashboard.
+It can also be reused for user-facing views to see repayment progress per loan.
