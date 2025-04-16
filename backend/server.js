@@ -8,6 +8,7 @@ const userRoute = require('./routes/user.route');
 const loanRoute = require('./routes/loan.route');
 const repaymentRoute = require('./routes/repayment.route');
 const transactionRoute = require('./routes/transaction.route');
+const notificationRoute = require('./routes/notification.route');
 const errorHandler = require('./middleware/errorHanlerMiddleware');
 
 const app = express();
@@ -15,7 +16,7 @@ const app = express();
 // Middleware to handle cors
 app.use(cors({
     origin: process.env.CLIENT_URL || '*',
-    methods: ['GET', 'POST','PUT','DELETE'],
+    methods: ['GET', 'POST','PUT','DELETE'], 
     allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
@@ -35,6 +36,7 @@ app.use("/api/users", userRoute);
 app.use("/api/loan", loanRoute);
 app.use("/api/transaction", transactionRoute)
 app.use("/api/repayment", repaymentRoute);
+app.use("/api/notification", notificationRoute);
 
 // Global error handler (this should be added at the end, after all routes)
 app.use(errorHandler);

@@ -1,25 +1,25 @@
-Integrating deleteeRepayment controller
+setting notification model, routes, and controller skeleton and using the route in server.js
 
 
-Here’s a clear 15-line explanation of your `deleteRepayment` controller logic:
+Model: The Notification model stores messages for users with fields like type, title, message, user, read, and createdAt.
 
-1. **Extracts `repaymentId`** from the route parameter.
-2. **Finds the repayment** in the database using the ID.
-3. If repayment doesn’t exist, it throws a **404 "not found" error**.
-4. Checks if the repayment has already been soft deleted (`isDeleted`).
-5. If already deleted, it throws a **400 error** indicating it's already removed.
-6. **Fetches the associated loan** using the `loan` ID from the repayment.
-7. If the loan doesn’t exist, it throws a **404 error**.
-8. **Restores the repayment amount** back to the loan’s `repaymentBalance`.
-9. Uses `Math.round()` to ensure the repayment balance stays a **whole number**.
-10. If the loan was previously marked as `'completed'`, it changes the status back to `'active'`.
-11. If the repayment status is `'paid'`, it updates it to `'rejected'`.
-12. **Saves the updated loan** with the adjusted balance and status.
-13. Sets `isDeleted` to `true` to **soft delete** the repayment.
-14. Saves the updated repayment with its new status.
-15. Sends a success response, showing the amount rolled back and the new loan balance.
+Type Enum: The type can be "system", indicating automated notifications triggered by system events like loan approval or repayment.
 
-Let me know if you want the logic to also log this action for auditing or include a restore feature!
+Routes: Routes include endpoints for creating, fetching, updating, and deleting notifications (e.g., GET /api/notifications, POST, PUT, DELETE).
+
+Controller Skeleton: The controller contains handlers like getAllNotifications, markAsRead, and createNotification, using asyncHandler for error handling.
+
+User Notifications: Logged-in users can fetch all or only unread notifications to stay updated on their loan activities.
+
+Admin Notifications: Admins can generate new notifications (like loan offers) using the POST route.
+
+Mark as Read: Notifications can be marked as read to improve UX and track engagement.
+
+Deletion: Users can delete old or irrelevant notifications via the DELETE endpoint.
+
+Population: When retrieving notifications, user data can be populated for clarity if needed (admin views).
+
+Use Case: This system helps notify users about events like loan approval, successful repayment, or missed due dates.
 
 
 
