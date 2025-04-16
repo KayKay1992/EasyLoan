@@ -108,9 +108,66 @@ res.status(201).json({
 // @route   GET /api/repayments
 // @access  Admin
 const getAllRepayments = asyncHandler(async (req, res) => {
-  // Logic to retrieve all repayments
-  res.status(200).json({ message: "Fetched all repayments" });
+  // Fetch all repayment records and populate user and loan details
+  const repayments = await Repayment.find()
+    .populate('user', 'name email phone')
+    .populate('loan', 'amount loanType status repaymentBalance user')
+    .sort({ paymentDate: -1 }); // Sort repayments by most recent first
+
+  // Group repayments by loan ID to track total paid and repayment balance
+  const grouped = {};
+
+  repayments.forEach(r => {
+    const loanId = r.loan._id.toString();
+    if (!grouped[loanId]) {
+      grouped[loanId] = {
+        totalPaid: 0, // Initialize total paid for this loan
+        repaymentBalance: r.loan.repaymentBalance, // Store repayment balance
+        loanStatus: r.loan.status, // Track loan status
+      };
+    }
+    grouped[loanId].totalPaid += r.amountPaid; // Accumulate amount paid per loan
+  });
+
+  // Create enhanced repayment records with summarized and formatted data
+  const enhancedRepayments = repayments.map(rep => {
+    const group = grouped[rep.loan._id.toString()];
+    return {
+      _id: rep._id,
+      loan: {
+        _id: rep.loan._id,
+        type: rep.loan.loanType,
+        amount: rep.loan.amount,
+        status: rep.loan.status,
+      },
+      user: {
+        _id: rep.user._id,
+        name: rep.user.name,
+        email: rep.user.email,
+        phone: rep.user.phone,
+      },
+      lastPayment: Math.round(rep.amountPaid), // Round off current repayment amount
+      totalPaidSoFar: Math.round(group.totalPaid), // Round total paid so far for loan
+      repaymentBalance: rep.loan.status === 'active' 
+        ? Math.round(group.repaymentBalance) 
+        : 0, // Only return balance if loan is active
+      paymentMethod: rep.paymentMethod,
+      dueDate: rep.dueDate,
+      paymentDate: rep.paymentDate,
+      status: rep.status,
+      referenceId: rep.referenceId,
+      evidence: rep.evidence,
+    };
+  });
+
+  // Send formatted response with all repayment data
+  res.status(200).json({
+    message: "Fetched all repayments",
+    total: enhancedRepayments.length,
+    repayments: enhancedRepayments,
+  });
 });
+
 
 // @desc    Get repayment by ID
 // @route   GET /api/repayments/:id

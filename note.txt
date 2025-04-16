@@ -1,15 +1,31 @@
-Integrating create repayment controller
+Integrating getAllRepayment controller
 
-Here's a 10-line explanation of the `createRepayment` controller:
+✅ What this does:
+Retrieves all repayments from the database.
 
-1. It starts by extracting repayment details (`loanId`, `amountPaid`, `paymentMethod`, `dueDate`) from the request body.
-2. It checks that all required fields are present; if not, it throws an error.
-3. The controller verifies that the specified loan exists.
-4. It ensures the logged-in user owns the loan to prevent unauthorized access.
-5. It only allows repayment if the loan status is `"active"`.
-6. It ensures the repayment amount doesn’t exceed the remaining loan balance.
-7. It determines whether the repayment is `"late"` or `"paid"` based on the due date.
-8. It creates a repayment record with a unique reference ID.
-9. It updates the loan’s repayment balance and status (to `"completed"` if fully paid).
-10. It returns a response with the repayment details, remaining balance, and updated loan status.
+Uses .populate() to include useful info from related User and Loan models.
 
+Sorts repayments by most recent paymentDate.
+
+Let me know if you want to add filters like by date, user, or loan type.
+
+📘 10-Line Explanation of the Code
+This controller fetches all repayment records from the database.
+
+It populates related user and loan fields to include user info and loan details.
+
+The repayments are sorted by paymentDate in descending order (latest first).
+
+It groups repayments by loan ID to calculate the total amount paid for each loan.
+
+For each repayment, it builds a new response object (enhancedRepayments).
+
+It includes key info like last payment, total paid so far, and current balance.
+
+If the loan is active, it shows the repayment balance; otherwise, it returns 0.
+
+The balance and payment figures are rounded using Math.round() to avoid decimals.
+
+The result includes enriched loan and user details for admin visibility.
+
+Finally, it sends a success response with the total number and full repayment data.
