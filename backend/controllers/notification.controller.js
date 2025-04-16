@@ -1,5 +1,7 @@
 // controllers/notificationController.js
 const asyncHandler = require("express-async-handler");
+const User = require("../models/user.model");
+const Notification = require("../models/notification.model");
 
 // @desc    Get all notifications for a user
 // @route   GET /api/notifications
@@ -26,8 +28,53 @@ const getNotificationById = asyncHandler(async (req, res) => {
 // @route   POST /api/notifications
 // @access  Admin
 const createNotification = asyncHandler(async (req, res) => {
-  // Logic to create a new notification
-});
+    const { type, message, userId, referenceId, referenceModel } = req.body;
+  
+    // Validate required fields
+    if (!type || !message || !userId) {
+      res.status(400);
+      throw new Error("Fields type, message, and userId are required");
+    }
+  
+    // Allowed types from schema
+    const allowedTypes = ['loan', 'repayment', 'warning', 'offer', 'system'];
+    if (!allowedTypes.includes(type)) {
+      res.status(400);
+      throw new Error(`Invalid type. Allowed: ${allowedTypes.join(', ')}`);
+    }
+  
+    // Validate referenceModel if referenceId is provided
+    if (referenceId && !['Loan', 'Repayment'].includes(referenceModel)) {
+      res.status(400);
+      throw new Error("referenceModel must be 'Loan' or 'Repayment' if referenceId is provided");
+    }
+  
+    // Ensure user exists
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(404);
+      throw new Error("User not found");
+    }
+    
+  
+    // Create notification
+    const notification = await Notification.create({
+      user: userId,
+      type,
+      message,
+      referenceId: referenceId || null,
+      referenceModel: referenceId ? referenceModel : undefined,
+      isRead: false,
+      createdAt: new Date(),
+    });
+  
+    res.status(201).json({
+      message: "Notification created successfully",
+      notification,
+    });
+  });
+  
+  
 
 // @desc    Mark a notification as read
 // @route   PUT /api/notifications/read/:id
