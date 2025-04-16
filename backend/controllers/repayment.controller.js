@@ -226,7 +226,61 @@ const getRepaymentById = asyncHandler(async (req, res) => {
 // @access  Admin/User
 const getRepaymentsByUser = asyncHandler(async (req, res) => {
   // Logic to get repayments by user ID
-  res.status(200).json({ message: "Fetched repayments for user" });
+  const { userId } = req.params;
+
+  // Fetch repayments made by the specified user
+  const repayments = await Repayment.find({ user: userId })
+    .populate('loan', 'amount loanType status repaymentBalance')
+    .sort({ paymentDate: -1 });
+
+  if (!repayments || repayments.length === 0) {
+    res.status(404);
+    throw new Error("No repayments found for this user.");
+  }
+
+  // Group repayments by loan to calculate totalPaid per loan
+  const grouped = {};
+
+  repayments.forEach(r => {
+    const loanId = r.loan._id.toString();
+    if (!grouped[loanId]) {
+      grouped[loanId] = {
+        totalPaid: 0,
+        repaymentBalance: r.loan.repaymentBalance,
+        loanStatus: r.loan.status,
+      };
+    }
+    grouped[loanId].totalPaid += r.amountPaid;
+  });
+
+  // Map the response with enhanced details
+  const enhanced = repayments.map(rep => {
+    const group = grouped[rep.loan._id.toString()];
+    return {
+      _id: rep._id,
+      loan: {
+        _id: rep.loan._id,
+        type: rep.loan.loanType,
+        amount: rep.loan.amount,
+        status: rep.loan.status,
+      },
+      lastPayment: Math.round(rep.amountPaid),
+      totalPaidSoFar: Math.round(group.totalPaid),
+      repaymentBalance: rep.loan.status === 'active' ? Math.round(group.repaymentBalance) : 0,
+      paymentMethod: rep.paymentMethod,
+      dueDate: rep.dueDate,
+      paymentDate: rep.paymentDate,
+      status: rep.status,
+      referenceId: rep.referenceId,
+      evidence: rep.evidence,
+    };
+  });
+
+  res.status(200).json({
+    message: "Fetched repayments for user",
+    total: enhanced.length,
+    repayments: enhanced,
+  });
 });
 
 // @desc    Get repayments by Loan

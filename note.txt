@@ -1,33 +1,22 @@
-Integrating getRepaymentById controller
+Integrating getRepaymentByUser controller
 
-✅ What it does:
-Finds a repayment by its ID from the database.
+✅ 10-Line Explanation:
+This controller fetches all repayment records tied to a specific user ID.
 
-Populates user and loan information for enriched context.
+It populates the linked loan details like amount, type, status, and repayment balance.
 
-Rounds amountPaid and repaymentBalance to whole numbers.
+If no repayments are found for that user, it returns a 404 error.
 
-Returns clean, formatted repayment info if found.
+It groups repayments by loan to calculate how much the user has paid per loan.
 
-Handles error if the repayment ID is invalid or not found.
+The totalPaid and repaymentBalance values are calculated for each loan.
 
-explain in 10 lines
-It fetches a specific repayment record based on the ID from the URL (req.params.id).
+All monetary values like amountPaid and balances are rounded to whole numbers.
 
-Uses populate() to include relevant user and loan details in the response.
+The result is mapped into a user-friendly format with enhanced repayment details.
 
-If the repayment is not found, it returns a 404 error with a custom message.
+The loan and repayment status are included to help track repayment progress.
 
-Builds a structured response object with all important repayment data.
+The logic supports both admins and users accessing their repayment history.
 
-Includes user name, email, and phone, along with loan type, amount, and status.
-
-Rounds amountPaid to avoid decimals in the response.
-
-Only includes repaymentBalance if the loan is still active, and rounds it too.
-
-Returns additional fields like payment method, due date, payment date, and status.
-
-Helps both admins and users view individual repayment records in a clean format.
-
-Ensures clarity, error handling, and consistent numeric formatting in the output.
+The final JSON response is structured and easy to integrate into a frontend dashboard.
