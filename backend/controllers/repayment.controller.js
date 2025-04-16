@@ -177,7 +177,7 @@ const getRepaymentById = asyncHandler(async (req, res) => {
   const repaymentId = req.params.id;
 
   // Find repayment by ID and populate associated user and loan
-  const repayment = await Repayment.findById(repaymentId)
+  const repayment = await Repayment.findById(repaymentId, { isDeleted: false })
     .populate('user', 'name email phone')
     .populate('loan', 'amount loanType status repaymentBalance');
 
@@ -229,7 +229,7 @@ const getRepaymentsByUser = asyncHandler(async (req, res) => {
   const { userId } = req.params;
 
   // Fetch repayments made by the specified user
-  const repayments = await Repayment.find({ user: userId })
+  const repayments = await Repayment.find({ user: userId, isDeleted: false  })
     .populate('loan', 'amount loanType status repaymentBalance')
     .sort({ paymentDate: -1 });
 
@@ -291,7 +291,7 @@ const getRepaymentsByLoan = asyncHandler(async (req, res) => {
   const { loanId } = req.params;
 
   // Fetch repayments linked to the specified loan
-  const repayments = await Repayment.find({ loan: loanId })
+  const repayments = await Repayment.find({ loan: loanId, isDeleted: false })
     .populate('user', 'name email phone')
     .populate('loan', 'amount loanType status repaymentBalance')
     .sort({ paymentDate: -1 });
@@ -353,7 +353,7 @@ const updateRepayment = asyncHandler(async (req, res) => {
   const { status, amountPaid, paymentMethod, dueDate, evidence } = req.body;
 
   // Find repayment by ID
-  const repayment = await Repayment.findById(repaymentId);
+  const repayment = await Repayment.findById(repaymentId, { isDeleted: false });
   if (!repayment) {
     res.status(404);
     throw new Error("Repayment not found");
@@ -381,7 +381,54 @@ const updateRepayment = asyncHandler(async (req, res) => {
 // @access  Admin
 const deleteRepayment = asyncHandler(async (req, res) => {
   // Logic to delete repayment record
-  res.status(200).json({ message: "Repayment deleted successfully" });
+  const repaymentId = req.params.id;
+
+  // Find the repayment record
+  const repayment = await Repayment.findById(repaymentId);
+  if (!repayment) {
+    res.status(404);
+    throw new Error("Repayment not found");
+  }
+
+  // Check if already deleted
+  if (repayment.isDeleted) {
+    res.status(400);
+    throw new Error("Repayment has already been deleted");
+  }
+
+  // Fetch the associated loan
+  const loan = await Loan.findById(repayment.loan).select('+repaymentBalance');
+  if (!loan) {
+    res.status(404);
+    throw new Error("Associated loan not found");
+  }
+
+  // Rollback repayment balance on the loan
+  loan.repaymentBalance = Math.round(loan.repaymentBalance + repayment.amountPaid);
+
+  // If loan was marked as completed before, revert it to active
+  if (loan.status === 'completed') {
+    loan.status = 'active';
+  }
+
+  //if payment was marked as paid before, revert it to rejected
+  if(repayment.status === 'paid'){
+     repayment.status = 'rejected'
+  }
+
+  // Save the loan updates
+  await loan.save();
+
+  // Soft delete the repayment
+  repayment.isDeleted = true;
+  repayment.status = 'rejected';
+  await repayment.save();
+
+  res.status(200).json({
+    message: "Repayment deleted successfully and loan balance adjusted",
+    rolledBackAmount: repayment.amountPaid,
+    updatedLoanBalance: loan.repaymentBalance,
+  });
 });
 
 module.exports = {

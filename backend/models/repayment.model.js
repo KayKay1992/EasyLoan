@@ -30,7 +30,7 @@ const repaymentSchema = new mongoose.Schema({
 
   status: {
     type: String,
-    enum: ['paid', 'late', 'upcoming'],
+    enum: ['paid', 'late', 'upcoming', 'rejected'],
     default: 'paid'
   },
 
@@ -38,6 +38,10 @@ const repaymentSchema = new mongoose.Schema({
     type: String,
     enum: ['bank', 'card', 'mobile_money', 'cash', 'bank transfer'],
     default: 'bank'
+  },
+  isDeleted: {
+    type: Boolean,
+    default: false
   },
 
   referenceId: {

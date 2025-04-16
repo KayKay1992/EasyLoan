@@ -1,25 +1,26 @@
-Integrating updateRepayment controller
+Integrating deleteeRepayment controller
 
-✅ 10-Line Explanation:
-This controller allows admin to update a repayment record.
 
-It fetches the repayment by its unique ID from the database.
+Here’s a clear 15-line explanation of your `deleteRepayment` controller logic:
 
-If the repayment doesn’t exist, it returns a 404 error.
+1. **Extracts `repaymentId`** from the route parameter.
+2. **Finds the repayment** in the database using the ID.
+3. If repayment doesn’t exist, it throws a **404 "not found" error**.
+4. Checks if the repayment has already been soft deleted (`isDeleted`).
+5. If already deleted, it throws a **400 error** indicating it's already removed.
+6. **Fetches the associated loan** using the `loan` ID from the repayment.
+7. If the loan doesn’t exist, it throws a **404 error**.
+8. **Restores the repayment amount** back to the loan’s `repaymentBalance`.
+9. Uses `Math.round()` to ensure the repayment balance stays a **whole number**.
+10. If the loan was previously marked as `'completed'`, it changes the status back to `'active'`.
+11. If the repayment status is `'paid'`, it updates it to `'rejected'`.
+12. **Saves the updated loan** with the adjusted balance and status.
+13. Sets `isDeleted` to `true` to **soft delete** the repayment.
+14. Saves the updated repayment with its new status.
+15. Sends a success response, showing the amount rolled back and the new loan balance.
 
-The admin can update the status, amount paid, due date, method, and evidence.
+Let me know if you want the logic to also log this action for auditing or include a restore feature!
 
-Only the fields provided in the request will be updated.
-
-The amountPaid is safely converted to a number.
-
-The repayment object is saved back to the database after updates.
-
-The updated record is returned in the response.
-
-This endpoint is useful for verifying or correcting repayment details.
-
-It's designed to ensure admins can maintain accurate repayment records.
 
 
 
