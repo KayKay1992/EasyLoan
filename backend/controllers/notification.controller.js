@@ -120,6 +120,30 @@ const createNotification = asyncHandler(async (req, res) => {
 // @access  Private
 const markAsRead = asyncHandler(async (req, res) => {
   // Logic to mark a notification as read
+  const notificationId = req.params.id;
+  const userId = req.user._id;
+
+  // Find the notification by ID
+  const notification = await Notification.findById(notificationId);
+  if (!notification) {
+    res.status(404);
+    throw new Error("Notification not found");
+  }
+
+  // Ensure the notification belongs to the logged-in user
+  if (notification.user.toString() !== userId.toString()) {
+    res.status(403);
+    throw new Error("You are not authorized to update this notification");
+  }
+
+  // Mark the notification as read
+  notification.isRead = true;
+  await notification.save();
+
+  res.status(200).json({
+    message: "Notification marked as read",
+    notification,
+  });
 });
 
 // @desc    Delete a notification

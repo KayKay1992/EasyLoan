@@ -1,24 +1,23 @@
-Integrating getAllNotification controller
+Integrating markAsRead controller
 
 
-Quick Explanation (10 Lines):
-This controller gets all notifications for the authenticated user.
+Explanation (10 lines):
+This function allows users to mark a notification as read.
 
-It retrieves the user ID from req.user._id, assuming auth middleware is set.
+It pulls the notification ID from the request parameters.
 
-It queries the Notification model to find all records for that user.
+It checks whether the notification exists in the database.
 
-It sorts the results by createdAt so the most recent appears first.
+It ensures the logged-in user owns the notification.
 
-It doesn't filter by isRead, so both read and unread are returned.
+If not found or unauthorized, appropriate errors are thrown.
 
-The response includes a message, the total count, and the notifications themselves.
+The isRead property is set to true.
 
-This is useful for a full notifications page or history section in the app.
+The updated notification is saved to the database.
 
-Can be combined with filters like type or date later if needed.
+A success message and updated notification are returned.
 
-Helps users stay updated on all loan and repayment activities.
+This improves UX by letting users track read/unread items.
 
-Easy to extend with pagination or searching by message/type.
-
+It reinforces user-specific access control for notifications.
