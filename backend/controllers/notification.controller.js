@@ -8,6 +8,17 @@ const Notification = require("../models/notification.model");
 // @access  Private
 const getAllNotifications = asyncHandler(async (req, res) => {
   // Logic to fetch all notifications for the logged-in user
+  const userId = req.user._id;
+
+  // Fetch all notifications for the logged-in user
+  const notifications = await Notification.find({ user: userId })
+    .sort({ createdAt: -1 });
+
+  res.status(200).json({
+    message: "All notifications fetched successfully",
+    total: notifications.length,
+    notifications,
+  });
 });
 
 // @desc    Get unread notifications

@@ -1,25 +1,24 @@
-Integrating getUnreadNotification controller
+Integrating getAllNotification controller
 
 
-10-Line Explanation:
-This controller fetches all unread notifications for the currently authenticated user.
+Quick Explanation (10 Lines):
+This controller gets all notifications for the authenticated user.
 
-It retrieves the user's ID from the req.user object (assuming authentication middleware is in place).
+It retrieves the user ID from req.user._id, assuming auth middleware is set.
 
-It queries the Notification collection where user matches and isRead is false.
+It queries the Notification model to find all records for that user.
 
-The results are sorted by createdAt in descending order (most recent first).
+It sorts the results by createdAt so the most recent appears first.
 
-It returns a JSON response with a success message and the notifications.
+It doesn't filter by isRead, so both read and unread are returned.
 
-The total key provides the count of unread notifications.
+The response includes a message, the total count, and the notifications themselves.
 
-This allows users to be alerted of new or unseen events (e.g., loan status, repayments).
+This is useful for a full notifications page or history section in the app.
 
-Useful for showing notification badges in the UI.
+Can be combined with filters like type or date later if needed.
 
-Ensures users don’t miss important actions or alerts in the system.
+Helps users stay updated on all loan and repayment activities.
 
-Helps drive engagement by showing up-to-date info about their loan activities.
+Easy to extend with pagination or searching by message/type.
 
-Let me know if you want to add pagination or mark notifications as read!
