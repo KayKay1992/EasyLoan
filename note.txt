@@ -1,25 +1,24 @@
-Integrating createSettings controller
+Integrating updateSettings controller
 
 
-ChatGPT said:
-Here's a 10-line explanation of the createSettings controller:
+Explanation:
+Fetch existing settings: The code first looks for an existing settings document in the database.
 
-The controller handles the creation of initial system settings for the loan platform.
+If settings are found: It updates the settings with any new values passed in the request body. If a value is not provided, it keeps the existing value.
 
-It is protected and intended for admin use only, ensuring only authorized users configure global settings.
+Update timestamp: The updatedAt field is updated to the current date to track when the settings were last modified.
 
-It first checks the database to see if a settings document already exists.
+Save and respond: After updating, the changes are saved to the database, and a success message with the updated settings is sent back to the client.
 
-If settings already exist, it returns a 400 Bad Request to prevent duplication.
+This allows admins to adjust system-wide loan terms, interest rates, and penalties dynamically.
 
-If no settings are found, it reads values like interestRate, loanTermOptions, etc., from the request body.
 
-It then creates a new Settings document in the database using these values.
+2/2
 
-Default values (like interest rate 5%) from the schema apply if not all fields are provided.
 
-After saving, it returns a 201 Created status with a success message and the created settings.
 
-This logic ensures only one system-wide configuration exists at any time.
 
-It's foundational for consistent interest calculation, penalties, and loan term validation in the app..
+
+
+
+

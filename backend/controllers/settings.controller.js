@@ -67,7 +67,35 @@ const createSettings = asyncHandler(async (req, res) => {
 // @access  Admin
 const updateSettings = asyncHandler(async (req, res) => {
   // Logic to update existing settings
-  res.status(200).json({ message: "Settings updated successfully" });
+  const { interestRate, loanTermOptions, maxLoanAmount, minLoanAmount, currency, gracePeriodDays, latePaymentPenalty } = req.body;
+
+  // Fetch the current settings
+  const settings = await Settings.findOne();
+  
+  if (!settings) {
+    res.status(404);
+    throw new Error("Settings not found");
+  }
+
+  // Update settings fields if provided in the request body
+  if (interestRate !== undefined) settings.interestRate = interestRate;
+  if (loanTermOptions !== undefined) settings.loanTermOptions = loanTermOptions;
+  if (maxLoanAmount !== undefined) settings.maxLoanAmount = maxLoanAmount;
+  if (minLoanAmount !== undefined) settings.minLoanAmount = minLoanAmount;
+  if (currency !== undefined) settings.currency = currency;
+  if (gracePeriodDays !== undefined) settings.gracePeriodDays = gracePeriodDays;
+  if (latePaymentPenalty !== undefined) settings.latePaymentPenalty = latePaymentPenalty;
+
+  // Update the timestamp to reflect when the settings were last modified
+  settings.updatedAt = Date.now();
+
+  // Save the updated settings
+  await settings.save();
+
+  res.status(200).json({
+    message: "Settings updated successfully",
+    updatedSettings: settings
+  });
 });
 
 module.exports = {
