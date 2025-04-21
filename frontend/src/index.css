@@ -15,3 +15,10 @@ body{
     overflow-x: hidden;
 }
 }
+.input-box{
+    @apply w-full flex justify-between gap-3 text-sm text-black bg-slate-100/50 rounded px-4 py-3  mb-4 mt-3 border border-slate-200 outline-none
+}
+
+.btn-primary{
+    @apply w-full text-sm font-bold text-black bg-yellow-500 shadow-lg shadow-amber-200/10 p-[10px] rounded-md my-1 hover:bg-black hover:text-yellow-400 cursor-pointer
+}
