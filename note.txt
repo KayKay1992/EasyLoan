@@ -1,25 +1,16 @@
+Integrating apiPath.js
 
-Sign Up file and logic
+This `API_PATHS` object in `apiPaths.js` centralizes all the API endpoint paths used across your frontend app. Here's a 10-line breakdown:
 
-ProfileImageSelector component 
+1. `BASE_URL` defines the root of your API server (`http://localhost:3000`).
+2. `API_PATHS` organizes all endpoint paths grouped by feature (e.g., `AUTH`, `USERS`, `LOANS`).
+3. Each group contains routes as constants (like `REGISTER`, `LOGIN`) or functions (for dynamic routes).
+4. `AUTH` handles user authentication: register, login, get/update profile.
+5. `USERS` is for user management: get all users, get/delete user by ID (admin only).
+6. `LOANS` includes endpoints for loan operations like create, update, delete, and apply.
+7. `TRANSACTION` covers creating, updating, retrieving, and deleting financial transactions.
+8. `REPAYMENT` deals with repayment records—CRUD operations and fetching by user or loan.
+9. `NOTIFICATION` supports creating, fetching, marking, and deleting user notifications.
+10. This setup improves maintainability by avoiding hard-coded URLs scattered across the app.
 
-1. **Component Purpose**: This React component (`ProfilePhotoSelector`) lets users upload, preview, and remove a profile photo.  
-2. **Hooks Used**: `useRef` for file input access and `useState` to track the image file and preview URL.  
-3. **File Handling**: When a file is selected (`handleImageChange`), it updates the image state and generates a preview URL.  
-4. **Remove Function**: `handleRemoveImage` clears the selected image and preview.  
-5. **UI Logic**: Shows a default user icon when no image is selected, or the preview if an image exists.  
-6. **Interactive Elements**: Clicking the upload button (LuUpload) triggers the file input; the trash icon (LuTrash) removes the image.  
-7. **Styling**: Uses Tailwind CSS for responsive styling, rounded avatars, and positioned action buttons.
-
-
-signup file
-
-State Management: Tracks form data (fullName, email, password, profilePic, adminInviteToken) and errors using useState.
-
-Validation: Checks for empty fields, invalid email format (via validateEmail—assumed to be defined elsewhere), and sets errors if requirements fail.
-
-Form Submission: On submit (handleSingUp), it prevents default behavior, validates inputs, clears errors if valid, and prepares for an API call (commented out).
-
-UI Components: Renders a form with inputs (using reusable Input and ProfilePhotoSelector components) and displays validation errors.
-
-Auth Flow: Redirects users to login via a Link and wraps the form in an AuthLayout for consistent styling.
+Let me know if you want to auto-prefix these with `BASE_URL` in actual requests.
