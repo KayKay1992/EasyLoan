@@ -1,32 +1,25 @@
 
-Building the Login Form UI
+Sign Up file and logic
+
+ProfileImageSelector component 
+
+1. **Component Purpose**: This React component (`ProfilePhotoSelector`) lets users upload, preview, and remove a profile photo.  
+2. **Hooks Used**: `useRef` for file input access and `useState` to track the image file and preview URL.  
+3. **File Handling**: When a file is selected (`handleImageChange`), it updates the image state and generates a preview URL.  
+4. **Remove Function**: `handleRemoveImage` clears the selected image and preview.  
+5. **UI Logic**: Shows a default user icon when no image is selected, or the preview if an image exists.  
+6. **Interactive Elements**: Clicking the upload button (LuUpload) triggers the file input; the trash icon (LuTrash) removes the image.  
+7. **Styling**: Uses Tailwind CSS for responsive styling, rounded avatars, and positioned action buttons.
 
 
-Explain login.jsx
+signup file
 
-This is a React login component with form validation
-It uses state hooks to manage email, password, and error messages
-Validates email format and password presence before submission
-Renders a form with email/password inputs using a custom Input component
-Displays validation errors and includes a link to signup page
-Wrapped in AuthLayout for consistent authentication page styling
+State Management: Tracks form data (fullName, email, password, profilePic, adminInviteToken) and errors using useState.
 
-Explaining AuthLayout.jsx
+Validation: Checks for empty fields, invalid email format (via validateEmail—assumed to be defined elsewhere), and sets errors if requirements fail.
 
-This is a layout component that provides a consistent structure for authentication pages
-It takes children as props to render content between its layout elements
-On small screens, it shows only the main content area (form)
-On medium+ screens, it adds a right sidebar with a decorative image
-The layout has a two-column flex design on larger screens
-The left side contains the app logo ("EASYloan") and the child components
-The right side displays a background image with an overlay loan-related graphic
+Form Submission: On submit (handleSingUp), it prevents default behavior, validates inputs, clears errors if valid, and prepares for an API call (commented out).
 
-Explaining Input.jsx file 
+UI Components: Renders a form with inputs (using reusable Input and ProfilePhotoSelector components) and displays validation errors.
 
-This is a reusable input component that handles both regular and password fields
-Uses state (showPassword) to toggle password visibility when type is "password"
-Accepts props for value, change handler, label, placeholder, and input type
-Conditionally renders an eye icon to show/hide password text
-Switches between FaRegEye and FaRegEyeSlash icons based on password visibility state
-Applies consistent styling for all input fields with a clean, modern look
-Maintains controlled component behavior by passing value and onChange props to input
+Auth Flow: Redirects users to login via a Link and wraps the form in an AuthLayout for consistent styling.
