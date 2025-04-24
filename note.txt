@@ -1,16 +1,15 @@
-Integrating apiPath.js
 
-This `API_PATHS` object in `apiPaths.js` centralizes all the API endpoint paths used across your frontend app. Here's a 10-line breakdown:
+Integrating axiosInstance for reuseable http requests
 
-1. `BASE_URL` defines the root of your API server (`http://localhost:3000`).
-2. `API_PATHS` organizes all endpoint paths grouped by feature (e.g., `AUTH`, `USERS`, `LOANS`).
-3. Each group contains routes as constants (like `REGISTER`, `LOGIN`) or functions (for dynamic routes).
-4. `AUTH` handles user authentication: register, login, get/update profile.
-5. `USERS` is for user management: get all users, get/delete user by ID (admin only).
-6. `LOANS` includes endpoints for loan operations like create, update, delete, and apply.
-7. `TRANSACTION` covers creating, updating, retrieving, and deleting financial transactions.
-8. `REPAYMENT` deals with repayment records—CRUD operations and fetching by user or loan.
-9. `NOTIFICATION` supports creating, fetching, marking, and deleting user notifications.
-10. This setup improves maintainability by avoiding hard-coded URLs scattered across the app.
+Sure! Here's a 10-line explanation of the code:
 
-Let me know if you want to auto-prefix these with `BASE_URL` in actual requests.
+1. Imports `axios` and a custom `BASE_URL` to set up a reusable HTTP client.  
+2. Creates an `axiosInstance` with a 10-second timeout and default headers for JSON requests.  
+3. The request interceptor adds an `Authorization` header if a token exists in localStorage.  
+4. This allows sending authenticated requests using the token saved after login.  
+5. If no token is found, the request proceeds without the `Authorization` header.  
+6. The response interceptor checks for error responses from the server.  
+7. If a 401 (unauthorized) error occurs, the user is redirected to the login page.  
+8. If a 500 (server error) occurs, an error message is logged in the console.  
+9. If the request times out, it logs a timeout message.  
+10. Finally, the customized `axiosInstance` is exported for use throughout the app.
