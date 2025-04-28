@@ -1,8 +1,11 @@
-import React, { useState } from "react"; // Import React and useState hook
+import React, { useContext, useState } from "react"; // Import React and useState hook
 import AuthLayout from "../../Components/layouts/AuthLayout"; // Import auth layout component
 import { Link, useNavigate } from "react-router-dom"; // Import routing utilities
 import Input from "../../Components/inputs/Inputs"; // Import custom input component
 import { validateEmail } from "../../utils/helper"; // Import email validation helper
+import axiosInstance from "../../utils/axiosInstance";
+import { API_PATHS } from "../../utils/apiPaths";
+import { UserContext } from "../../context/userContext";
 
 // Login component handles user authentication
 const Login = () => {
@@ -10,6 +13,7 @@ const Login = () => {
   const [password, setPassword] = useState(""); // State for password input
   const [error, setError] = useState(""); // State for error messages
 
+  const {updateUser} = useContext(UserContext)
   const navigate = useNavigate(); // Navigation hook for routing
 
   // Handle login form submission
@@ -27,7 +31,37 @@ const Login = () => {
     setError(""); // Clear errors if validation passes
 
     // Login API call would go here
+       //Login API call
+       try{
+        const response = await axiosInstance.post(API_PATHS.AUTH.LOGIN,{
+          email,
+          password
+        });
+  
+        const {token, role} = response.data;
+  
+        if(token) {
+          localStorage.setItem('token', token);
+          updateUser(response.data)
+  
+          //Redirect based on role
+          if(role === 'admin'){
+            navigate('/admin/dashboard')
+          }else{
+            navigate('/user/dashboard')
+          }
+        }
+       }catch(error){
+        if(error.response && error.response.data.message){
+          setError(error.response.data.message);
+        }else {
+          setError('Something went wrong. Please try again');
+        }
+       }
+    
+
   };
+  
 
   return ( // Render login form
     <AuthLayout> {/* Use authentication layout */}

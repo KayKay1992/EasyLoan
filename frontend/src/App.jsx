@@ -1,6 +1,6 @@
-import React from 'react'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import Home from './Pages/UserPages/Home'
+import React, { useContext } from 'react'
+import { BrowserRouter as Router, Routes, Route, Outlet, Navigate } from 'react-router-dom'
+// import Home from './Pages/UserPages/Home'
 import Login from './Pages/AuthPages/Login'
 import SignUp from './Pages/AuthPages/SignUp'
 import PrivateRoute from './Routes/PrivateRoute'
@@ -12,14 +12,16 @@ import AdminDashboard from './Pages/AdminPages/AdminDashboard'
 import ManageLoans from './Pages/AdminPages/ManageLoans'
 import CreateLoan from './Pages/AdminPages/CreateLoan'
 import ManageUsers from './Pages/AdminPages/ManageUsers'
+import UserProvider, { UserContext } from './context/userContext'
 
 const App = () => {
   return (
+    <UserProvider>
    <div>
      <Router>
         <Routes>
           {/* Auth routes go here */}
-          <Route path="/" element={<Home />} />
+          {/* <Route path="/" element={<Home />} /> */}
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
 
@@ -38,11 +40,26 @@ const App = () => {
             <Route path="/admin/create-loan" element={<CreateLoan/>} />
             <Route path="/admin/users" element={<ManageUsers/>} />
           </Route>
+           {/*DEFAULT ROUTE */}
+           <Route path='/' element={<Root/>}/>
         </Routes>
       </Router>
   
    </div>
+   </UserProvider>
   )
 }
 
 export default App
+
+//Define the root
+const Root = () => {
+  const {user, loading} = useContext(UserContext)
+
+  if(loading) return <Outlet/>
+
+  if(!user){
+    return <Navigate to='/login'/>
+  }
+  return user.role === 'admin' ? <Navigate to='/admin/dashboard' /> : <Navigate to="/user/dashboard"/>
+}
