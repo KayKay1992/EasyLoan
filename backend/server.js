@@ -28,7 +28,7 @@ connectDB()
 app.use(express.json());
 
 //for static files
-app.use('/uploads', express.static('uploads'));
+// app.use('/uploads', express.static('uploads'));
 
 
 // Routes
@@ -43,6 +43,8 @@ app.use("/api/setting", settingRoute);
 // Global error handler (this should be added at the end, after all routes)
 app.use(errorHandler);
 
+//saves upload folder
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 
 //start server
 

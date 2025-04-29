@@ -1,8 +1,13 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import AuthLayout from "../../Components/layouts/AuthLayout";
 import ProfilePhotoSelector from "../../Components/inputs/ProfilePhotoSelector";
 import Input from "../../Components/inputs/Inputs";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import axiosInstance from "../../utils/axiosInstance";
+import { API_PATHS } from "../../utils/apiPaths";
+import { UserContext } from "../../context/userContext";
+import uploadImage from "../../utils/uploadingImage";
+import { validateEmail } from "../../utils/helper";
 
 const SignUp = () => {
   const [profilePic, setProfilePic] = useState(null);
@@ -12,9 +17,15 @@ const SignUp = () => {
   const [adminInviteToken, setAdminInviteToken] = useState("");
   const [error, setError] = useState(null);
 
+  
+  const {updateUser} = useContext(UserContext)
+  const navigate = useNavigate();
+
   //handle signUp form submit
-  const handleSingUp = async (e) => {
+  const handleSignUp = async (e) => {
     e.preventDefault();
+
+     let  profileImageUrl = ''
 
     if (!fullName) {
       setError("Please Enter your fullname");
@@ -31,7 +42,43 @@ const SignUp = () => {
     setError("");
 
     //SignUp API call
+    try{
+
+      //upload image if present
+      if(profilePic){
+        const imgUploadRes = await uploadImage(profilePic);
+        profileImageUrl = imgUploadRes.imageUrl || '';
+      }
+      const response =await axiosInstance.post(API_PATHS.AUTH.REGISTER, {
+        name: fullName,
+        email,
+        password,
+        profileImageUrl,
+        adminInviteToken
+      });
+
+      const {token, role} = response.data;
+
+      if(token) {
+        localStorage.setItem('token', token);
+        updateUser(response.data);
+
+        //Redirect base on role
+        if(role === 'admin'){
+          navigate('/admin/dashboard')
+        }else{
+          navigate('/user/dashboard')
+        }
+      }
+    }catch(error){
+      if(error.response && error.response.data.message){
+        setError(error.response.data.message);
+      }else {
+        setError('Something went wrong. Please try again');
+      }
+    }
   };
+  
   return (
     <AuthLayout>
       <div className="lg:w-[100%] h-auto md:h-full mt-10 md:mt-0 flex flex-col justify-center ">
@@ -40,7 +87,7 @@ const SignUp = () => {
           Join Us Today by Entering Your Details Below
         </p>
 
-        <form onSubmit={handleSingUp}>
+        <form onSubmit={handleSignUp}>
           <ProfilePhotoSelector image={profilePic} setImage={setProfilePic} />
           <div className="grid grid-col-1 md:grid-cols-2 gap-4 ">
             <Input
