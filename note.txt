@@ -1,19 +1,16 @@
-API call to fetch dashboard Data.
+Admin Dashboard Summary section
 
-the states we used
+Here’s a 10-line explanation of the **loan dashboard summary section**:
 
-dashboardData: stores the full dashboard payload from the backend.
-pieChartData & barChartData: likely to hold specific data for visual charts (though not set yet in this snippet).
+1. The component is wrapped in `DashboardLayout` with "Dashboard" set as the active menu.
+2. A greeting message displays the current user's name and today’s date using `moment()`.
+3. Inside a responsive grid, four `InfoCard` components summarize loan data.
+4. Each `InfoCard` shows a category like "Total Loans", "Approved Loans", etc.
+5. The values are pulled from `dashboardData?.charts?.loanDistribution` using optional chaining.
+6. `addThousandsSeparator()` formats numbers (e.g., 1000 → 1,000) for better readability.
+7. Each card uses a different color (`bg-primary`, `bg-green-500`, etc.) for visual distinction.
+8. The layout is responsive using Tailwind CSS (`grid-cols-2`, `md:grid-cols-4`, etc.).
+9. Data is expected to be fetched before this render, typically using a `useEffect` hook.
+10. This section provides a high-level overview of loan activity for admins at a glance.
 
-📡 getDashboardData Function
-Makes a GET request using your axiosInstance to the API path defined as GET_DASHBOARD_DATA, likely something like /api/loan/dashboard-data.
-If successful, stores the result in dashboardData state.
-If it fails, logs an error.
-
-🔁 useEffect Hook
-This ensures getDashboardData runs once when the component mounts.
-The empty dependency array ([]) means it won’t run again unless the component is remounted.
-
-🧠 Summary
-This setup is standard in React apps to fetch data as soon as a page or dashboard loads.
-Right now, the chart states (pieChartData, barChartData) are unused — maybe the intention is to process dashboardData later and populate them.
+Would you like to add totals for amounts (e.g. total disbursed or repaid) too?

@@ -30,7 +30,7 @@ const SideMenu = ({activeMenu}) => {
     return () => {}
   }, [user])
   return (
-    <div className='w-64 h-[calc(125vh-61px)] bg-yellow-800 border-r border-gray-200/50 sticky top-[61px] z-20'>
+    <div className='hidden sm:block w-64 h-[calc(125vh-61px)] bg-yellow-800 border-r border-gray-200/50 sticky top-[61px] z-20'>
         <div className="flex flex-col items-center justify-center mb-7 pt-5 ">
           <div className="relative">
             <img src={user?.profileImageUrl || null} alt='profile image' className='w-20 h-20 bg-slate-400 rounded-full'/>
