@@ -8,6 +8,8 @@ import { API_PATHS } from '../../utils/apiPaths'
 import { addThousandsSeparator } from '../../utils/helper'
 import moment from 'moment'
 import InfoCard from '../../Components/Cards/InfoCard'
+import LoanListTable from '../../Components/LoanListTable';
+import { LuArrowRight } from 'react-icons/lu'
 
 const AdminDashboard = () => {
   useUserAuth()
@@ -32,6 +34,10 @@ const AdminDashboard = () => {
       console.error('Error fetching users', error)
     }
   };
+
+  const onSeeMore = () => {
+    navigate('/admin/loan')
+  }
 
   useEffect(()=> {
     getDashboardData();
@@ -87,6 +93,22 @@ const AdminDashboard = () => {
              value={addThousandsSeparator(dashboardData?.charts?.loanDistribution?.rejected || 0)}
              color='bg-amber-700'
              />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-4 md:my-6">
+        <div className="md:col-span-2">
+          <div className="card">
+            <div className="flex items-center justify-between">
+              <h5 className="text-lg">
+                Recent Loans
+              </h5>
+              <button className="card-btn" onClick={onSeeMore}>
+                  See All <LuArrowRight className='text-base'/>
+              </button>
+            </div>
+            <LoanListTable tableData={dashboardData?.recentLoans || []}/>
+          </div>
         </div>
       </div>
     </DashboardLayout>

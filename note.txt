@@ -1,16 +1,36 @@
-Admin Dashboard Summary section
+CREATING RECENT LOANS SECTION
 
-Here’s a 10-line explanation of the **loan dashboard summary section**:
+EXPLAINING ADMINDASHBOARD.JSX FILE.
+1. The outer `<div>` creates a responsive grid layout using Tailwind CSS.  
+2. `md:col-span-2` makes the content span both columns on medium+ screens.  
+3. The `.card` class wraps the recent loans section with card-style visuals.  
+4. Inside, a flex container aligns the title and button horizontally.  
+5. `<h5>` displays the "Recent Loans" section title.  
+6. The "See All" button triggers the `onSeeMore` function when clicked.  
+7. The right arrow icon (`<LuArrowRight />`) enhances the button visually.  
+8. `<LoanListTable />` is a child component for rendering the loans in a table format.  
+9. It receives `tableData` from `dashboardData.recentLoans`.  
+10. `|| []` ensures an empty array is passed if no loans are found to avoid errors.
 
-1. The component is wrapped in `DashboardLayout` with "Dashboard" set as the active menu.
-2. A greeting message displays the current user's name and today’s date using `moment()`.
-3. Inside a responsive grid, four `InfoCard` components summarize loan data.
-4. Each `InfoCard` shows a category like "Total Loans", "Approved Loans", etc.
-5. The values are pulled from `dashboardData?.charts?.loanDistribution` using optional chaining.
-6. `addThousandsSeparator()` formats numbers (e.g., 1000 → 1,000) for better readability.
-7. Each card uses a different color (`bg-primary`, `bg-green-500`, etc.) for visual distinction.
-8. The layout is responsive using Tailwind CSS (`grid-cols-2`, `md:grid-cols-4`, etc.).
-9. Data is expected to be fetched before this render, typically using a `useEffect` hook.
-10. This section provides a high-level overview of loan activity for admins at a glance.
+EXPLAIN LoanListTable component
+Here’s a 10-line explanation of your LoanListTable component:
 
-Would you like to add totals for amounts (e.g. total disbursed or repaid) too?
+This React component displays a list of recent loans in a styled table format.
+
+It takes tableData as a prop, which is an array of loan objects.
+
+The getStatusBadgeColor function returns Tailwind CSS classes based on loan status.
+
+The getLoanTypeBadgeColor function assigns color styles depending on loan type.
+
+A responsive table is rendered with columns for Name, Amount, Status, Loan Type, and Created On.
+
+If tableData is empty, a row saying “No recent loan found” is shown.
+
+Each loan row shows the user’s name, formatted amount (₦), and status with a color badge.
+Loan type is displayed with a corresponding color-coded badge as well.
+Creation date is formatted using moment.js for readability (e.g., "1st Jan 2025").
+The component is exported as default and can be reused wherever recent loan data is needed.
+
+
+We added the loantype data in data.js file.

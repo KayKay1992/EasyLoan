@@ -112,11 +112,19 @@ import {
     }
   ];
   export const LOAN_STATUS_DATA = [
-    { label: "Pending", value: "Pending" },           // Loan is created but not yet reviewed
-    { label: "Approved", value: "Approved" },         // Admin has approved the loan
-    { label: "Active", value: "Active" },             // Funds disbursed; loan is in progress
-    { label: "Completed", value: "Completed" },       // Loan is fully repaid
-    { label: "Rejected", value: "Rejected" },         // Admin rejected the loan request
-    { label: "Overdue", value: "Overdue" },           // Loan not repaid on time
-    { label: "Cancelled", value: "Cancelled" }        // Loan was cancelled (either by user or admin)
+    { label: "Pending", value: "pending" },           // Loan is created but not yet reviewed
+    { label: "Approved", value: "approved" },         // Admin has approved the loan
+    { label: "Active", value: "active" },             // Funds disbursed; loan is in progress
+    { label: "Completed", value: "completed" },       // Loan is fully repaid
+    { label: "Rejected", value: "rejected" },         // Admin rejected the loan request
+    { label: "Defaulted", value: "defaulted" },           // Loan not repaid on time
+  ];
+
+  export const LOAN_TYPE_DATA = [
+    { label: "Personal Loan", value: "personal" },
+    { label: "Business Loan", value: "business" },
+    { label: "Student Loan", value: "student" },
+    { label: "Mortgage Loan", value: "mortgage" },
+    { label: "Car Loan", value: "car loan" },
+    { label: "Quickie Loan", value: "quickie loan" }
   ];
