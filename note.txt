@@ -1,36 +1,60 @@
-CREATING RECENT LOANS SECTION
+CREATING LOAN DISTRIBUTION SECTION PIE CHART
 
-EXPLAINING ADMINDASHBOARD.JSX FILE.
-1. The outer `<div>` creates a responsive grid layout using Tailwind CSS.  
-2. `md:col-span-2` makes the content span both columns on medium+ screens.  
-3. The `.card` class wraps the recent loans section with card-style visuals.  
-4. Inside, a flex container aligns the title and button horizontally.  
-5. `<h5>` displays the "Recent Loans" section title.  
-6. The "See All" button triggers the `onSeeMore` function when clicked.  
-7. The right arrow icon (`<LuArrowRight />`) enhances the button visually.  
-8. `<LoanListTable />` is a child component for rendering the loans in a table format.  
-9. It receives `tableData` from `dashboardData.recentLoans`.  
-10. `|| []` ensures an empty array is passed if no loans are found to avoid errors.
+Here’s a 10-line explanation of the prepareChartData function: In ADMINDASHBOARD 
+file
+The function prepareChartData prepares data for rendering pie and bar charts.
 
-EXPLAIN LoanListTable component
-Here’s a 10-line explanation of your LoanListTable component:
+It extracts loanDistribution and loanTypeLevels from the input data object.
 
-This React component displays a list of recent loans in a styled table format.
+loanDistributionData is an array of loan status counts (e.g., active, approved).
 
-It takes tableData as a prop, which is an array of loan objects.
+Default values of 0 are used if any status count is missing or undefined.
 
-The getStatusBadgeColor function returns Tailwind CSS classes based on loan status.
+This array is passed to setPieChartData to update the pie chart state.
 
-The getLoanTypeBadgeColor function assigns color styles depending on loan type.
+loanTypeLevelData is another array built from different loan types (e.g., personal, business).
 
-A responsive table is rendered with columns for Name, Amount, Status, Loan Type, and Created On.
+It also uses fallback 0 values where needed to avoid undefined errors.
 
-If tableData is empty, a row saying “No recent loan found” is shown.
+This array is passed to setBarChartData to update the bar chart state.
 
-Each loan row shows the user’s name, formatted amount (₦), and status with a color badge.
-Loan type is displayed with a corresponding color-coded badge as well.
-Creation date is formatted using moment.js for readability (e.g., "1st Jan 2025").
-The component is exported as default and can be reused wherever recent loan data is needed.
+The function ensures both charts reflect the most recent loan data breakdown.
+
+It's typically called after fetching dashboard or analytics data.
+
+*****************************************************
+Render the piechart block in the ADMINDASHBOARD
+This block renders a card section titled "Loan Distribution" with a header.
+
+Inside the card, it uses a custom pie chart component (CustomPieChart) to visualize loan status data.
+
+The chart is given data from pieChartData and color values from the COLORS array.
 
 
-We added the loantype data in data.js file.
+
+*****************************************************
+Explain custom legend componenet 
+
+1. This component `CustomLegend` displays a custom legend for charts using the `payload` prop.  
+2. It wraps legend items in a flex container, allowing them to wrap and space out evenly.  
+3. Each legend item shows a small colored circle representing the chart data color.  
+4. Next to the circle, it displays the corresponding label from `entry.value`.  
+5. The component is typically used with chart libraries like Recharts to replace the default legend.
+
+***********************************************************
+Explain custompiechart component
+
+1. `CustomPieChart` renders a donut-style pie chart using Recharts components inside a responsive container.  
+2. The `Pie` uses `data`, with `count` as the value and `status` as the label, and is styled with inner and outer radii for a donut effect.  
+3. Each `Cell` is filled with a color from the `colors` array, cycling through if there are more slices than colors.  
+4. A custom tooltip and custom legend are used to display extra info and styling.  
+5. The chart is fully responsive and fits its parent container.
+
+*********************************************************
+Explain customTooltip component
+
+1. `CustomTooltip` is a React component used in charts to display detailed info when hovering over a data point.  
+2. It checks if the tooltip is active and if valid `payload` data is available.  
+3. If true, it shows a styled tooltip with the data name and value (e.g., status and count).  
+4. The tooltip is styled using Tailwind CSS for a clean UI.  
+5. If not active or missing data, it returns `null` (renders nothing).
