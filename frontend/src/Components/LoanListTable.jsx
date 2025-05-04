@@ -41,19 +41,19 @@ const LoanListTable = ({ tableData }) => {
   };
 
   return (
-    <div className="overflow-x-auto p-0 rounded-lg mt-3">
-      <table className="min-w-full">
-        <thead>
-          <tr className="text-left">
-            <th className="py-3 px-4 text-gray-800 font-medium text-[13px]">User Id</th>
-            <th className="py-3 px-4 text-gray-800 font-medium text-[13px]">Amount</th>
-            <th className="py-3 px-4 text-gray-800 font-medium text-[13px]">Status</th>
-            <th className="py-3 px-4 text-gray-800 font-medium text-[13px]">Loan Type</th>
-            <th className="py-3 px-4 text-gray-800 font-medium text-[13px] hidden md:table-cell">Created On</th>
+    <div className="w-full overflow-x-auto rounded-lg mt-3">
+      <table className="min-w-full table-auto text-sm">
+        <thead className="bg-gray-50">
+          <tr className="text-left text-xs text-gray-600">
+            <th className="py-3 px-4">User ID</th>
+            <th className="py-3 px-4">Amount</th>
+            <th className="py-3 px-4">Status</th>
+            <th className="py-3 px-4">Loan Type</th>
+            <th className="py-3 px-4 hidden md:table-cell">Created On</th>
           </tr>
         </thead>
         <tbody>
-          {(!tableData || tableData.length === 0) ? (
+          {!tableData || tableData.length === 0 ? (
             <tr>
               <td colSpan="5" className="text-center py-6 text-gray-500">
                 No recent loan found.
@@ -61,24 +61,22 @@ const LoanListTable = ({ tableData }) => {
             </tr>
           ) : (
             tableData.map((loan) => (
-              <tr key={loan._id} className="border-t border-gray-200">
-                <td className="py-4 px-4 text-gray-700 text-[13px] line-clamp-1 overflow-hidden">
-                  {loan.user}
-                </td>
-                <td className="py-4 px-4 text-gray-700 text-[13px]">
+              <tr key={loan._id} className="border-t border-gray-200 hover:bg-gray-50 transition">
+                <td className="py-3 px-4 text-gray-700 truncate">{loan.user}</td>
+                <td className="py-3 px-4 text-gray-700">
                   ₦{Number(loan.amount).toLocaleString()}
                 </td>
-                <td className="py-4 px-4">
-                  <span className={`px-2 py-1 text-xs rounded inline-block ${getStatusBadgeColor(loan.status)}`}>
+                <td className="py-3 px-4">
+                  <span className={`px-2 py-1 text-xs rounded ${getStatusBadgeColor(loan.status)}`}>
                     {loan.status}
                   </span>
                 </td>
-                <td className="py-4 px-4">
-                  <span className={`px-2 py-1 text-xs rounded inline-block ${getLoanTypeBadgeColor(loan.loanType)}`}>
+                <td className="py-3 px-4">
+                  <span className={`px-2 py-1 text-xs rounded ${getLoanTypeBadgeColor(loan.loanType)}`}>
                     {loan.loanType}
                   </span>
                 </td>
-                <td className="py-4 px-4 text-gray-700 text-[13px] text-nowrap hidden md:table-cell">
+                <td className="py-3 px-4 hidden md:table-cell text-nowrap text-gray-700">
                   {loan.createdAt ? moment(loan.createdAt).format("Do MMM YYYY") : "N/A"}
                 </td>
               </tr>

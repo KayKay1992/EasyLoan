@@ -11,6 +11,7 @@ import InfoCard from "../../Components/Cards/InfoCard";
 import LoanListTable from "../../Components/LoanListTable";
 import { LuArrowRight } from "react-icons/lu";
 import CustomPieChart from "../../Components/Charts/CustomPieChart";
+import CustomBarChart from "../../Components/Charts/CustomBarChart";
 
 const COLORS = [
   "#8b5cf6",
@@ -54,8 +55,8 @@ const AdminDashboard = () => {
       {loanType: 'business', count: loanTypeLevels?.business || 0},
       {loanType: 'student', count: loanTypeLevels?.student || 0},
       {loanType: 'mortgage', count: loanTypeLevels?.mortgage || 0},
-      {loanType: 'car loan', count: loanTypeLevels?.car || 0},
-      {loanType: 'quickie loan', count: loanTypeLevels?.quickie || 0},
+      {loanType: 'car loan', count: loanTypeLevels?.['car loan'] || 0},
+      {loanType: 'quickie loan', count: loanTypeLevels?.['quickie loan'] || 0},
     ];
 
     setBarChartData(loanTypeLevelData)
@@ -158,6 +159,20 @@ const AdminDashboard = () => {
             <CustomPieChart data={pieChartData} colors={COLORS} />
           </div>
         </div>
+
+        <div className="">
+          <div className="card">
+            <div className="flex items-center justify-between">
+              <h5 className="font-medium">
+                Loan Type Distribution
+              </h5>
+              </div>
+              <CustomBarChart data={barChartData} />
+           
+          </div>
+         </div>
+
+
         <div className="md:col-span-2">
           <div className="card">
             <div className="flex items-center justify-between">
