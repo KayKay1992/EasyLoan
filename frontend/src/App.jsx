@@ -13,10 +13,15 @@ import ManageLoans from './Pages/AdminPages/ManageLoans'
 import CreateLoan from './Pages/AdminPages/CreateLoan'
 import ManageUsers from './Pages/AdminPages/ManageUsers'
 import UserProvider, { UserContext } from './context/userContext'
+import CreateTransactions from './Pages/AdminPages/CreateTransactions'
+import { Toaster } from 'react-hot-toast'
+import CreateNotification from './Pages/AdminPages/CreateNotifications'
+import CreateSetting from './Pages/AdminPages/CreateSetting'
 
 const App = () => {
   return (
     <UserProvider>
+       <Toaster position="top-right" />
    <div>
      <Router>
         <Routes>
@@ -39,6 +44,9 @@ const App = () => {
             <Route path="/admin/manage-loan" element={<ManageLoans />} />
             <Route path="/admin/create-loan" element={<CreateLoan/>} />
             <Route path="/admin/users" element={<ManageUsers/>} />
+            <Route path="/admin/transactions" element={<CreateTransactions/>} />
+            <Route path="/admin/notifications" element={<CreateNotification/>} />
+            <Route path="/admin/settings" element={<CreateSetting/>} />
           </Route>
            {/*DEFAULT ROUTE */}
            <Route path='/' element={<Root/>}/>
