@@ -18,6 +18,37 @@ const CreateLoan = () => {
   };
 
   const handleSubmit = async () => {
+    const { loanName, amount, loanType, interestRate, tenure, description } =
+      loanData;
+
+    // Basic Validation
+    if (
+      !loanName ||
+      !amount ||
+      !loanType ||
+      !interestRate ||
+      !tenure ||
+      !description
+    ) {
+      toast.error("Please fill in all required fields.");
+      return;
+    }
+
+    if (isNaN(amount) || amount <= 0) {
+      toast.error("Enter a valid loan amount.");
+      return;
+    }
+
+    if (isNaN(interestRate) || interestRate <= 0) {
+      toast.error("Enter a valid interest rate.");
+      return;
+    }
+
+    if (isNaN(tenure) || tenure <= 0) {
+      toast.error("Enter a valid tenure in months.");
+      return;
+    }
+
     try {
       console.log("Creating loan:", loanData);
       toast.success("Loan created successfully!");
@@ -70,7 +101,6 @@ const CreateLoan = () => {
             />
           </div>
 
-        
           {/* Loan Type */}
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-1">

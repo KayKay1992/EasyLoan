@@ -18,6 +18,55 @@ const CreateSetting = () => {
   };
 
   const handleSubmit = () => {
+    const {
+      interestRate,
+      loanTermOptions,
+      maxLoanAmount,
+      minLoanAmount,
+      currency,
+      gracePeriodDays,
+      latePaymentPenalty,
+    } = settings;
+  
+    if (
+      !interestRate ||
+      !loanTermOptions ||
+      !maxLoanAmount ||
+      !minLoanAmount ||
+      !currency ||
+      !gracePeriodDays ||
+      !latePaymentPenalty
+    ) {
+      toast.error("Please fill in all fields.");
+      return;
+    }
+  
+    if (
+      Number(interestRate) <= 0 ||
+      Number(maxLoanAmount) <= 0 ||
+      Number(minLoanAmount) <= 0 ||
+      Number(gracePeriodDays) < 0 ||
+      Number(latePaymentPenalty) < 0
+    ) {
+      toast.error("All numeric values must be positive.");
+      return;
+    }
+  
+    if (Number(minLoanAmount) >= Number(maxLoanAmount)) {
+      toast.error("Minimum loan amount must be less than maximum loan amount.");
+      return;
+    }
+  
+    const termsArray = loanTermOptions
+      .split(",")
+      .map((term) => term.trim())
+      .filter(Boolean)
+      .map(Number);
+  
+    if (termsArray.some((term) => isNaN(term) || term <= 0)) {
+      toast.error("Loan terms must be a comma-separated list of positive numbers.");
+      return;
+    }
     console.log("Saving settings:", settings);
     toast.success("Settings saved successfully!");
     // You may send this to an API endpoint here

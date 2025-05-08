@@ -1,106 +1,12 @@
-Building CreateLoan, CreateTransaction, CreateNotification, CreateSetting pages.
+VALIDATING ALL THE CREATED PAGES Input
 
-Explaining CreateLoan Component file.
-
-Here’s a 10-line explanation of the CreateLoan component:
-
-This React component renders a form that allows admins to create new loan types with key details.
-
-It uses useState to manage the loan's data such as name, amount, type, interest rate, tenure, and an optional document.
-
-The handleChange function updates individual fields in the loan data state.
-
-Upon form submission (handleSubmit), it logs the loan data and shows a success toast.
-
-It includes input fields for text, numbers, a dropdown for loan type, and a file uploader.
-
-A file input allows attaching documents like PDFs or images, and shows the selected file name.
-
-Tailwind CSS is used for styling, providing a clean and responsive layout.
-
-The form is wrapped inside a DashboardLayout, with the active menu set to "Create Loan".
-
-After successful submission, the form resets the state to clear inputs.
-
-This component doesn't yet send data to a backend — it just logs and resets form values.
-
-***************************************************************
-Explaining CreateTransaction Component
-
-Here’s a 10-line explanation of the TransactionPage component:
-
-This React component renders a form for creating and managing loan transactions (like disbursement, payment, or refund).
-
-It uses useState to track transaction data such as user ID, loan ID, amount, type, and payment method.
-
-The handleChange function dynamically updates transaction fields based on user input.
-
-The form includes inputs and dropdowns for entering relevant transaction details.
-
-The handleApprove function simulates loan approval and shows a success toast notification.
-
-The handleReject function simulates transaction rejection with its own toast feedback.
-
-Both actions currently log the transaction data instead of submitting it to a backend.
-
-Tailwind CSS classes are used for consistent and modern UI styling.
-
-The page is wrapped in a DashboardLayout with the active tab set to "Transactions".
-
-This component serves as an admin interface to manage user loan transactions.
-
-
-
-***************************************************************
-Create Notification Explained
-
-Here's a 10-line explanation of the Notification component:
-
-This component allows admins to send notifications to specific users.
-
-It uses useState to store fields like type, title, message, and user ID.
-
-The handleChange function updates the form state dynamically as input changes.
-
-A form UI is rendered using Tailwind CSS for clean design and responsiveness.
-
-Notification type is selected from options like info, warning, success, and urgent.
-
-The handleSubmit function logs the notification data and shows a toast success message.
-
-It resets the form after sending the notification.
-
-The layout is wrapped in a DashboardLayout component with "Notifications" active.
-
-Input validation is not implemented, so sending empty values is possible.
-
-This is a front-end-only implementation and doesn't send data to a backend API yet.
-
-************************************************************
-Createsetting page explained.
-
-Here's a 10-line explanation of the CreateSetting component:
-
-This React component allows admins to configure and save loan-related settings.
-
-It uses useState to manage form values like interest rate, loan amounts, and penalties.
-
-handleChange updates the appropriate setting field as users type or select values.
-
-handleSubmit logs the current settings and displays a toast notification on save.
-
-Inputs include interest rate, loan terms, min/max amounts, currency, grace days, and penalty.
-
-Loan term options are entered as comma-separated values (e.g., "6, 12, 24").
-
-The currency is selected from a dropdown including NGN, USD, GBP, and EUR.
-
-Tailwind CSS is used for consistent styling, spacing, and form aesthetics.
-
-The form is wrapped in a DashboardLayout with the "Settings" tab active.
-
-Currently, no API call is made — it's a frontend-only implementation for now.
-
-
-
-NOTE: THE NEWLY ADDED PAGES IS ALSO REGISTERED IN APP.JS.
+1. **Empty Check**: Each required field is checked to ensure it is not empty before submission.
+2. **Numeric Validation**: Fields like interest rate, amounts, and penalties must be positive numbers.
+3. **Length Check**: IDs (like user and loan) must be at least 6 characters to be considered valid.
+4. **Amount Logic**: Amounts must be greater than zero to be processed.
+5. **Loan Term Format**: The loan term input must be a valid comma-separated list of positive numbers.
+6. **Min vs Max Amount**: The minimum loan amount must be less than the maximum loan amount.
+7. **Grace Period & Penalty**: Grace days and penalties must not be negative.
+8. **Dropdown Selection**: Transaction type and method must be selected, not left blank.
+9. **Toast Feedback**: Validation errors are shown to the user via toast notifications for clarity.
+10. **Clean Submit**: Only when all checks pass does the form proceed to log or save the data.

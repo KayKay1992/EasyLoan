@@ -16,15 +16,45 @@ const TransactionPage = () => {
   };
 
   const handleApprove = async () => {
+    const { user, loan, amount, type, method } = transaction;
+
+    if (!user || !loan || !amount || !type || !method) {
+      toast.error("Please fill in all fields.");
+      return;
+    }
+  
+    if (user.length < 6 || loan.length < 6) {
+      toast.error("User ID and Loan ID must be at least 6 characters.");
+      return ;
+    }
+  
+    if (Number(amount) <= 0) {
+      toast.error("Amount must be a positive number.");
+      return ;
+    }
+  
     try {
       console.log("Loan approved and disbursed", transaction);
       toast.success("Loan approved and disbursed!");
+      setTransaction({ user: "", loan: "", amount: "", method: "" });
     } catch (error) {
       toast.error("Failed to disburse loan");
     }
   };
 
   const handleReject = async () => {
+    const { user, loan } = transaction;
+
+    if (!user || !loan) {
+      toast.error("User ID and Loan ID are required to reject the transaction.");
+      return;
+    }
+  
+    if (user.length < 6 || loan.length < 6) {
+      toast.error("User ID and Loan ID must be at least 6 characters.");
+      return;
+    }
+   
     try {
       console.log("Loan rejected", transaction);
       toast.success("Loan rejected");

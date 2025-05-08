@@ -15,6 +15,23 @@ const Notification = () => {
   };
 
   const handleSubmit = () => {
+    const { type, title, message, userId } = notification;
+
+    // Validation
+    if (!type || !title || !message || !userId) {
+      toast.error("Please fill in all fields before sending the notification.");
+      return;
+    }
+  
+    if (title.length < 3) {
+      toast.error("Title must be at least 3 characters.");
+      return;
+    }
+  
+    if (message.length < 5) {
+      toast.error("Message must be at least 5 characters.");
+      return;
+    }
     console.log("Sending notification:", notification);
     toast.success("Notification sent!");
     setNotification({ type: "", title: "", message: "", userId: "" });
