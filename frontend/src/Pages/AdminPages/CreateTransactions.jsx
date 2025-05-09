@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import DashboardLayout from "../../Components/layouts/DashboardLayout";
 import toast from "react-hot-toast";
+import { API_PATHS } from "../../utils/apiPaths";
+import axiosInstance from "../../utils/axiosInstance";
 
 const TransactionPage = () => {
   const [transaction, setTransaction] = useState({
@@ -10,10 +12,48 @@ const TransactionPage = () => {
     type: "",      // dropdown: disbursement, repayment, reversal
     method: "",    // dropdown: bank, cash, wallet
   });
+    const [loading, setLoading] = useState(false);
 
   const handleChange = (key, value) => {
     setTransaction((prev) => ({ ...prev, [key]: value }));
   };
+
+  const createTransaction = async () => {
+    setLoading(true);
+    const { user, loan, amount, type, method } = transaction;
+
+    if (!user || !loan || !amount || !type || !method) {
+      toast.error("Please fill in all fields.");
+      setLoading(false);
+      return;
+    }
+
+    if (Number(amount) <= 0) {
+      toast.error("Amount must be a positive number.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // Create the transaction using the applied loan ID
+      const transactionPayload = {
+        user,
+        loan, // Applied loan ID
+        amount: Number(amount),
+        type,  // "disbursement", "repayment", "reversal"
+        method, // "bank", "cash", "wallet"
+      };
+
+      // Send the POST request to the server to create the transaction
+      await axiosInstance.post(API_PATHS.TRANSACTION.CREATE_TRANSACTION, transactionPayload);
+        setTransaction({ user: "", loan: "", amount: "", type: "", method: "" }); // ✅ Reset transaction form
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to create loan");
+      } finally {
+        setLoading(false);
+      }
+    };
 
   const handleApprove = async () => {
     const { user, loan, amount, type, method } = transaction;
@@ -34,8 +74,8 @@ const TransactionPage = () => {
     }
   
     try {
-      console.log("Loan approved and disbursed", transaction);
       toast.success("Loan approved and disbursed!");
+      createTransaction();  // Create the transaction when approved;
       setTransaction({ user: "", loan: "", amount: "", method: "" });
     } catch (error) {
       toast.error("Failed to disburse loan");
@@ -44,7 +84,7 @@ const TransactionPage = () => {
 
   const handleReject = async () => {
     const { user, loan } = transaction;
-
+  
     if (!user || !loan) {
       toast.error("User ID and Loan ID are required to reject the transaction.");
       return;
@@ -54,11 +94,13 @@ const TransactionPage = () => {
       toast.error("User ID and Loan ID must be at least 6 characters.");
       return;
     }
-   
+  
     try {
-      console.log("Loan rejected", transaction);
-      toast.success("Loan rejected");
+      await axiosInstance.post(API_PATHS.LOANS.REJECT_LOAN(loan));
+      toast.success("Loan rejected successfully!");
+      setTransaction({ user: "", loan: "", amount: "", method: "" });
     } catch (error) {
+      console.error(error);
       toast.error("Failed to reject loan");
     }
   };

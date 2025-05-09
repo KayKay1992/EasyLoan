@@ -79,6 +79,10 @@ const loanSchema = new mongoose.Schema({
     type: String,
     // required: true,
   },
+  isOffer: {
+    type: Boolean,
+    default: false,
+  },
   
   createdAt: {
     type: Date,

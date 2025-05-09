@@ -23,11 +23,12 @@ export const API_PATHS = {
     GET_USER_DASHBOARD_DATA: "/api/loan/user-dashboard-data", //Get user dashboard.
     GET_ALL_LOANS: "/api/loan", //admin and assigned user to get all tasks
     GET_LOAN_BY_ID: (loanId) => `/api/loan/${loanId}`, //get task by id
-    CREATE_LOAN: "/api/loans", //create task admin
+    CREATE_LOAN: "/api/loan", //create task admin
     UPDATE_LOAN: (loanId) => `/api/loan/${loanId}`, //update task details
     DELETE_LOAN: (loanId) => `/api/loan/${loanId}`, //admin to delete a task
     UPDATE_LOAN_STATUS: (loanId) => `/api/loan/${loanId}/status`,
     APPLY_LOAN: `/api/loan/apply`, //apply loan
+    REJECT_LOAN: (loanId)=> `/api/loan/reject/${loanId}`
   },
 
   TRANSACTION: {

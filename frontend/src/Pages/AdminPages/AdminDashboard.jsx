@@ -98,7 +98,7 @@ const AdminDashboard = () => {
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 md:gap-6 ">
           <InfoCard
-            label="Total Loans"
+            label="Total Applied Loans"
             value={addThousandsSeparator(
               dashboardData?.charts?.loanDistribution?.All || 0
             )}

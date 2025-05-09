@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import toast from "react-hot-toast";
 import DashboardLayout from "../../Components/layouts/DashboardLayout";
+import axiosInstance from "../../utils/axiosInstance";
+import { API_PATHS } from "../../utils/apiPaths";
 
 const Notification = () => {
   const [notification, setNotification] = useState({
@@ -12,6 +14,30 @@ const Notification = () => {
 
   const handleChange = (key, value) => {
     setNotification((prev) => ({ ...prev, [key]: value }));
+  };
+
+
+  const createNotification = async ({ type, title, message, userId }) => {
+    if (!type || !title || !message || !userId) {
+      toast.error("All notification fields are required");
+      return;
+    }
+  
+    try {
+      const payload = { type, title, message, userId };
+  
+      await axiosInstance.post(API_PATHS.NOTIFICATION.CREATE_NOTIFICATION,  {
+        type,
+        title,
+        message,
+        userId,
+      });
+  
+      toast.success("Notification created successfully!");
+    } catch (error) {
+      console.error("Notification creation failed:", error);
+      toast.error("Failed to create notification");
+    }
   };
 
   const handleSubmit = () => {
@@ -32,7 +58,7 @@ const Notification = () => {
       toast.error("Message must be at least 5 characters.");
       return;
     }
-    console.log("Sending notification:", notification);
+    createNotification(notification)
     toast.success("Notification sent!");
     setNotification({ type: "", title: "", message: "", userId: "" });
   };
@@ -51,10 +77,11 @@ const Notification = () => {
               className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-amber-700 focus:outline-none"
             >
               <option value="">Select Type</option>
-              <option value="info">Info</option>
+              <option value="loan">Loan</option>
+              <option value="repayment">Repayment</option>
               <option value="warning">Warning</option>
-              <option value="success">Success</option>
-              <option value="urgent">Urgent</option>
+              <option value="offer">Offer</option>
+              <option value="system">System</option>
             </select>
           </div>
 

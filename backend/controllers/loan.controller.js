@@ -43,40 +43,86 @@ const getLoanById = asyncHandler(async (req, res) => {
 // @desc    Admin creates loan template (not assigned to user)
 // @route   POST /api/loan-templates
 // @access  Admin
+
+
+// Assumes you're using Multer middleware on the route to handle 'document' field
 const createLoan = asyncHandler(async (req, res) => {
   const { amount, interestRate, termMonths, loanType } = req.body;
 
+  // Authorization: Only admins can create loan offers
   if (!req.user || req.user.role !== "admin") {
     res.status(403);
-    throw new Error("Not authorized to create a loan template");
+    throw new Error("Only admins are allowed to create loan offers");
   }
 
+  // Validation: All fields are required
   if (!amount || !interestRate || !termMonths || !loanType) {
     res.status(400);
-    throw new Error("All fields are required");
+    throw new Error("All fields (amount, interestRate, termMonths, loanType) are required");
   }
 
   const parsedAmount = parseFloat(amount);
   const parsedInterestRate = parseFloat(interestRate);
-  const parsedTermMonths = parseInt(termMonths);
+  const parsedTermMonths = parseInt(termMonths, 10);
 
+  // Validate numeric fields
   if (isNaN(parsedAmount) || isNaN(parsedInterestRate) || isNaN(parsedTermMonths)) {
     res.status(400);
-    throw new Error("Invalid numeric input");
+    throw new Error("Amount, interest rate, and term must be valid numbers");
   }
 
+  // Check for uploaded file (optional)
+  let documentUrl = null;
+  if (req.file) {
+    // You can customize this logic to save file buffer, path, or upload to cloud storage
+    documentUrl = req.file.originalname; // or req.file.path if using diskStorage
+  }
+
+  // Create the loan offer
   const loan = await Loan.create({
     loanType,
     amount: parsedAmount,
     interestRate: parsedInterestRate,
     termMonths: parsedTermMonths,
     createdBy: req.user._id,
+    isOffer: true, // Mark as a loan offer
+    documents: documentUrl, // Optional: Save file name or path
   });
 
   res.status(201).json({
-    message: "Loan created successfully",
+    message: "Loan offer created successfully",
     loan,
   });
+});
+
+// @desc    Reject a loan application
+// @route   PATCH /api/loans/reject/:id
+// @access  Admin only
+const rejectLoan = asyncHandler(async (req, res) => {
+  const loanId = req.params.id;
+
+  // Only admin can reject loans
+  if (!req.user || req.user.role !== "admin") {
+    res.status(403);
+    throw new Error("Not authorized to reject loans");
+  }
+
+  const loan = await Loan.findById(loanId);
+  if (!loan) {
+    res.status(404);
+    throw new Error("Loan not found");
+  }
+
+  // Prevent rejecting already completed or rejected loans
+  if (["completed", "rejected"].includes(loan.status)) {
+    res.status(400);
+    throw new Error(`Loan is already ${loan.status}`);
+  }
+
+  loan.status = "rejected";
+  await loan.save();
+
+  res.status(200).json({ message: "Loan rejected successfully", loan });
 });
 
 
@@ -216,113 +262,88 @@ const updateLoanStatus = asyncHandler(async (req, res) => {
 // @route   GET /api/loans/dashboard-data
 // @access  Protected/Admin
 const getAdminLoanDashboard = asyncHandler(async (req, res) => {
-    try {
-      // 1. FETCH BASIC STATISTICS
-      // Count all loans in the database
-      const totalLoans = await Loan.countDocuments();
-  
-      // Count loans with "Pending" status
-      const pendingLoans = await Loan.countDocuments({
-        status: "pending",
-      });
-  
-      // Count loans with "Approved" status
-      const approvedLoans = await Loan.countDocuments({
-        status: "approved",
-      });
-  
-      // Count loans with "Active" status
-      const activeLoans = await Loan.countDocuments({
-        status: "active",
-      });
-  
-      // Count loans with "Completed" status
-      const completedLoans = await Loan.countDocuments({
-        status: "completed",
-      });
-  
-      // Count loans with "Defaulted" status
-      const defaultedLoans = await Loan.countDocuments({
-        status: "defaulted",
-      });
-  
-      // 2. LOAN DISTRIBUTION BY STATUS
-      // Define all possible status values we want to track
-      const loanStatuses = ["pending", "approved", "active", "completed", "rejected", "defaulted"];
-      
-      // Aggregate loans by status (raw data from MongoDB)
-      const loanDistributionRaw = await Loan.aggregate([
-        {
-          $group: {
-            _id: "$status", // Group by status field
-            count: { $sum: 1 }, // Count documents in each group
-          },
+  try {
+    // Only consider user-applied loans (not templates)
+    const filter = { isOffer: false };
+
+    // 1. FETCH BASIC STATISTICS
+    const totalLoans = await Loan.countDocuments(filter);
+    const pendingLoans = await Loan.countDocuments({ ...filter, status: "pending" });
+    const approvedLoans = await Loan.countDocuments({ ...filter, status: "approved" });
+    const activeLoans = await Loan.countDocuments({ ...filter, status: "active" });
+    const completedLoans = await Loan.countDocuments({ ...filter, status: "completed" });
+    const defaultedLoans = await Loan.countDocuments({ ...filter, status: "defaulted" });
+
+    // 2. LOAN DISTRIBUTION BY STATUS
+    const loanStatuses = ["pending", "approved", "active", "completed", "rejected", "defaulted"];
+
+    const loanDistributionRaw = await Loan.aggregate([
+      { $match: filter },
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 },
         },
-      ]);
-  
-      // Transform raw data into a consistent format including all statuses
-      const loanDistribution = loanStatuses.reduce((acc, status) => {
-        const formattedKey = status.replace(/\s+/g, ""); // Remove spaces for response keys
-        acc[formattedKey] =
-          loanDistributionRaw.find((item) => item._id === status)?.count || 0;
-        return acc;
-      }, {});
-  
-      loanDistribution["All"] = totalLoans; // Add total count
-  
-      // 3. LOAN TYPES DISTRIBUTION
-      // Define expected loan types (personal, business, etc.)
-      const loanTypes = ["personal", "business", "student", "mortgage", "car loan", "quickie loan"];
-      
-      // Aggregate loans by loan type
-      const loanTypeLevelsRaw = await Loan.aggregate([
-        {
-          $group: {
-            _id: "$loanType",
-            count: { $sum: 1 }, // Count loans in each type
-          },
+      },
+    ]);
+
+    const loanDistribution = loanStatuses.reduce((acc, status) => {
+      const formattedKey = status.replace(/\s+/g, "");
+      acc[formattedKey] =
+        loanDistributionRaw.find((item) => item._id === status)?.count || 0;
+      return acc;
+    }, {});
+    loanDistribution["All"] = totalLoans;
+
+    // 3. LOAN TYPES DISTRIBUTION
+    const loanTypes = ["personal", "business", "student", "mortgage", "car loan", "quickie loan"];
+
+    const loanTypeLevelsRaw = await Loan.aggregate([
+      { $match: filter },
+      {
+        $group: {
+          _id: "$loanType",
+          count: { $sum: 1 },
         },
-      ]);
-  
-      // Transform loan type data to include all types
-      const loanTypeLevels = loanTypes.reduce((acc, type) => {
-        acc[type] =
-          loanTypeLevelsRaw.find((item) => item._id === type)?.count || 0;
-        return acc;
-      }, {});
-  
-      // 4. RECENT LOANS
-      // Get 10 most recent loans with selected fields
-      const recentLoans = await Loan.find()
-        .sort({ createdAt: -1 }) // Newest first
-        .limit(10)
-        .select("amount loanType status createdAt user");
-  
-      // 5. RETURN COMPREHENSIVE DASHBOARD DATA
-      res.status(200).json({
-        statistics: {
-          totalLoans,
-          pendingLoans,
-          approvedLoans,
-          activeLoans,
-          completedLoans,
-          defaultedLoans, // Include defaulted loans in the statistics
-        },
-        charts: {
-          loanDistribution, // By status
-          loanTypeLevels, // By loan type
-        },
-        recentLoans, // Recent loan activity
-      });
-    } catch (error) {
-      // 6. ERROR HANDLING
-      console.error("Admin loan dashboard error:", error); // Log for debugging
-      res.status(500).json({
-        message: "Server Error", // Return server error message
-        error: error.message, // Return error message for debugging
-      });
-    }
-  });
+      },
+    ]);
+
+    const loanTypeLevels = loanTypes.reduce((acc, type) => {
+      acc[type] =
+        loanTypeLevelsRaw.find((item) => item._id === type)?.count || 0;
+      return acc;
+    }, {});
+
+    // 4. RECENT LOANS
+    const recentLoans = await Loan.find(filter)
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .select("amount loanType status createdAt user");
+
+    // 5. RETURN DASHBOARD DATA
+    res.status(200).json({
+      statistics: {
+        totalLoans,
+        pendingLoans,
+        approvedLoans,
+        activeLoans,
+        completedLoans,
+        defaultedLoans,
+      },
+      charts: {
+        loanDistribution,
+        loanTypeLevels,
+      },
+      recentLoans,
+    });
+  } catch (error) {
+    console.error("Admin loan dashboard error:", error);
+    res.status(500).json({
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+});
 
   
 
@@ -469,5 +490,6 @@ module.exports = {
   updateLoanStatus,
   getAdminLoanDashboard,
   getUserLoanDashboard,
-  applyForLoan
+  applyForLoan,
+  rejectLoan
 };

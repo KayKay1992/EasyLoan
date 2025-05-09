@@ -1,35 +1,62 @@
 import React, { useState } from "react";
 import toast from "react-hot-toast";
 import DashboardLayout from "../../Components/layouts/DashboardLayout";
+import axiosInstance from "../../utils/axiosInstance";
+import { API_PATHS } from "../../utils/apiPaths";
 
 const CreateLoan = () => {
   const [loanData, setLoanData] = useState({
-    loanName: "",
     amount: "",
     loanType: "",
     interestRate: "",
-    tenure: "",
-    description: "",
-    document: null, // added
+    termMonths: "",
+    document: '',
   });
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (key, value) => {
     setLoanData((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleSubmit = async () => {
-    const { loanName, amount, loanType, interestRate, tenure, description } =
-      loanData;
+  const createLoan = async () => {
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("amount", Number(loanData.amount));
+      formData.append("loanType", loanData.loanType);
+      formData.append("interestRate", Number(loanData.interestRate));
+      formData.append("termMonths", Number(loanData.termMonths));
+      if (loanData.document) {
+        formData.append("document", loanData.document);
+      }
 
-    // Basic Validation
-    if (
-      !loanName ||
-      !amount ||
-      !loanType ||
-      !interestRate ||
-      !tenure ||
-      !description
-    ) {
+      await axiosInstance.post(API_PATHS.LOANS.CREATE_LOAN, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      toast.success("Loan created successfully!");
+      setLoanData({
+        amount: "",
+        loanType: "",
+        interestRate: "",
+        termMonths: "",
+        document: '',
+      });
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to create loan");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async () => {
+    const { amount, loanType, interestRate, termMonths } = loanData;
+
+    // Validation
+    if (!amount || !loanType || !interestRate || !termMonths) {
       toast.error("Please fill in all required fields.");
       return;
     }
@@ -44,70 +71,36 @@ const CreateLoan = () => {
       return;
     }
 
-    if (isNaN(tenure) || tenure <= 0) {
-      toast.error("Enter a valid tenure in months.");
+    if (isNaN(termMonths) || termMonths <= 0) {
+      toast.error("Enter a valid term in months.");
       return;
     }
 
-    try {
-      console.log("Creating loan:", loanData);
-      toast.success("Loan created successfully!");
-      setLoanData({
-        loanName: "",
-        amount: "",
-        loanType: "",
-        interestRate: "",
-        tenure: "",
-        description: "",
-      });
-    } catch (err) {
-      toast.error("Failed to create loan");
-    }
+    createLoan();
   };
 
   return (
     <DashboardLayout activeMenu="Create Loan">
       <div className="max-w-3xl mx-auto bg-white shadow-xl rounded-2xl p-10 mt-10 border border-gray-100">
-        <h2 className="text-3xl font-bold text-gray-800 mb-8">
-          Create a New Loan
-        </h2>
+        <h2 className="text-3xl font-bold text-gray-800 mb-8">Create a New Loan</h2>
 
         <div className="space-y-6">
-          {/* Loan Name */}
-          <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">
-              Loan Name
-            </label>
-            <input
-              type="text"
-              value={loanData.loanName}
-              onChange={(e) => handleChange("loanName", e.target.value)}
-              placeholder="e.g. Student Loan"
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-700 focus:border-amber-700 transition"
-            />
-          </div>
-
           {/* Amount */}
           <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">
-              Amount (₦)
-            </label>
+            <label className="block text-sm font-medium text-gray-600 mb-1">Amount (₦)</label>
             <input
               type="number"
               value={loanData.amount}
               onChange={(e) => handleChange("amount", e.target.value)}
               placeholder="e.g. 50000"
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-700 focus:border-amber-700 transition"
+              className="w-full px-4 py-3 rounded-xl border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-700"
             />
           </div>
 
           {/* Loan Type */}
           <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">
-              Loan Type
-            </label>
+            <label className="block text-sm font-medium text-gray-600 mb-1">Loan Type</label>
             <select
-              name="loanType"
               value={loanData.loanType}
               onChange={(e) => handleChange("loanType", e.target.value)}
               className="w-full px-4 py-2 rounded-md border border-amber-500 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-300"
@@ -123,63 +116,38 @@ const CreateLoan = () => {
             </select>
           </div>
 
-          {/* Interest Rate and Tenure */}
+          {/* Interest Rate & Term */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">
-                Interest Rate (%)
-              </label>
+              <label className="block text-sm font-medium text-gray-600 mb-1">Interest Rate (%)</label>
               <input
                 type="number"
                 value={loanData.interestRate}
                 onChange={(e) => handleChange("interestRate", e.target.value)}
                 placeholder="e.g. 5"
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-700 focus:border-amber-700 transition"
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-700"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">
-                Tenure (months)
-              </label>
+              <label className="block text-sm font-medium text-gray-600 mb-1">Term (months)</label>
               <input
                 type="number"
-                value={loanData.tenure}
-                onChange={(e) => handleChange("tenure", e.target.value)}
+                value={loanData.termMonths}
+                onChange={(e) => handleChange("termMonths", e.target.value)}
                 placeholder="e.g. 12"
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-700 focus:border-amber-700 transition"
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-700"
               />
             </div>
           </div>
 
-          {/* Description */}
+          {/* Document Upload */}
           <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">
-              Description
-            </label>
-            <textarea
-              rows={4}
-              value={loanData.description}
-              onChange={(e) => handleChange("description", e.target.value)}
-              placeholder="Write a description about the loan..."
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-700 focus:border-amber-700 transition resize-none"
-            />
-          </div>
-
-          {/* Attach Document */}
-          <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">
-              Attach Document
-            </label>
+            <label className="block text-sm font-medium text-gray-600 mb-1">Attach Document</label>
             <input
               type="file"
               accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
               onChange={(e) => handleChange("document", e.target.files[0])}
-              className="block w-full text-sm text-gray-500
-               file:mr-4 file:py-2 file:px-4
-               file:rounded-xl file:border-0
-               file:text-sm file:font-semibold
-               file:bg-amber-700 file:text-white
-               hover:file:bg-amber-800 transition duration-200"
+              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-amber-700 file:text-white hover:file:bg-amber-800 transition duration-200"
             />
             {loanData.document && (
               <p className="mt-1 text-sm text-green-700">
@@ -192,9 +160,12 @@ const CreateLoan = () => {
           <div className="pt-6 flex justify-end">
             <button
               onClick={handleSubmit}
-              className="bg-amber-700 hover:bg-amber-800 text-white text-sm font-semibold px-6 py-3 rounded-xl shadow-md transition duration-200"
+              disabled={loading}
+              className={`bg-amber-700 hover:bg-amber-800 text-white text-sm font-semibold px-6 py-3 rounded-xl shadow-md transition duration-200 ${
+                loading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
-              Create Loan
+              {loading ? "Submitting..." : "Create Loan"}
             </button>
           </div>
         </div>
