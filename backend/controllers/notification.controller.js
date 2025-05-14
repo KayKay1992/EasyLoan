@@ -63,7 +63,7 @@ const getNotificationById = asyncHandler(async (req, res) => {
   });
   });
 
-// @desc    Create a notification
+// @desc    Create a notification for a user
 // @route   POST /api/notifications
 // @access  Admin
 const createNotification = asyncHandler(async (req, res) => {
@@ -113,6 +113,59 @@ const createNotification = asyncHandler(async (req, res) => {
     });
   });
   
+
+// @desc    Create notifications for all users
+// @route   POST /api/notifications/all
+// @access  Admin
+const createNotificationForAllUsers = asyncHandler(async (req, res) => {
+    const { type, message, referenceId, referenceModel } = req.body;
+  
+    // Validate required fields (userId is no longer required)
+    if (!type || !message) {
+      res.status(400);
+      throw new Error("Fields type and message are required");
+    }
+  
+    // Allowed types from schema
+    const allowedTypes = ['loan', 'repayment', 'warning', 'offer', 'system'];
+    if (!allowedTypes.includes(type)) {
+      res.status(400);
+      throw new Error(`Invalid type. Allowed: ${allowedTypes.join(', ')}`);
+    }
+  
+    // Validate referenceModel if referenceId is provided
+    if (referenceId && !['Loan', 'Repayment'].includes(referenceModel)) {
+      res.status(400);
+      throw new Error("referenceModel must be 'Loan' or 'Repayment' if referenceId is provided");
+    }
+  
+    // Get all users
+    const users = await User.find({}, '_id');
+    if (!users || users.length === 0) {
+      res.status(404);
+      throw new Error("No users found");
+    }
+
+    // Prepare notifications for bulk insert
+    const notifications = users.map(user => ({
+      user: user._id,
+      type,
+      message,
+      referenceId: referenceId || null,
+      referenceModel: referenceId ? referenceModel : undefined,
+      isRead: false,
+      createdAt: new Date(),
+    }));
+  
+    // Bulk insert notifications
+    const createdNotifications = await Notification.insertMany(notifications);
+  
+    res.status(201).json({
+      message: `Notifications created successfully for ${users.length} users`,
+      count: createdNotifications.length,
+    });
+});
+
   
 
 // @desc    Mark a notification as read
@@ -183,4 +236,5 @@ module.exports = {
   createNotification,
   markAsRead,
   deleteNotification,
+  createNotificationForAllUsers,
 };

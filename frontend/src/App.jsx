@@ -5,7 +5,7 @@ import Login from './Pages/AuthPages/Login'
 import SignUp from './Pages/AuthPages/SignUp'
 import PrivateRoute from './Routes/PrivateRoute'
 import UserDashboard from './Pages/UserPages/UserDashboard'
-import LoanDetails from './Pages/UserPages/LoanDetails'
+import LoanDetails from './Pages/AdminPages/LoanDetails'
 import LoanCalculator from './Pages/UserPages/LoanCalculator'
 import ApplyLoan from './Pages/UserPages/ApplyLoan'
 import AdminDashboard from './Pages/AdminPages/AdminDashboard'
@@ -17,6 +17,8 @@ import CreateTransactions from './Pages/AdminPages/CreateTransactions'
 import { Toaster } from 'react-hot-toast'
 import CreateNotification from './Pages/AdminPages/CreateNotifications'
 import CreateSetting from './Pages/AdminPages/CreateSetting'
+import RepaymentsTable from './Pages/AdminPages/Repayment'
+
 
 const App = () => {
   return (
@@ -41,8 +43,11 @@ const App = () => {
           {/* Admin routes go here */}
           <Route element={<PrivateRoute allowedRoles={["admin"]} />}>
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/admin/manage-loan" element={<ManageLoans />} />
+            <Route path="/admin/loans" element={<ManageLoans />} />
+             <Route path="/admin/loan-details/:id" element={<LoanDetails />} />
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/create-loan" element={<CreateLoan/>} />
+            <Route path="/admin/repayments" element={<RepaymentsTable/>} />
             <Route path="/admin/users" element={<ManageUsers/>} />
             <Route path="/admin/transactions" element={<CreateTransactions/>} />
             <Route path="/admin/notifications" element={<CreateNotification/>} />

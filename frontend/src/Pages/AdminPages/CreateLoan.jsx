@@ -1,91 +1,116 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 import DashboardLayout from "../../Components/layouts/DashboardLayout";
 import axiosInstance from "../../utils/axiosInstance";
 import { API_PATHS } from "../../utils/apiPaths";
 
 const CreateLoan = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  // Get edit mode and existing loan data from navigation state
+  const { isEditMode, loanData: editData } = location.state || {};
+  
   const [loanData, setLoanData] = useState({
     amount: "",
     loanType: "",
     interestRate: "",
     termMonths: "",
-    document: '',
+    document: null, // Document not pre-filled for security
   });
   const [loading, setLoading] = useState(false);
+
+  // Pre-fill form when in edit mode
+  useEffect(() => {
+    if (isEditMode && editData) {
+      setLoanData({
+        amount: editData.amount?.toString() || "",
+        loanType: editData.loanType || "",
+        interestRate: editData.interestRate?.toString() || "",
+        termMonths: editData.termMonths?.toString() || "",
+        document: null, // Document requires fresh upload even in edit mode
+      });
+    }
+  }, [isEditMode, editData]);
 
   const handleChange = (key, value) => {
     setLoanData((prev) => ({ ...prev, [key]: value }));
   };
 
-  const createLoan = async () => {
-    setLoading(true);
-    try {
-      const formData = new FormData();
-      formData.append("amount", Number(loanData.amount));
-      formData.append("loanType", loanData.loanType);
-      formData.append("interestRate", Number(loanData.interestRate));
-      formData.append("termMonths", Number(loanData.termMonths));
-      if (loanData.document) {
-        formData.append("document", loanData.document);
-      }
-
-      await axiosInstance.post(API_PATHS.LOANS.CREATE_LOAN, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-
-      toast.success("Loan created successfully!");
-      setLoanData({
-        amount: "",
-        loanType: "",
-        interestRate: "",
-        termMonths: "",
-        document: '',
-      });
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to create loan");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSubmit = async () => {
+    // Validate all fields
     const { amount, loanType, interestRate, termMonths } = loanData;
-
-    // Validation
     if (!amount || !loanType || !interestRate || !termMonths) {
       toast.error("Please fill in all required fields.");
       return;
     }
-
     if (isNaN(amount) || amount <= 0) {
       toast.error("Enter a valid loan amount.");
       return;
     }
-
     if (isNaN(interestRate) || interestRate <= 0) {
       toast.error("Enter a valid interest rate.");
       return;
     }
-
     if (isNaN(termMonths) || termMonths <= 0) {
       toast.error("Enter a valid term in months.");
       return;
     }
 
-    createLoan();
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("amount", loanData.amount);
+      formData.append("loanType", loanData.loanType);
+      formData.append("interestRate", loanData.interestRate);
+      formData.append("termMonths", loanData.termMonths);
+      
+      if (loanData.document) {
+        formData.append("document", loanData.document);
+      }
+
+      const config = {
+        headers: { "Content-Type": "multipart/form-data" }
+      };
+
+      // Conditional API call for create vs update
+      if (isEditMode) {
+        // UPDATE existing loan
+        await axiosInstance.put(
+          API_PATHS.LOANS.UPDATE_LOAN(editData._id), // Include loan ID in endpoint
+          formData,
+          config
+        );
+        toast.success("Loan updated successfully!");
+      } else {
+        // CREATE new loan
+        await axiosInstance.post(
+          API_PATHS.LOANS.CREATE_LOAN,
+          formData,
+          config
+        );
+        toast.success("Loan created successfully!");
+      }
+
+      navigate("/admin/loans");
+    } catch (err) {
+      console.error("Operation error:", err);
+      toast.error(err.response?.data?.message || "Operation failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <DashboardLayout activeMenu="Create Loan">
       <div className="max-w-3xl mx-auto bg-white shadow-xl rounded-2xl p-10 mt-10 border border-gray-100">
-        <h2 className="text-3xl font-bold text-gray-800 mb-8">Create a New Loan</h2>
+        {/* Dynamic header based on mode */}
+        <h2 className="text-3xl font-bold text-gray-800 mb-8">
+          {isEditMode ? "Update Loan Offer" : "Create a New Loan"}
+        </h2>
 
         <div className="space-y-6">
-          {/* Amount */}
+          {/* Form fields remain the same for both modes */}
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-1">Amount (₦)</label>
             <input
@@ -97,7 +122,7 @@ const CreateLoan = () => {
             />
           </div>
 
-          {/* Loan Type */}
+          {/* Loan Type dropdown */}
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-1">Loan Type</label>
             <select
@@ -140,9 +165,11 @@ const CreateLoan = () => {
             </div>
           </div>
 
-          {/* Document Upload */}
+          {/* Document upload with conditional label */}
           <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">Attach Document</label>
+            <label className="block text-sm font-medium text-gray-600 mb-1">
+              {isEditMode ? "Update Document (optional)" : "Attach Document"}
+            </label>
             <input
               type="file"
               accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
@@ -156,7 +183,7 @@ const CreateLoan = () => {
             )}
           </div>
 
-          {/* Submit Button */}
+          {/* Submit button with dynamic text */}
           <div className="pt-6 flex justify-end">
             <button
               onClick={handleSubmit}
@@ -165,7 +192,13 @@ const CreateLoan = () => {
                 loading ? "opacity-50 cursor-not-allowed" : ""
               }`}
             >
-              {loading ? "Submitting..." : "Create Loan"}
+              {loading 
+                ? isEditMode 
+                  ? "Updating..." 
+                  : "Submitting..." 
+                : isEditMode 
+                  ? "Update Loan" 
+                  : "Create Loan"}
             </button>
           </div>
         </div>

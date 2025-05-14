@@ -25,10 +25,11 @@ export const API_PATHS = {
     GET_LOAN_BY_ID: (loanId) => `/api/loan/${loanId}`, //get task by id
     CREATE_LOAN: "/api/loan", //create task admin
     UPDATE_LOAN: (loanId) => `/api/loan/${loanId}`, //update task details
-    DELETE_LOAN: (loanId) => `/api/loan/${loanId}`, //admin to delete a task
+    DELETE_LOAN_OFFER: (loanId) => `/api/loan/${loanId}`, //admin to delete
     UPDATE_LOAN_STATUS: (loanId) => `/api/loan/${loanId}/status`,
     APPLY_LOAN: `/api/loan/apply`, //apply loan
-    REJECT_LOAN: (loanId)=> `/api/loan/reject/${loanId}`
+    REJECT_LOAN: (loanId)=> `/api/loan/reject/${loanId}`,
+    GET_LOAN_OFFER: `/api/loan/offer`
   },
 
   TRANSACTION: {
@@ -57,7 +58,8 @@ export const API_PATHS = {
     MARK_NOTIFICATION_AS_READ: (notificationId) => `/api/notification/read/${notificationId}`,
     GET_UNREAD_NOTIFICATION: `/api/notification/unread`,
     DELETE_NOTIFICATION: (notificationId) => `/api/notification/${notificationId}`,
-    GET_NOTIFICATION_BY_ID: (notificationId) => `/api/notification/${notificationId}`
+    GET_NOTIFICATION_BY_ID: (notificationId) => `/api/notification/${notificationId}`,
+    CREATE_NOTIFICATION_FOR_ALL: '/api/notification/all'
   },
   SETTING: {
     GET_CURRENT_SETTING: '/api/setting',

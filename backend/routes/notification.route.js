@@ -1,6 +1,6 @@
 const express = require('express');
 const { protect, adminOnly } = require('../middleware/authMiddleware');
-const { getAllNotifications, createNotification, deleteNotification, getNotificationById, markAsRead, getUnreadNotifications } = require('../controllers/notification.controller');
+const { getAllNotifications, createNotification, deleteNotification, getNotificationById, markAsRead, getUnreadNotifications, createNotificationForAllUsers } = require('../controllers/notification.controller');
 
 
 const router = express.Router();
@@ -16,6 +16,8 @@ router.get('/', protect, getAllNotifications);
 // @route   POST /api/notifications
 // @access  Admin
 router.post('/', protect, adminOnly, createNotification);
+
+router.post('/all', protect, adminOnly, createNotificationForAllUsers); // new all-users version
 
 
 // @desc    Mark a notification as read

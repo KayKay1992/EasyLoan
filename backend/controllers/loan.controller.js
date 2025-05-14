@@ -4,21 +4,61 @@ const Loan = require("../models/loan.model");
 // @desc    Get all loans
 // @route   GET /api/loans
 // @access  Protected (User/Admin)
+// Get all applied loans (Admin only)
+// Get all applied loans (Admin only)
 const getAllLoans = asyncHandler(async (req, res) => {
   // Check if the logged-in user is an admin
   if (!req.user || req.user.role !== 'admin') {
-    res.status(403); // Forbidden
-    throw new Error('Not authorized to access all loans');
+    console.log(`Unauthorized attempt to access all loans by user: ${req.user?._id || 'unknown'}`);
+    res.status(403);
+    throw new Error('Not authorized to access loan data');
   }
 
-  // Fetch all loans, including user name & email, sorted by latest
-  const loans = await Loan.find()
-    .populate('user', 'name email')
-    .sort({ createdAt: -1 });
+  // Extract query parameters for pagination and filtering
+  const { page = 1, limit = 10, status } = req.query;
+  const query = {};
 
-  // Return loans to admin
-  res.status(200).json(loans);
+  // Add status filter if provided
+  if (status) {
+    query.status = status; // Assumes Loan model has a 'status' field
+  }
 
+  // Calculate pagination
+  const pageNum = parseInt(page, 10);
+  const limitNum = parseInt(limit, 10);
+  const skip = (pageNum - 1) * limitNum;
+
+  try {
+    // Fetch loans with pagination, population, and sorting
+    const loans = await Loan.find(query)
+      .populate('user', 'name') // Only populate 'name' to minimize data exposure
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limitNum)
+      .lean(); // Use lean() for better performance (returns plain JS objects)
+
+    // Get total count for pagination metadata
+    const totalLoans = await Loan.countDocuments(query);
+
+    // Log the admin action
+    console.log(`Admin ${req.user._id} fetched ${loans.length} loans (page: ${pageNum}, limit: ${limitNum})`);
+
+    // Return loans with pagination metadata
+    res.status(200).json({
+      success: true,
+      data: loans,
+      meta: {
+        total: totalLoans,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(totalLoans / limitNum),
+      },
+    });
+  } catch (error) {
+    console.error(`Error fetching loans for admin ${req.user._id}: ${error.message}`);
+    res.status(500);
+    throw new Error('Server error while fetching loans');
+  }
 });
 
 // @desc    Get a loan by ID
@@ -126,6 +166,55 @@ const rejectLoan = asyncHandler(async (req, res) => {
 });
 
 
+// Get all loan offers (accessible to all users)
+const getLoanOffer = asyncHandler(async (req, res) => {
+  // Extract query parameters for pagination and filtering
+  const { page = 1, limit = 10, loanType } = req.query;
+  const query = { isOffer: true }; // Only fetch loan offers
+
+  // Add loanType filter if provided
+  if (loanType) {
+    query.loanType = loanType; // Assumes Loan model has a 'loanType' field
+  }
+
+  // Calculate pagination
+  const pageNum = parseInt(page, 10);
+  const limitNum = parseInt(limit, 10);
+  const skip = (pageNum - 1) * limitNum;
+
+  try {
+    // Fetch loan offers with pagination and sorting
+    const loans = await Loan.find(query)
+      .select('loanType amount interestRate termMonths documents') // Exclude sensitive fields like createdBy
+      .sort({ createdAt: -1 }) // Latest offers first
+      .skip(skip)
+      .limit(limitNum)
+      .lean(); // Use lean() for better performance
+
+    // Get total count for pagination metadata
+    const totalLoans = await Loan.countDocuments(query);
+
+    // Log the action for debugging (optional)
+    console.log(`Fetched ${loans.length} loan offers (page: ${pageNum}, limit: ${limitNum})`);
+
+    // Return loan offers with pagination metadata
+    res.status(200).json({
+      success: true,
+      data: loans,
+      meta: {
+        total: totalLoans,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(totalLoans / limitNum),
+      },
+    });
+  } catch (error) {
+    console.error(`Error fetching loan offers: ${error.message}`);
+    res.status(500);
+    throw new Error('Server error while fetching loan offers');
+  }
+});
+
 
 // @desc    Update a loan
 // @route   PUT /api/loans/:id
@@ -136,53 +225,55 @@ const updateLoan = asyncHandler(async (req, res) => {
     // Find the loan by ID
     const loan = await Loan.findById(id);
   
-    // If loan not found, return error
     if (!loan) {
       res.status(404);
       throw new Error('Loan not found');
     }
   
-    // Optional: Only allow admin or the loan owner to update
-    if (
-      req.user.role !== 'admin' &&
-      loan.user.toString() !== req.user._id.toString()
-    ) {
+    // Authorization check (unchanged)
+    if (req.user.role !== 'admin' && loan.user.toString() !== req.user._id.toString()) {
       res.status(403);
       throw new Error('Not authorized to update this loan');
     }
   
-    // Update allowed fields
-    const updatedFields = {
-      amount: req.body.amount ?? loan.amount,
-      interestRate: req.body.interestRate ?? loan.interestRate,
-      termMonths: req.body.termMonths ?? loan.termMonths,
-      loanType: req.body.loanType ?? loan.loanType,
-      status: req.body.status ?? loan.status,
-      startDate: req.body.startDate ?? loan.startDate,
-      endDate: req.body.endDate ?? loan.endDate,
-    };
-  
-    // Recalculate monthlyPayment and totalRepayable if related fields changed
-    if (req.body.amount || req.body.interestRate || req.body.termMonths) {
-      const monthlyInterestRate = updatedFields.interestRate / 100 / 12;
-      const monthlyPayment = (
-        updatedFields.amount *
-        monthlyInterestRate /
-        (1 - Math.pow(1 + monthlyInterestRate, -updatedFields.termMonths))
-      ).toFixed(2);
-  
-      updatedFields.monthlyPayment = monthlyPayment;
-      updatedFields.totalRepayable = (monthlyPayment * updatedFields.termMonths).toFixed(2);
+    // Extract fields from FormData
+    const amount = req.body.amount ? Number(req.body.amount) : loan.amount;
+    const interestRate = req.body.interestRate ? Number(req.body.interestRate) : loan.interestRate;
+    const termMonths = req.body.termMonths ? Number(req.body.termMonths) : loan.termMonths;
+    const loanType = req.body.loanType || loan.loanType;
+    
+    // Handle file upload if present
+    if (req.file) {
+      loan.document = req.file.path; // Adjust based on your file handling
     }
   
-    // Apply updates and save
+    // Update fields
+    const updatedFields = {
+      amount,
+      interestRate,
+      termMonths,
+      loanType,
+      status: req.body.status || loan.status,
+      // ... other fields
+    };
+  
+    // Recalculate payments if financial fields changed
+    if (req.body.amount || req.body.interestRate || req.body.termMonths) {
+      const monthlyInterestRate = interestRate / 100 / 12;
+      updatedFields.monthlyPayment = (
+        amount *
+        monthlyInterestRate /
+        (1 - Math.pow(1 + monthlyInterestRate, -termMonths))
+      ).toFixed(2);
+      updatedFields.totalRepayable = (updatedFields.monthlyPayment * termMonths).toFixed(2);
+    }
+  
+    // Apply updates
     Object.assign(loan, updatedFields);
     const updatedLoan = await loan.save();
   
     res.status(200).json(updatedLoan);
-  
 });
-
 // @desc    Delete a loan
 // @route   DELETE /api/loans/:id
 // @access  Protected/Admin
@@ -210,6 +301,23 @@ const deleteLoan = asyncHandler(async (req, res) => {
     // Send success response
     res.status(200).json({ message: `Loan deleted successfully: ${id}` });
 });
+
+// @desc    Delete a loan offer
+// @route   DELETE /api/loan-offer/:id
+// @access  Private/Admin
+const deleteLoanOffer = async (req, res) => {
+  try {
+    const loan = await Loan.findByIdAndDelete(req.params.id); // Check model name
+    if (!loan) {
+      return res.status(404).json({ message: "Loan not found" });
+    }
+    res.status(200).json({ message: "Loan deleted successfully" });
+  } catch (error) {
+    console.error("Delete error:", error);
+    res.status(500).json({ message: "Failed to delete loan" });
+  }
+};
+
 
 // @desc    Update loan status
 // @route   PUT /api/loans/:id/status
@@ -491,5 +599,8 @@ module.exports = {
   getAdminLoanDashboard,
   getUserLoanDashboard,
   applyForLoan,
-  rejectLoan
+  rejectLoan,
+  getLoanOffer,
+  deleteLoanOffer
+
 };

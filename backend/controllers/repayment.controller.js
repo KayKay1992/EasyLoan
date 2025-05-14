@@ -8,165 +8,185 @@ const Loan = require('../models/loan.model');
 // @route   POST /api/repayments
 // @access  User
 const createRepayment = asyncHandler(async (req, res) => {
-// Destructure necessary fields from request body and authenticated user
-const { loanId, amountPaid, paymentMethod, dueDate } = req.body;
-const userId = req.user._id;
+  // Destructure necessary fields from request body and authenticated user
+  const { loanId, amountPaid, paymentMethod, dueDate } = req.body;
+  const userId = req.user._id;
 
-// ✅ Validate required input fields
-if (!loanId || !amountPaid || !paymentMethod || !dueDate) {
-  res.status(400);
-  throw new Error("All fields (loanId, amountPaid, paymentMethod, dueDate) are required");
-}
+  // ✅ Validate required input fields
+  if (!loanId || !amountPaid || !paymentMethod || !dueDate) {
+    res.status(400);
+    throw new Error("All fields (loanId, amountPaid, paymentMethod, dueDate) are required");
+  }
 
-// ✅ Convert amount to a number and validate it's a positive number
-const paymentAmount = Number(amountPaid);
-if (isNaN(paymentAmount) || paymentAmount <= 0) {
-  res.status(400);
-  throw new Error("Invalid payment amount");
-}
+  // ✅ Convert amount to a number, validate it's positive, and round to nearest whole number
+  const paymentAmount = Math.round(Number(amountPaid));
+  if (isNaN(paymentAmount) || paymentAmount <= 0) {
+    res.status(400);
+    throw new Error("Invalid payment amount");
+  }
 
-// ✅ Get path to uploaded repayment evidence if available
-const evidencePath = req.file?.path || null;
+  // ✅ Get path to uploaded repayment evidence if available
+  const evidencePath = req.file?.path || null;
 
-// ✅ Find the loan document and select the repaymentBalance field explicitly
-const loan = await Loan.findById(loanId).select('+repaymentBalance');
-if (!loan) {
-  res.status(404);
-  throw new Error("Loan not found");
-}
+  // ✅ Find the loan document and select the repaymentBalance field explicitly
+  const loan = await Loan.findById(loanId).select('+repaymentBalance');
+  if (!loan) {
+    res.status(404);
+    throw new Error("Loan not found");
+  }
 
-// ✅ Ensure the user trying to repay is the owner of the loan
-if (loan.user.toString() !== userId.toString()) {
-  res.status(403);
-  throw new Error("You are not authorized to repay this loan");
-}
+  // ✅ Ensure the user trying to repay is the owner of the loan
+  if (loan.user.toString() !== userId.toString()) {
+    res.status(403);
+    throw new Error("You are not authorized to repay this loan");
+  }
 
-// ✅ Only allow repayment if the loan is active
-if (loan.status !== 'active') {
-  res.status(400);
-  throw new Error("Repayment is only allowed for active loans");
-}
+  // ✅ Only allow repayment if the loan is active
+  if (loan.status !== 'active') {
+    res.status(400);
+    throw new Error("Repayment is only allowed for active loans");
+  }
 
-// ✅ Check that the loan has a valid repayment balance
-if (typeof loan.repaymentBalance !== 'number' || loan.repaymentBalance < 0) {
-  res.status(500);
-  throw new Error("Invalid repayment balance on loan record");
-}
+  // ✅ Check that the loan has a valid repayment balance
+  if (typeof loan.repaymentBalance !== 'number' || loan.repaymentBalance < 0) {
+    res.status(500);
+    throw new Error("Invalid repayment balance on loan record");
+  }
 
-// ✅ Prevent overpayment beyond the outstanding balance
-if (paymentAmount > loan.repaymentBalance) {
-  res.status(400);
-  throw new Error(`Repayment exceeds outstanding balance. Maximum payment: ${loan.repaymentBalance}`);
-}
+  // ✅ Allow payment if it matches or slightly exceeds balance (within tolerance)
+  const tolerance = 1; // Allow up to 1 unit over the balance
+  if (paymentAmount > loan.repaymentBalance + tolerance) {
+    res.status(400);
+    throw new Error(`Repayment exceeds outstanding balance. Maximum payment: ${loan.repaymentBalance}`);
+  }
 
-// ✅ Check if repayment is late based on due date
-const isLate = new Date() > new Date(dueDate);
-const status = isLate ? 'late' : 'paid';
+  // ✅ Adjust payment to not exceed balance (e.g., pay 429.8 instead of 430)
+  const effectivePayment = Math.min(paymentAmount, loan.repaymentBalance);
 
-// ✅ Generate a unique reference ID for the repayment
-const referenceId = `RPY-${Date.now()}`;
+  // ✅ Check if repayment is late based on due date
+  const isLate = new Date() > new Date(dueDate);
+  const status = isLate ? 'late' : 'paid';
 
-// ✅ Create a new repayment record
-const repayment = await Repayment.create({
-  loan: loanId,
-  user: userId,
-  amountPaid: paymentAmount,
-  paymentMethod,
-  dueDate,
-  paymentDate: new Date(),
-  status,
-  referenceId,
-  evidence: evidencePath,
-});
+  // ✅ Generate a unique reference ID for the repayment
+  const referenceId = `RPY-${Date.now()}`;
 
-// ✅ Update loan: reduce repaymentBalance and possibly mark loan as completed
-const updatedLoan = await Loan.findByIdAndUpdate(
-  loanId,
-  {
-    $inc: { repaymentBalance: -Math.round(paymentAmount) }, // Reduce balance (whole number)
-    $set: { 
-      status: loan.repaymentBalance - paymentAmount <= 0 ? 'completed' : 'active', // Set new status
-      lastRepaymentDate: new Date() // Track latest repayment
-    }
-  },
-  { new: true }
-).select('repaymentBalance status'); // Return only what's needed
-
-// ✅ Respond with repayment details and updated loan balance/status
-res.status(201).json({
-  message: "Repayment successful",
-  repayment,
-  repaymentBalance: Math.round(updatedLoan.repaymentBalance), // Round off the balance in response
-  loanStatus: updatedLoan.status,
-});
-});
-
-
-
-
-// @desc    Get all repayments
-// @route   GET /api/repayments
-// @access  Admin
-const getAllRepayments = asyncHandler(async (req, res) => {
-  // Fetch all repayment records and populate user and loan details
-  const repayments = await Repayment.find()
-    .populate('user', 'name email phone')
-    .populate('loan', 'amount loanType status repaymentBalance user')
-    .sort({ paymentDate: -1 }); // Sort repayments by most recent first
-
-  // Group repayments by loan ID to track total paid and repayment balance
-  const grouped = {};
-
-  repayments.forEach(r => {
-    const loanId = r.loan._id.toString();
-    if (!grouped[loanId]) {
-      grouped[loanId] = {
-        totalPaid: 0, // Initialize total paid for this loan
-        repaymentBalance: r.loan.repaymentBalance, // Store repayment balance
-        loanStatus: r.loan.status, // Track loan status
-      };
-    }
-    grouped[loanId].totalPaid += r.amountPaid; // Accumulate amount paid per loan
+  // ✅ Create a new repayment record
+  const repayment = await Repayment.create({
+    loan: loanId,
+    user: userId,
+    amountPaid: effectivePayment,
+    paymentMethod,
+    dueDate,
+    paymentDate: new Date(),
+    status,
+    referenceId,
+    evidence: evidencePath,
   });
 
-  // Create enhanced repayment records with summarized and formatted data
+  // ✅ Update loan: reduce repaymentBalance and possibly mark loan as completed
+  const updatedLoan = await Loan.findByIdAndUpdate(
+    loanId,
+    {
+      $inc: { repaymentBalance: -effectivePayment }, // Reduce balance by effective amount
+      $set: { 
+        status: loan.repaymentBalance - effectivePayment <= 0 ? 'completed' : 'active', // Set new status
+        lastRepaymentDate: new Date() // Track latest repayment
+      }
+    },
+    { new: true }
+  ).select('repaymentBalance status'); // Return only what's needed
+
+  // ✅ Respond with repayment details and updated loan balance/status
+  res.status(201).json({
+    message: "Repayment successful",
+    repayment,
+    repaymentBalance: Math.round(updatedLoan.repaymentBalance), // Round off the balance in response
+    loanStatus: updatedLoan.status,
+  });
+});
+
+
+
+// @desc    Get all repayment records
+// @route   GET /api/repayments
+// @access  Private/Admin
+const getAllRepayments = asyncHandler(async (req, res) => {
+  // Step 1: Aggregate total paid per loan
+  const totalPaidAggregation = await Repayment.aggregate([
+    {
+      $group: {
+        _id: '$loan', // Group by loan ID
+        totalPaid: { $sum: '$amountPaid' }, // Sum amountPaid for each loan
+      },
+    },
+  ]);
+
+  // Convert aggregation result to a lookup object for quick access
+  const totalPaidMap = totalPaidAggregation.reduce((map, item) => {
+    map[item._id.toString()] = Math.round(item.totalPaid || 0);
+    return map;
+  }, {});
+
+  // Step 2: Fetch all repayments with populated user and loan data
+  const repayments = await Repayment.find()
+    .populate('user', 'name email phone') // Populate user details
+    .populate('loan', 'amount loanType status repaymentBalance') // Populate loan details
+    .sort({ paymentDate: -1 }) // Sort by most recent payment date
+    .lean(); // Convert to plain JS objects for performance
+
+  // Step 3: Handle case where no repayments are found
+  if (!repayments || repayments.length === 0) {
+    return res.status(200).json({
+      message: 'No repayments found',
+      total: 0,
+      repayments: [],
+    });
+  }
+
+  // Step 4: Create enhanced repayment records
   const enhancedRepayments = repayments.map(rep => {
-    const group = grouped[rep.loan._id.toString()];
+    const loanId = rep.loan?._id?.toString();
     return {
       _id: rep._id,
-      loan: {
-        _id: rep.loan._id,
-        type: rep.loan.loanType,
-        amount: rep.loan.amount,
-        status: rep.loan.status,
-      },
-      user: {
-        _id: rep.user._id,
-        name: rep.user.name,
-        email: rep.user.email,
-        phone: rep.user.phone,
-      },
-      lastPayment: Math.round(rep.amountPaid), // Round off current repayment amount
-      totalPaidSoFar: Math.round(group.totalPaid), // Round total paid so far for loan
-      repaymentBalance: rep.loan.status === 'active' 
-        ? Math.round(group.repaymentBalance) 
-        : 0, // Only return balance if loan is active
-      paymentMethod: rep.paymentMethod,
-      dueDate: rep.dueDate,
-      paymentDate: rep.paymentDate,
-      status: rep.status,
-      referenceId: rep.referenceId,
-      evidence: rep.evidence,
+      loan: rep.loan
+        ? {
+            _id: rep.loan._id,
+            type: rep.loan.loanType || 'unknown',
+            amount: Number(rep.loan.amount) || 0,
+            status: rep.loan.status || 'unknown',
+          }
+        : { _id: null, type: 'unknown', amount: 0, status: 'unknown' },
+      user: rep.user
+        ? {
+            _id: rep.user._id,
+            name: rep.user.name || 'Unknown',
+            email: rep.user.email || 'N/A',
+            phone: rep.user.phone || 'N/A',
+          }
+        : { _id: null, name: 'Unknown', email: 'N/A', phone: 'N/A' },
+      lastPayment: Math.round(Number(rep.amountPaid) || 0), // Current repayment amount
+      totalPaidSoFar: loanId ? totalPaidMap[loanId] || 0 : 0, // Total paid for this loan
+      repaymentBalance: rep.loan?.status === 'active' && rep.loan?.repaymentBalance
+        ? Math.round(Number(rep.loan.repaymentBalance) || 0)
+        : 0, // Balance only for active loans
+      paymentMethod: rep.paymentMethod || 'N/A',
+      dueDate: rep.dueDate || null,
+      paymentDate: rep.paymentDate || null,
+      status: rep.status || 'unknown',
+      referenceId: rep.referenceId || 'N/A',
+      evidence: rep.evidence || null,
     };
   });
 
-  // Send formatted response with all repayment data
+  // Step 5: Send response with formatted repayment data
   res.status(200).json({
-    message: "Fetched all repayments",
+    message: 'Fetched all repayments successfully',
     total: enhancedRepayments.length,
     repayments: enhancedRepayments,
   });
 });
+
+
 
 
 // @desc    Get repayment by ID
