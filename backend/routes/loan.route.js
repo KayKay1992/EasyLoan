@@ -12,11 +12,11 @@ const {
   applyForLoan,
   rejectLoan,
   getLoanOffer,
-  deleteLoanOffer
+  deleteLoanOffer,
+  getUserLoans
 } = require('../controllers/loan.controller');
 const { uploadDocument } = require('../middleware/fileUploadMiddleware');
 const upload = require('../middleware/uploadMiddleware');
-
 
 const router = express.Router();
 
@@ -24,25 +24,18 @@ const router = express.Router();
 router.get('/offer', getLoanOffer);
 
 // Loan dashboard routes
-router.get('/dashboard-data', protect, adminOnly, getAdminLoanDashboard); // Admin dashboard
-router.get('/user-dashboard-data', protect, getUserLoanDashboard); // User-specific loan stats
+router.get('/dashboard-data', protect, adminOnly, getAdminLoanDashboard);
+router.get('/user-dashboard-data', protect, getUserLoanDashboard);
 
 // Loan management
-router.get('/', protect, adminOnly, getAllLoans); // Get all loans
-router.get('/:id', protect, getLoanById); // Get loan by ID
-router.post('/', protect, adminOnly, upload.single("document"), createLoan); // Create new loan (admin only)
-router.put(
-  '/:id',
-  protect,
-  adminOnly,
-  upload.single('document'), // Handle single file upload
-  updateLoan
-);
-// router.delete('/:id', protect, adminOnly, deleteLoan); // Delete loan (admin only)
-router.delete('/:id', protect, adminOnly, deleteLoanOffer); // Delete loan (admin only)
-router.post('/reject/:id', protect, adminOnly, rejectLoan);
-router.put('/:id/status', protect, updateLoanStatus); // Update loan status (e.g., approved, completed)
-router.post('/apply', protect, uploadDocument.single('document'), applyForLoan);
-
+router.get('/', protect, adminOnly, getAllLoans); // All loans
+router.post('/', protect, adminOnly, upload.single("document"), createLoan); // Create loan
+router.put('/:id/status', protect, updateLoanStatus); // Update status
+router.post('/reject/:id', protect, adminOnly, rejectLoan); // Reject loan
+router.put('/:id', protect, adminOnly, upload.single('document'), updateLoan); // Update loan
+router.post('/apply', protect, uploadDocument.single('document'), applyForLoan); // Apply for loan
+router.get('/user/:userId/stats', protect, getUserLoans); // User stats
+router.delete('/:id', protect, adminOnly, deleteLoanOffer); // Delete loan
+router.get('/:id', protect, getLoanById); // ⚠️ Must be last: generic route
 
 module.exports = router;

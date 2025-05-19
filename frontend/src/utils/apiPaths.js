@@ -29,7 +29,8 @@ export const API_PATHS = {
     UPDATE_LOAN_STATUS: (loanId) => `/api/loan/${loanId}/status`,
     APPLY_LOAN: `/api/loan/apply`, //apply loan
     REJECT_LOAN: (loanId)=> `/api/loan/reject/${loanId}`,
-    GET_LOAN_OFFER: `/api/loan/offer`
+    GET_LOAN_OFFER: `/api/loan/offer`,
+     GET_USER_LOANS:(userId)=>`/api/loan/user/${userId}/stats`// Base path for /api/loans/:userId
   },
 
   TRANSACTION: {
