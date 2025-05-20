@@ -550,73 +550,74 @@ const getUserLoanDashboard = asyncHandler(async (req, res) => {
   // Get the authenticated user's ID from the request
   const userId = req.user._id;
 
-  // 1. FETCH BASIC STATISTICS FOR USER'S LOANS
-  // Count all loans taken by the user
-  const totalLoans = await Loan.countDocuments({ user: userId });
+  // 1. FETCH LOAN DISTRIBUTION BY STATUS
+  const statusCounts = await Loan.aggregate([
+    { $match: { user: userId } },
+    {
+      $group: {
+        _id: "$status",
+        count: { $sum: 1 }
+      }
+    }
+  ]);
 
-  // Count active loans for the user
-  const activeLoans = await Loan.countDocuments({
-    user: userId,
-    status: "active",
+  // Convert to object format with all possible statuses
+  const statuses = ["active", "approved", "completed", "defaulted", "pending", "rejected"];
+  const loanDistribution = statusCounts.reduce((acc, { _id, count }) => {
+    acc[_id] = count;
+    return acc;
+  }, {});
+
+  // Ensure all statuses are included (even with 0 count)
+  statuses.forEach(status => {
+    if (!loanDistribution.hasOwnProperty(status)) {
+      loanDistribution[status] = 0;
+    }
   });
 
-  // Count completed loans for the user
-  const completedLoans = await Loan.countDocuments({
-    user: userId,
-    status: "completed",
-  });
-
-  // Count defaulted loans (not completed and overdue)
-  const defaultedLoans = await Loan.countDocuments({
-    user: userId,
-    status: "defaulted",
-  });
+  // Calculate total loans count
+  loanDistribution.All = Object.values(loanDistribution).reduce((a, b) => a + b, 0);
 
   // 2. LOAN TYPES DISTRIBUTION
-  // All possible loan types to track
   const loanTypes = [
     "personal",
     "business",
     "student",
     "mortgage",
     "car loan",
-    "quickie loan",
+    "quickie loan"
   ];
 
-  // Get raw count of loans grouped by type for the user
+  // Get raw count of loans grouped by type
   const loanTypesRaw = await Loan.aggregate([
-    { $match: { user: userId } }, // Filter loans by the user
+    { $match: { user: userId } },
     {
       $group: {
-        _id: "$loanType", // Group by loan type
-        count: { $sum: 1 }, // Count loans in each group
-      },
-    },
+        _id: "$loanType",
+        count: { $sum: 1 }
+      }
+    }
   ]);
 
   // Transform data to include all loan types (even with 0 count)
-  const loanTypesDistribution = loanTypes.reduce((acc, type) => {
-    acc[type] = loanTypesRaw.find((item) => item._id === type)?.count || 0;
+  const loanTypeLevels = loanTypes.reduce((acc, type) => {
+    acc[type] = loanTypesRaw.find(item => item._id === type)?.count || 0;
     return acc;
   }, {});
 
   // 3. RECENT LOANS
-  // Get 5 most recent loans for the user with selected fields
   const recentLoans = await Loan.find({ user: userId })
-    .sort({ createdAt: -1 }) // Newest first
-    .limit(5) // Only 5 most recent loans
-    .select("amount loanType status createdAt"); // Selected fields
+    .sort({ createdAt: -1 })
+    .limit(5)
+    .select("user amount loanType status createdAt");
 
-  // 4. RETURN COMPREHENSIVE LOAN DATA FOR THE USER
+  // 4. RETURN DATA IN FORMAT EXPECTED BY FRONTEND
   res.status(200).json({
-    statistics: {
-      totalLoans, // Total loans for the user
-      activeLoans, // Active loans count
-      completedLoans, // Completed loans count
-      defaultedLoans, // Defaulted loans count
+    charts: {
+      loanDistribution,
+      loanTypeLevels
     },
-    loanTypes: loanTypesDistribution, // Loan distribution by type
-    recentLoans, // List of recent loans
+    recentLoans: recentLoans
   });
 });
 
