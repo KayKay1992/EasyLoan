@@ -30,7 +30,8 @@ export const API_PATHS = {
     APPLY_LOAN: `/api/loan/apply`, //apply loan
     REJECT_LOAN: (loanId)=> `/api/loan/reject/${loanId}`,
     GET_LOAN_OFFER: `/api/loan/offer`,
-     GET_USER_LOANS:(userId)=>`/api/loan/user/${userId}/stats`// Base path for /api/loans/:userId
+     GET_USER_LOANS:(userId)=>`/api/loan/user/${userId}/stats`,// Base path for /api/loans/:userId
+    GET_LOAN_BY_USER:(userId) => `/api/loan/user/${userId}`
   },
 
   TRANSACTION: {

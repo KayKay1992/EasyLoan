@@ -104,6 +104,93 @@ const getUserLoans = asyncHandler(async (req, res) => {
   });
 });
 
+const getLoansByUser = asyncHandler(async (req, res) => {
+  // Authorization check
+  const requestedUserId = req.params.userId;
+  
+  if (!req.user || (req.user._id.toString() !== requestedUserId && req.user.role !== "admin")) {
+    console.log(`Unauthorized attempt by: ${req.user?._id || "unknown"}`);
+    res.status(403);
+    throw new Error("Not authorized to access this user's loan data");
+  }
+
+  // Extract query parameters
+  const { page = 1, limit = 10, status } = req.query;
+  const query = { user: requestedUserId };
+
+  if (status) {
+    query.status = status;
+  }
+
+  const pageNum = parseInt(page, 10);
+  const limitNum = parseInt(limit, 10);
+  const skip = (pageNum - 1) * limitNum;
+
+  try {
+    // Fetch loans with processing
+    let loans = await Loan.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limitNum)
+      .lean();
+
+    // Process each loan
+    loans = await Promise.all(loans.map(async (loan) => {
+      let needsUpdate = false;
+      const updateFields = {};
+
+      // Calculate endDate if loan is active and endDate doesn't exist
+      if (loan.status === 'active' && !loan.endDate && loan.createdAt && loan.termMonths) {
+        const endDate = new Date(loan.createdAt);
+        endDate.setMonth(endDate.getMonth() + loan.termMonths);
+        updateFields.endDate = endDate;
+        needsUpdate = true;
+      }
+
+      // Check for defaulted loans
+      if (loan.status === 'active' && loan.endDate && new Date(loan.endDate) < new Date()) {
+        // Replace with your actual payment verification logic
+        const isUnpaid = true; 
+        
+        if (isUnpaid) {
+          updateFields.status = 'defaulted';
+          updateFields.defaultedAt = new Date();
+          needsUpdate = true;
+        }
+      }
+
+      // Update loan if needed
+      if (needsUpdate) {
+        const updatedLoan = await Loan.findByIdAndUpdate(
+          loan._id,
+          updateFields,
+          { new: true }
+        ).lean();
+        return updatedLoan;
+      }
+
+      return loan;
+    }));
+
+    // Get total count
+    const totalLoans = await Loan.countDocuments(query);
+
+    res.status(200).json({
+      success: true,
+      data: loans,
+      meta: {
+        total: totalLoans,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(totalLoans / limitNum),
+      },
+    });
+  } catch (error) {
+    console.error(`Error fetching loans: ${error.message}`);
+    res.status(500);
+    throw new Error("Server error while fetching user loans");
+  }
+});
 // @desc    Get a loan by ID
 // @route   GET /api/loans/:id
 // @access  Protected
@@ -708,4 +795,5 @@ module.exports = {
   getLoanOffer,
   deleteLoanOffer,
   getUserLoans,
+  getLoansByUser
 };

@@ -18,6 +18,7 @@ import { Toaster } from 'react-hot-toast'
 import CreateNotification from './Pages/AdminPages/CreateNotifications'
 import CreateSetting from './Pages/AdminPages/CreateSetting'
 import RepaymentsTable from './Pages/AdminPages/Repayment'
+import MyLoans from './Pages/UserPages/MyLoans'
 
 
 const App = () => {
@@ -37,6 +38,7 @@ const App = () => {
             <Route path="/user/dashboard" element={<UserDashboard />} />
             <Route path="/user/loan-details/:id" element={<LoanDetails />} />
             <Route path="/user/loan-calculator" element={<LoanCalculator />} />
+            <Route path="/user/loans" element={<MyLoans />} />
             <Route path="/user/apply-loan" element={<ApplyLoan/>} />
           </Route>
 

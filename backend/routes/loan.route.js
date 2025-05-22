@@ -13,7 +13,8 @@ const {
   rejectLoan,
   getLoanOffer,
   deleteLoanOffer,
-  getUserLoans
+  getUserLoans,
+  getLoansByUser
 } = require('../controllers/loan.controller');
 const { uploadDocument } = require('../middleware/fileUploadMiddleware');
 const upload = require('../middleware/uploadMiddleware');
@@ -37,5 +38,6 @@ router.post('/apply', protect, uploadDocument.single('document'), applyForLoan);
 router.get('/user/:userId/stats', protect, getUserLoans); // User stats
 router.delete('/:id', protect, adminOnly, deleteLoanOffer); // Delete loan
 router.get('/:id', protect, getLoanById); // ⚠️ Must be last: generic route
+router.get('/user/:userId', protect, getLoansByUser); // ⚠️ Must be last: generic route
 
 module.exports = router;
