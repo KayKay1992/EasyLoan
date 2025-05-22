@@ -19,6 +19,7 @@ import CreateNotification from './Pages/AdminPages/CreateNotifications'
 import CreateSetting from './Pages/AdminPages/CreateSetting'
 import RepaymentsTable from './Pages/AdminPages/Repayment'
 import MyLoans from './Pages/UserPages/MyLoans'
+import UserLoanDetails from './Pages/UserPages/UserLoanDetails'
 
 
 const App = () => {
@@ -36,7 +37,7 @@ const App = () => {
           {/* User routes go here */}
           <Route element={<PrivateRoute allowedRoles={["admin"]} />}>
             <Route path="/user/dashboard" element={<UserDashboard />} />
-            <Route path="/user/loan-details/:id" element={<LoanDetails />} />
+            <Route path="/loans/:id" element={<UserLoanDetails/>} />
             <Route path="/user/loan-calculator" element={<LoanCalculator />} />
             <Route path="/user/loans" element={<MyLoans />} />
             <Route path="/user/apply-loan" element={<ApplyLoan/>} />

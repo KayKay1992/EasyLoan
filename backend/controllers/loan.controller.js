@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const Loan = require("../models/loan.model");
 const User = require("../models/user.model");
+const { default: mongoose } = require("mongoose");
 
 // @desc    Get all loans
 // @route   GET /api/loans
@@ -197,7 +198,14 @@ const getLoansByUser = asyncHandler(async (req, res) => {
 const getLoanById = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  // Find the loan by its ID and populate user name and email
+
+  // Validate ID format
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    res.status(400);
+    throw new Error('Invalid loan ID format');
+  }
+  try{
+     // Find the loan by its ID and populate user name and email
   const loan = await Loan.findById(id).populate("user", "name email");
 
   // If loan not found, return 404 error
@@ -208,6 +216,12 @@ const getLoanById = asyncHandler(async (req, res) => {
 
   // Return the found loan
   res.status(200).json(loan);
+  } catch (error) {
+    console.error('Error in getLoanById:', error);
+    res.status(500);
+    throw new Error('Server error while fetching loan');
+  }
+ 
 });
 
 // @desc    Admin creates loan template (not assigned to user)

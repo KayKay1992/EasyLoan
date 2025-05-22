@@ -60,7 +60,7 @@ const LoanDetails = () => {
       navigate(`/admin/transactions?${queryParams}`);
     }
   };
-
+  
   return (
     <DashboardLayout activeMenu="Manage Loan">
       <div className="container mx-auto px-4 py-6">
@@ -209,7 +209,7 @@ const LoanDetails = () => {
                 </div>
                 <div>
                   <p className="text-gray-600">
-                    <span className="font-semibold">Total Repayable:</span> $
+                    <span className="font-semibold">Total Repayable:</span> #
                     {loan.totalRepayable
                       ? loan.totalRepayable.toLocaleString(undefined, {
                           maximumFractionDigits: 2,

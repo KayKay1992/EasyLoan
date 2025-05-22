@@ -86,7 +86,7 @@ const handleUpdateOffer = (loan) => {
   });
 };
   return (
-    <DashboardLayout activeMenu="Manage Loan">
+    <DashboardLayout activeMenu="Manage Loans">
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-col sm:flex-row justify-between items-center mb-6">
           <h2 className="text-2xl font-semibold text-gray-800">

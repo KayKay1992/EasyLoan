@@ -143,7 +143,7 @@ const MyLoans = () => {
             id="status-filter"
             value={statusFilter}
             onChange={handleStatusFilterChange}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 border"
+            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-amber-600 focus:ring-amber-700 py-2 px-3 border"
           >
             <option value="all">All Statuses</option>
             <option value="active">Active</option>
@@ -169,7 +169,7 @@ const MyLoans = () => {
 
       {loading ? (
         <div className="flex justify-center items-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-700"></div>
         </div>
       ) : loans.length === 0 ? (
         <div className="bg-gray-50 rounded-lg p-8 text-center">
