@@ -48,43 +48,44 @@ const ManageLoans = () => {
     setIsLoanOffers(!isLoanOffers);
   };
 
-const handleDeleteOffer = async (loanId) => {
-  if (!window.confirm("Are you sure you want to delete this loan offer?")) {
-    return;
-  }
-  try {
-    // Use the DELETE_LOAN_OFFER path from API_PATHS
-    await axiosInstance.delete(API_PATHS.LOANS.DELETE_LOAN_OFFER(loanId));
-    toast.success("Loan offer deleted successfully!");
-    fetchLoans(); // Refresh the list
-  } catch (err) {
-    const errorMessage =
-      err.response?.data?.message || "Failed to delete loan offer";
-    console.error("Delete error:", {
-      message: err.message,
-      status: err.response?.status,
-      data: err.response?.data,
-      config: err.config
-    });
-    toast.error(errorMessage);
-  }
-};
-
-const handleUpdateOffer = (loan) => {
-  navigate(`/admin/create-loan`, {
-    state: {
-      isEditMode: true,
-      loanData: {  // Ensure this matches your expected structure
-        _id: loan._id,
-        amount: loan.amount,
-        loanType: loan.loanType,
-        interestRate: loan.interestRate,
-        termMonths: loan.termMonths,
-        // Don't include document here as it needs re-upload
-      }
+  const handleDeleteOffer = async (loanId) => {
+    if (!window.confirm("Are you sure you want to delete this loan offer?")) {
+      return;
     }
-  });
-};
+    try {
+      // Use the DELETE_LOAN_OFFER path from API_PATHS
+      await axiosInstance.delete(API_PATHS.LOANS.DELETE_LOAN_OFFER(loanId));
+      toast.success("Loan offer deleted successfully!");
+      fetchLoans(); // Refresh the list
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.message || "Failed to delete loan offer";
+      console.error("Delete error:", {
+        message: err.message,
+        status: err.response?.status,
+        data: err.response?.data,
+        config: err.config,
+      });
+      toast.error(errorMessage);
+    }
+  };
+
+  const handleUpdateOffer = (loan) => {
+    navigate(`/admin/create-loan`, {
+      state: {
+        isEditMode: true,
+        loanData: {
+          // Ensure this matches your expected structure
+          _id: loan._id,
+          amount: loan.amount,
+          loanType: loan.loanType,
+          interestRate: loan.interestRate,
+          termMonths: loan.termMonths,
+          // Don't include document here as it needs re-upload
+        },
+      },
+    });
+  };
   return (
     <DashboardLayout activeMenu="Manage Loans">
       <div className="container mx-auto px-4 py-6">
@@ -157,22 +158,22 @@ const handleUpdateOffer = (loan) => {
                       <span className="font-semibold">Term:</span>{" "}
                       {loan.termMonths} months
                     </p>
-                   {loan.documents && loan.documents.length > 0 && (
-  <p className="text-gray-600 mt-1">
-    <span className="font-semibold">Documents:</span>{" "}
-    {loan.documents.map((doc, index) => (
-      <a
-        key={index}
-        href={`${axiosInstance.defaults.baseURL}/uploads/${doc}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-amber-500 hover:underline"
-      >
-        Doc {index + 1}
-      </a>
-    ))}
-  </p>
-)}
+                    {loan.documents && loan.documents.length > 0 && (
+                      <p className="text-gray-600 mt-1">
+                        <span className="font-semibold">Documents:</span>{" "}
+                        {loan.documents.map((doc, index) => (
+                          <a
+                            key={index}
+                            href={`${axiosInstance.defaults.baseURL}/uploads/${doc}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-amber-500 hover:underline"
+                          >
+                            Doc {index + 1}
+                          </a>
+                        ))}
+                      </p>
+                    )}
                     <p className="text-gray-500 text-sm mt-2">
                       Created: {new Date(loan.createdAt).toLocaleDateString()}
                     </p>
