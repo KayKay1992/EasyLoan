@@ -1,25 +1,30 @@
-const multer = require('multer')
+const multer = require('multer');
 
-//configure storage
+// Configure storage
 const storage = multer.diskStorage({
-    destination: (req,file,cb) =>{
-        cb(null, 'uploads/')
-    },
-    filename: (req, file, cb) => {
-        cb(null, `${Date.now()}-${file.originalname}`)
-    },
-})
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  },
+});
 
-//file filter
-const fileFilter = (req,file , cb)=>{
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
-    if(allowedTypes.includes(file.mimetype)){
-        cb(null, true);
-    }else{
-        cb(new Error('Only .jpeg, .jpg and .png formats are allowed'), false)
-    }
-}
+// File filter
+const fileFilter = (req, file, cb) => {
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only .jpeg, .jpg, .png, and .pdf formats are allowed'), false);
+  }
+};
 
-const upload = multer({storage, fileFilter})
+// Configure multer to expect 'documents' field
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+}).single('documents');
 
 module.exports = upload;

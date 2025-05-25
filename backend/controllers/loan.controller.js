@@ -94,7 +94,7 @@ const getUserLoans = asyncHandler(async (req, res) => {
   }
 
   const loans = await Loan.find({ user: userId })
-    .select("amount status createdAt updatedAt")
+    .select("amount status createdAt updatedAt documents")
     .lean();
 
   console.log("Loans fetched:", loans);
@@ -362,6 +362,48 @@ const getLoanOffer = asyncHandler(async (req, res) => {
     console.error(`Error fetching loan offers: ${error.message}`);
     res.status(500);
     throw new Error("Server error while fetching loan offers");
+  }
+});
+
+// Get a single loan offer by ID (accessible to all users)
+const getLoanOfferById = asyncHandler(async (req, res) => {
+  const { id } = req.params; // Get the loan offer ID from URL parameters
+
+  try {
+    // Find the loan offer by ID and ensure it's marked as an offer
+    const loanOffer = await Loan.findOne({
+      _id: id,
+      isOffer: true
+    })
+    .select("loanType amount interestRate termMonths documents description eligibilityCriteria") // Select fields to return
+    .lean(); // Convert to plain JavaScript object
+
+    // If no loan offer found with that ID
+    if (!loanOffer) {
+      res.status(404);
+      throw new Error("Loan offer not found");
+    }
+
+    // Log the action for debugging (optional)
+    console.log(`Fetched loan offer with ID: ${id}`);
+
+    // Return the loan offer
+    res.status(200).json({
+      success: true,
+      data: loanOffer
+    });
+  } catch (error) {
+    console.error(`Error fetching loan offer with ID ${id}: ${error.message}`);
+    
+    // Handle CastError (invalid ID format)
+    if (error.name === 'CastError') {
+      res.status(400);
+      throw new Error("Invalid loan offer ID format");
+    }
+    
+    // Pass other errors to the error handler
+    res.status(error.statusCode || 500);
+    throw error;
   }
 });
 
@@ -723,76 +765,182 @@ const getUserLoanDashboard = asyncHandler(async (req, res) => {
 });
 
 const applyForLoan = asyncHandler(async (req, res) => {
-  const {
-    amount,
-    duration,
-    reason,
-    loanType,
-    interestRate,
-    bankName,
-    accountName,
-    accountNumber,
-    BVN,
-    phone,
-    email,
-  } = req.body;
+  try {
+    // Log incoming request
+    console.log('Received loan application:', {
+      body: req.body,
+      file: req.file ? req.file.path : 'No file uploaded',
+      fields: Object.keys(req.body)
+    });
 
-  // STEP 1: Check if user has defaulted within the last 3 months
-  const threeMonthsAgo = new Date();
-  threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+    // Validate authentication
+    if (!req.user || !req.user._id) {
+      console.error('Authentication error: req.user is undefined');
+      return res.status(401).json({
+        message: 'Unauthorized: Please log in to apply for a loan'
+      });
+    }
 
-  const recentDefaultedLoan = await Loan.findOne({
-    user: req.user._id,
-    status: "defaulted",
-    defaultedAt: { $gte: threeMonthsAgo }, // Must exist in your schema
-  });
+    const {
+      amount,
+      duration,
+      reason,
+      loanType,
+      interestRate,
+      monthlyPayment,
+      totalRepayable,
+      bankName,
+      accountName,
+      accountNumber,
+      BVN,
+      phone,
+      email
+    } = req.body;
 
-  if (recentDefaultedLoan) {
-    return res.status(403).json({
-      message: "You cannot apply for a new loan within 3 months of defaulting.",
+    // Validate required fields
+    const requiredFields = {
+      amount,
+      duration,
+      reason,
+      loanType,
+      interestRate,
+      monthlyPayment,
+      totalRepayable,
+      bankName,
+      accountName,
+      accountNumber,
+      BVN,
+      phone,
+      email
+    };
+    const missingFields = Object.keys(requiredFields).filter(
+      key => requiredFields[key] === undefined || requiredFields[key] === ''
+    );
+    if (missingFields.length > 0) {
+      console.error('Missing fields:', missingFields);
+      return res.status(400).json({
+        message: `Missing required fields: ${missingFields.join(', ')}`
+      });
+    }
+
+    // Validate data types
+    const parsedAmount = parseFloat(amount);
+    const parsedDuration = parseInt(duration);
+    const parsedInterestRate = parseFloat(interestRate);
+    const parsedMonthlyPayment = parseFloat(monthlyPayment);
+    const parsedTotalRepayable = parseFloat(totalRepayable);
+
+    if (
+      isNaN(parsedAmount) ||
+      isNaN(parsedDuration) ||
+      isNaN(parsedInterestRate) ||
+      isNaN(parsedMonthlyPayment) ||
+      isNaN(parsedTotalRepayable)
+    ) {
+      console.error('Invalid data types:', {
+        amount,
+        duration,
+        interestRate,
+        monthlyPayment,
+        totalRepayable
+      });
+      return res.status(400).json({
+        message: 'Invalid data types: amount, duration, interestRate, monthlyPayment, and totalRepayable must be numbers'
+      });
+    }
+
+    // Validate loanType
+    const validLoanTypes = ['personal', 'business', 'student', 'mortgage', 'car loan', 'quickie loan'];
+    if (!validLoanTypes.includes(loanType)) {
+      console.error('Invalid loanType:', loanType);
+      return res.status(400).json({
+        message: `Invalid loanType. Must be one of: ${validLoanTypes.join(', ')}`
+      });
+    }
+
+    // Check for recent defaulted loans
+    const threeMonthsAgo = new Date();
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
+    const recentDefaultedLoan = await Loan.findOne({
+      user: req.user._id,
+      status: 'defaulted',
+      defaultedAt: { $gte: threeMonthsAgo }
+    });
+
+    if (recentDefaultedLoan) {
+      console.log('User has recent defaulted loan:', req.user._id);
+      return res.status(403).json({
+        message: 'You cannot apply for a new loan within 3 months of defaulting.'
+      });
+    }
+
+    // Get document path
+    const documentPath = req.file?.path;
+    console.log('Document path:', documentPath || 'None');
+
+    // Generate a unique Loan ID
+    const loanId = `LOAN-${Date.now()}`;
+    console.log('Generated loanId:', loanId);
+
+    // Create new loan application
+    const loanData = {
+      user: req.user._id,
+      loanId,
+      amount: parsedAmount,
+      duration: parsedDuration,
+      reason,
+      loanType,
+      interestRate: parsedInterestRate,
+      termMonths: parsedDuration,
+      monthlyPayment: parsedMonthlyPayment,
+      totalRepayable: parsedTotalRepayable,
+      status: 'pending',
+      applicationDate: new Date(),
+      bankName,
+      accountName,
+      accountNumber,
+      BVN,
+      phone,
+      email,
+      documents: documentPath ? [documentPath] : []
+    };
+
+    console.log('Creating loan with data:', loanData);
+    const newLoan = await Loan.create(loanData);
+    console.log('Loan created successfully:', newLoan._id);
+
+    res.status(201).json({
+      message: 'Loan application submitted successfully',
+      loan: newLoan
+    });
+  } catch (error) {
+    console.error('Error in applyForLoan:', {
+      message: error.message,
+      stack: error.stack,
+      code: error.code
+    });
+    if (error instanceof mongoose.Error.ValidationError) {
+      return res.status(400).json({
+        message: 'Validation failed',
+        errors: Object.values(error.errors).map(err => err.message)
+      });
+    }
+    if (error.code === 'LIMIT_UNEXPECTED_FILE' || error.message.includes('Unexpected field')) {
+      return res.status(400).json({
+        message: `File upload error: Unexpected field '${error.field || 'unknown'}'`
+      });
+    }
+    if (error.message.includes('Only .jpeg, .jpg, .png, and .pdf formats are allowed')) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }
+    res.status(500).json({
+      message: 'Server error. Please try again later.',
+      error: error.message
     });
   }
-
-  const documentPath = req.file?.path; // for loan documents
-
-  // Generate a unique Loan ID (example: LOAN-1687984353463)
-  const loanId = `LOAN-${Date.now()}`;
-
-  // STEP 2: Calculate monthly payment and total repayable
-  const monthlyInterestRate = interestRate / 100 / 12;
-  const termMonths = duration;
-  const monthlyPayment =
-    (amount * monthlyInterestRate) /
-    (1 - Math.pow(1 + monthlyInterestRate, -termMonths));
-  const totalRepayable = monthlyPayment * termMonths;
-
-  // STEP 3: Create new loan application
-  const newLoan = await Loan.create({
-    user: req.user._id,
-    loanId, // Store the generated loan ID
-    amount,
-    duration,
-    reason,
-    loanType,
-    interestRate,
-    termMonths,
-    monthlyPayment,
-    totalRepayable,
-    status: "pending",
-    applicationDate: new Date(),
-    bankName,
-    accountName,
-    accountNumber,
-    BVN,
-    phone,
-    email, // assuming your schema supports this
-    documents: documentPath, // Add path to uploaded file, // Multer required
-  });
-
-  res.status(201).json({
-    message: "Loan application submitted successfully",
-    loan: newLoan,
-  });
 });
 
 module.exports = {
@@ -809,5 +957,6 @@ module.exports = {
   getLoanOffer,
   deleteLoanOffer,
   getUserLoans,
-  getLoansByUser
+  getLoansByUser,
+  getLoanOfferById
 };

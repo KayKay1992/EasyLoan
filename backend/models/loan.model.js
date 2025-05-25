@@ -1,53 +1,53 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const loanSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    // required: true
+    ref: "User",
   },
-
   amount: {
     type: Number,
-    required: true
   },
   loanType: {
     type: String,
-    enum: ['personal', 'business', 'student', 'mortgage', 'car loan','quickie loan'], // You can add more
-    required: true
+    enum: [
+      "personal",
+      "business",
+      "student",
+      "mortgage",
+      "car loan",
+      "quickie loan",
+    ],
   },
   interestRate: {
     type: Number,
-    required: true
   },
-
   termMonths: {
     type: Number,
-    required: true
   },
-
   monthlyPayment: {
     type: Number,
-    // required: true
   },
-
   totalRepayable: {
     type: Number,
-    // required: true
   },
-
   status: {
     type: String,
-    enum: ['pending', 'approved', 'rejected', 'active', 'completed', 'defaulted'],
-    default: 'pending'
+    enum: [
+      "pending",
+      "approved",
+      "rejected",
+      "active",
+      "completed",
+      "defaulted",
+    ],
+    default: "pending",
   },
-
   startDate: {
-    type: Date
+    type: Date,
   },
-
   endDate: {
-    type: Date
+    type: Date,
   },
   documents: [
     {
@@ -56,47 +56,40 @@ const loanSchema = new mongoose.Schema({
   ],
   bankName: {
     type: String,
-    // required: true,
   },
   accountName: {
     type: String,
-    // required: true,
   },
   accountNumber: {
     type: String,
-    // required: true,
   },
   BVN: {
     type: String,
-    // required: true,
   },
   phone: {
     type: String,
-    // required: true,
   },
-  
   email: {
     type: String,
-    // required: true,
   },
   isOffer: {
     type: Boolean,
     default: false,
   },
-  
   createdAt: {
     type: Date,
-    default: Date.now
+    default: Date.now,
   },
   defaultedAt: {
     type: Date,
   },
   repaymentBalance: {
     type: Number,
-   
-    default: 0
-  }
-  
+    default: 0,
+  },
+  loanId: {
+    type: String, // Added to match controller
+  },
 });
 
-module.exports = mongoose.model('Loan', loanSchema);
+module.exports = mongoose.model("Loan", loanSchema);

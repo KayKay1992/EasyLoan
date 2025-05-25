@@ -20,6 +20,7 @@ import CreateSetting from './Pages/AdminPages/CreateSetting'
 import RepaymentsTable from './Pages/AdminPages/Repayment'
 import MyLoans from './Pages/UserPages/MyLoans'
 import UserLoanDetails from './Pages/UserPages/UserLoanDetails'
+import LoanApplicationForm from './Pages/UserPages/LoanApplicationForm'
 
 
 const App = () => {
@@ -41,6 +42,7 @@ const App = () => {
             <Route path="/user/loan-calculator" element={<LoanCalculator />} />
             <Route path="/user/loans" element={<MyLoans />} />
             <Route path="/user/apply-loan" element={<ApplyLoan/>} />
+            <Route path="/user/loan-form" element={<LoanApplicationForm/>} />
           </Route>
 
           {/* Admin routes go here */}

@@ -189,22 +189,35 @@ const UserLoanDetails = () => {
           </div>
         </div>
         
-        {/* Documents section */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-4">Documents</h2>
-          {loan.documents && loan.documents.length > 0 ? (
-            <div className="space-y-3">
-              {loan.documents.map((doc, index) => (
-                <div key={index} className="border-b pb-3 last:border-b-0">
-                  <p className="font-medium">{doc.name || `Document ${index + 1}`}</p>
-                  <p className="text-sm text-gray-500">{doc.type}</p>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-500">No documents uploaded for this loan.</p>
-          )}
-        </div>
+     {/* Documents section with additional safeguards */}
+ {loan.documents && loan.documents.length > 0 ? (
+              <section className="mb-8">
+                <h3 className="text-lg font-medium text-gray-800 border-b-2 border-amber-200 pb-2 mb-4">
+                  Documents
+                </h3>
+                <ul className="space-y-2">
+                  {loan.documents.map((doc, index) => (
+                    <li key={index}>
+                      <a
+                        href={`${axiosInstance.defaults.baseURL}/${doc}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-amber-500 hover:text-amber-600 font-medium"
+                      >
+                        Document {index + 1}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : (
+              <section className="mb-8">
+                <h3 className="text-lg font-medium text-gray-800 border-b-2 border-amber-200 pb-2 mb-4">
+                  Documents
+                </h3>
+                <p className="text-gray-600">No documents available.</p>
+              </section>
+            )}
       </div>
     </DashboardLayout>
   );

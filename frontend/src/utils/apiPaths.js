@@ -31,7 +31,9 @@ export const API_PATHS = {
     REJECT_LOAN: (loanId)=> `/api/loan/reject/${loanId}`,
     GET_LOAN_OFFER: `/api/loan/offer`,
      GET_USER_LOANS:(userId)=>`/api/loan/user/${userId}/stats`,// Base path for /api/loans/:userId
-    GET_LOAN_BY_USER:(userId) => `/api/loan/user/${userId}`
+    GET_LOAN_BY_USER:(userId) => `/api/loan/user/${userId}`,
+    LOAN_OFFER_BY_ID:(offerId) => `/api/loan/offer/${offerId}`
+
   },
 
   TRANSACTION: {

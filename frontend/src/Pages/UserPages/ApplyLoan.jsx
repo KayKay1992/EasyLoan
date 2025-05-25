@@ -92,20 +92,20 @@ const LoanOffers = () => {
   // Loading state UI
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <DashboardLayout className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-center items-center min-h-[60vh]">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-600"></div>
           </div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
   // Error state UI
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <DashboardLayout className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div
             className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4"
@@ -114,7 +114,7 @@ const LoanOffers = () => {
             <p>{error}</p>
           </div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
@@ -237,7 +237,7 @@ const LoanOffers = () => {
 
                 {/* Apply button */}
                 <button
-                  onClick={() => navigate(`/apply-loan/${offer._id}`)}
+                  onClick={() => navigate(`/user/loan-form`)}
                   className="w-full flex justify-center items-center px-4 py-3 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-amber-600 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-colors duration-200"
                 >
                   Apply Now <FiArrowRight className="ml-2" />
