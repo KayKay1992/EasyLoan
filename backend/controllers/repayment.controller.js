@@ -29,11 +29,19 @@ const createRepayment = asyncHandler(async (req, res) => {
   const evidencePath = req.file?.path || null;
 
   // ✅ Find the loan document and select the repaymentBalance field explicitly
-  const loan = await Loan.findById(loanId).select('+repaymentBalance');
+  const loan = await Loan.findById(loanId).select('+repaymentBalance +status');
   if (!loan) {
     res.status(404);
     throw new Error("Loan not found");
   }
+
+    // Status validation
+  const invalidStatuses = ['rejected', 'pending', 'completed'];
+  if (invalidStatuses.includes(loan.status)) {
+    res.status(400);
+    throw new Error(`Cannot create repayment for ${loan.status} loans`);
+  }
+
 
   // ✅ Ensure the user trying to repay is the owner of the loan
   if (loan.user.toString() !== userId.toString()) {

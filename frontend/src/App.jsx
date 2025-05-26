@@ -1,12 +1,12 @@
 import React, { useContext } from 'react'
 import { BrowserRouter as Router, Routes, Route, Outlet, Navigate } from 'react-router-dom'
 // import Home from './Pages/UserPages/Home'
+import 'react-toastify/dist/ReactToastify.css';
 import Login from './Pages/AuthPages/Login'
 import SignUp from './Pages/AuthPages/SignUp'
 import PrivateRoute from './Routes/PrivateRoute'
 import UserDashboard from './Pages/UserPages/UserDashboard'
 import LoanDetails from './Pages/AdminPages/LoanDetails'
-import LoanCalculator from './Pages/UserPages/LoanCalculator'
 import ApplyLoan from './Pages/UserPages/ApplyLoan'
 import AdminDashboard from './Pages/AdminPages/AdminDashboard'
 import ManageLoans from './Pages/AdminPages/ManageLoans'
@@ -21,6 +21,9 @@ import RepaymentsTable from './Pages/AdminPages/Repayment'
 import MyLoans from './Pages/UserPages/MyLoans'
 import UserLoanDetails from './Pages/UserPages/UserLoanDetails'
 import LoanApplicationForm from './Pages/UserPages/LoanApplicationForm'
+import CreateRepayment from './Pages/UserPages/CreateRepayment'
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 
 const App = () => {
@@ -39,7 +42,7 @@ const App = () => {
           <Route element={<PrivateRoute allowedRoles={["admin"]} />}>
             <Route path="/user/dashboard" element={<UserDashboard />} />
             <Route path="/loans/:id" element={<UserLoanDetails/>} />
-            <Route path="/user/loan-calculator" element={<LoanCalculator />} />
+            <Route path="/user/repayments" element={<CreateRepayment />} />
             <Route path="/user/loans" element={<MyLoans />} />
             <Route path="/user/apply-loan" element={<ApplyLoan/>} />
             <Route path="/user/loan-form" element={<LoanApplicationForm/>} />
@@ -62,7 +65,17 @@ const App = () => {
            <Route path='/' element={<Root/>}/>
         </Routes>
       </Router>
-  
+     <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
    </div>
    </UserProvider>
   )
