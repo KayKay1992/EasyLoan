@@ -24,6 +24,7 @@ import LoanApplicationForm from './Pages/UserPages/LoanApplicationForm'
 import CreateRepayment from './Pages/UserPages/CreateRepayment'
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import ViewMyRepayments from './Pages/UserPages/ViewMyRepayments';
 
 
 const App = () => {
@@ -42,6 +43,7 @@ const App = () => {
           <Route element={<PrivateRoute allowedRoles={["admin"]} />}>
             <Route path="/user/dashboard" element={<UserDashboard />} />
             <Route path="/loans/:id" element={<UserLoanDetails/>} />
+          <Route path="/repayments/:userId" element={<ViewMyRepayments />} />
             <Route path="/user/repayments" element={<CreateRepayment />} />
             <Route path="/user/loans" element={<MyLoans />} />
             <Route path="/user/apply-loan" element={<ApplyLoan/>} />

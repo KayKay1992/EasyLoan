@@ -1,13 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useContext } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import DashboardLayout from '../../Components/layouts/DashboardLayout';
 import axiosInstance from '../../utils/axiosInstance';
 import { API_PATHS } from '../../utils/apiPaths';
+import { UserContext } from '../../context/userContext';
 
 const CreateRepayment = () => {
+    // const { userId } = useParams();
   const navigate = useNavigate();
+
+  // Inside your component:
+const { user } = useContext(UserContext);
+const userId = user?._id; // Get from context instead of params
   const [loanId, setLoanId] = useState('');
   const [loan, setLoan] = useState(null);
   const [formData, setFormData] = useState({
@@ -231,6 +237,12 @@ const CreateRepayment = () => {
           <p className="mt-2 text-lg text-gray-600">
             Enter your loan ID to begin repayment process
           </p>
+              <button
+                        onClick={() => navigate(`/repayments/${user?._id}`)}
+                        className="text-amber-600 hover:text-amber-900 border border-amber-600 hover:bg-blue-50 px-3 py-1 rounded-md text-sm mt-5"
+                      >
+                        View All Repayments
+                      </button>
         </div>
 
         {/* Loan ID Search Form */}

@@ -3,6 +3,7 @@
 const asyncHandler = require('express-async-handler');
 const Repayment = require('../models/repayment.model'); // Uncomment if model is ready
 const Loan = require('../models/loan.model');
+const { default: mongoose } = require('mongoose');
 
 // @desc    Create a new repayment
 // @route   POST /api/repayments
@@ -253,63 +254,108 @@ const getRepaymentById = asyncHandler(async (req, res) => {
 // @route   GET /api/repayments/user/:userId
 // @access  Admin/User
 const getRepaymentsByUser = asyncHandler(async (req, res) => {
-  // Logic to get repayments by user ID
   const { userId } = req.params;
 
-  // Fetch repayments made by the specified user
-  const repayments = await Repayment.find({ user: userId, isDeleted: false  })
-    .populate('loan', 'amount loanType status repaymentBalance')
-    .sort({ paymentDate: -1 });
-
-  if (!repayments || repayments.length === 0) {
-    res.status(404);
-    throw new Error("No repayments found for this user.");
+  // Validate the userId is a valid MongoDB ObjectId
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    res.status(400);
+    throw new Error('Invalid user ID format');
   }
 
-  // Group repayments by loan to calculate totalPaid per loan
-  const grouped = {};
+  // Check if the requesting user has permission (admin or same user)
+  if (req.user.role !== 'admin' && req.user.id !== userId) {
+    res.status(403);
+    throw new Error('Not authorized to view these repayments');
+  }
 
-  repayments.forEach(r => {
-    const loanId = r.loan._id.toString();
-    if (!grouped[loanId]) {
-      grouped[loanId] = {
-        totalPaid: 0,
-        repaymentBalance: r.loan.repaymentBalance,
-        loanStatus: r.loan.status,
-      };
+  try {
+    // Fetch repayments with loan details
+    const repayments = await Repayment.find({ 
+      user: userId, 
+      isDeleted: false 
+    })
+    .populate('loan', 'amount loanType status repaymentBalance')
+    .sort({ paymentDate: -1 })
+    .lean();
+
+    if (!repayments || repayments.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No repayments found for this user.",
+        repayments: []
+      });
     }
-    grouped[loanId].totalPaid += r.amountPaid;
-  });
 
-  // Map the response with enhanced details
-  const enhanced = repayments.map(rep => {
-    const group = grouped[rep.loan._id.toString()];
-    return {
-      _id: rep._id,
-      loan: {
-        _id: rep.loan._id,
-        type: rep.loan.loanType,
-        amount: rep.loan.amount,
-        status: rep.loan.status,
-      },
-      lastPayment: Math.round(rep.amountPaid),
-      totalPaidSoFar: Math.round(group.totalPaid),
-      repaymentBalance: rep.loan.status === 'active' ? Math.round(group.repaymentBalance) : 0,
-      paymentMethod: rep.paymentMethod,
-      dueDate: rep.dueDate,
-      paymentDate: rep.paymentDate,
-      status: rep.status,
-      referenceId: rep.referenceId,
-      evidence: rep.evidence,
-    };
-  });
+    // Calculate totals and enhance the response
+    const loanSummary = {};
+    const enhancedRepayments = repayments.map(repayment => {
+      const loanId = repayment.loan._id.toString();
+      
+      // Initialize loan summary if not exists
+      if (!loanSummary[loanId]) {
+        loanSummary[loanId] = {
+          totalPaid: 0,
+          repaymentBalance: repayment.loan.repaymentBalance,
+          loanStatus: repayment.loan.status,
+        };
+      }
+      
+      // Accumulate total paid per loan
+      loanSummary[loanId].totalPaid += repayment.amountPaid;
 
-  res.status(200).json({
-    message: "Fetched repayments for user",
-    total: enhanced.length,
-    repayments: enhanced,
-  });
+      return {
+        _id: repayment._id,
+        loan: {
+          _id: repayment.loan._id,
+          type: repayment.loan.loanType,
+          amount: repayment.loan.amount,
+          status: repayment.loan.status,
+        },
+        lastPayment: Math.round(repayment.amountPaid),
+        totalPaidSoFar: Math.round(loanSummary[loanId].totalPaid),
+        repaymentBalance: repayment.loan.status === 'active' 
+          ? Math.round(loanSummary[loanId].repaymentBalance) 
+          : 0,
+        paymentMethod: repayment.paymentMethod,
+        dueDate: repayment.dueDate,
+        paymentDate: repayment.paymentDate,
+        status: repayment.status,
+        referenceId: repayment.referenceId,
+        evidence: repayment.evidence,
+        createdAt: repayment.createdAt,
+        updatedAt: repayment.updatedAt
+      };
+    });
+
+    // Calculate overall totals
+    const totalRepaid = enhancedRepayments.reduce((sum, rep) => sum + rep.lastPayment, 0);
+    const activeLoans = Object.keys(loanSummary).filter(
+      loanId => loanSummary[loanId].loanStatus === 'active'
+    ).length;
+
+    res.status(200).json({
+      success: true,
+      message: "Repayments fetched successfully",
+      total: enhancedRepayments.length,
+      totalRepaid,
+      activeLoans,
+      repayments: enhancedRepayments,
+      loanSummary: Object.keys(loanSummary).map(loanId => ({
+        loanId,
+        loanType: enhancedRepayments.find(r => r.loan._id.toString() === loanId).loan.type,
+        totalPaid: loanSummary[loanId].totalPaid,
+        repaymentBalance: loanSummary[loanId].repaymentBalance,
+        status: loanSummary[loanId].loanStatus
+      }))
+    });
+
+  } catch (error) {
+    console.error('Error fetching repayments:', error);
+    res.status(500);
+    throw new Error('Server error while fetching repayments');
+  }
 });
+
 
 // @desc    Get repayments by Loan
 // @route   GET /api/repayments/loan/:loanId

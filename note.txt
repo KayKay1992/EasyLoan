@@ -1,210 +1,418 @@
-Integrating createRepayment with API integration
-
-Here's a concise 40-line explanation of the code:
-
-1. This React component (`CreateRepayment`) handles loan repayment submissions in a dashboard.
-2. It uses React hooks (`useState`, `useEffect`) for state management and `useNavigate` for routing.
-3. The component includes form validation, file upload handling, and API communication.
-4. Users first search for a loan by ID, which triggers a GET request to fetch loan details.
-5. The loan details display includes amount, balance, due date, and status (color-coded).
-6. The repayment form collects: payment amount (with "Pay Full" option), payment method, and evidence upload.
-7. File uploads are validated for type (JPG/PNG/PDF) and size (<5MB), with image preview.
-8. Amount validation ensures payment doesn't exceed balance + 1% tolerance.
-9. The form is disabled for loans with 'rejected', 'pending', or 'completed' statuses.
-10. On submission, it creates FormData and sends a POST request with the repayment details.
-11. The API request includes authentication via JWT from localStorage.
-12. Success shows a toast notification and redirects after 3 seconds.
-13. Error handling covers validation errors, API errors, and authentication issues.
-14. The UI includes loading states for both the loan search and form submission.
-15. Currency formatting displays amounts in Nigerian Naira (₦) without decimals.
-16. Date formatting presents dates in a readable format (e.g., "May 27, 2025").
-17. The component uses a `DashboardLayout` with 'Repayments' marked as active.
-18. Responsive design works on mobile and desktop with a clean, user-friendly interface.
-19. Visual feedback includes error messages below relevant fields and status alerts.
-20. The cancel button allows users to navigate back without submitting.
-
-The component manages complex form state while providing clear user guidance throughout the repayment process.
+Creating ViewMyRepayment component and integrating the backend API using GetRepaymentByUser controller.
 
 
-Here's a breakdown of how the UI renders in this React component:
+The `ViewMyRepayments` component is a React functional component designed to display a user's loan repayment information in a dashboard format. It fetches repayment data for a specific user, filters and displays it based on loan status, and provides a responsive UI for tracking repayments. Below, I’ll break down the component extensively, covering its structure, functionality, styling, responsiveness, and potential improvements. The explanation will reference the modified version of the code provided earlier, which was optimized for smaller screens.
 
-### 1. **Layout Structure**
+---
+
+## Table of Contents
+1. **Overview**
+2. **Imports and Dependencies**
+3. **Component Structure and State**
+4. **Data Fetching and Logic**
+5. **UI Components and Layout**
+   - Header Section
+   - Stats Cards
+   - Tabs for Filtering
+   - Repayments Table (Desktop) and Card View (Mobile)
+   - Summary Section
+   - Recent Activity Section
+6. **Responsive Design**
+7. **Styling with Tailwind CSS**
+8. **Error and Loading States**
+9. **Potential Improvements**
+10. **Summary**
+
+---
+
+## 1. Overview
+The `ViewMyRepayments` component is part of a dashboard application, likely for a financial or loan management system. It:
+- Fetches repayment data for a user based on their `userId` from the URL parameters.
+- Displays key metrics (total repaid, active loans, total repayments).
+- Allows filtering repayments by loan status (all, active, completed) via tabs.
+- Presents repayment details in a table (desktop) or card view (mobile).
+- Includes a summary of loans and recent activity sections.
+- Handles loading and error states gracefully.
+- Uses Tailwind CSS for responsive styling and a `DashboardLayout` component for consistent layout structure.
+
+The component is designed to be user-friendly, with a clean interface for tracking loan repayments, and is optimized for both desktop and mobile devices.
+
+---
+
+## 2. Imports and Dependencies
+The component relies on several dependencies:
+
 ```jsx
-<DashboardLayout activeMenu='Repayments' className="...">
-  <div className="max-w-3xl mx-auto">
-    {/* All content rendered inside this container */}
-  </div>
-</DashboardLayout>
-```
-- Wraps everything in a `DashboardLayout` (shared layout component)
-- Sets active menu item to 'Repayments'
-- Centers content with max-width constraints
-
-### 2. **Header Section**
-```jsx
-<div className="text-center mb-8">
-  <h1 className="text-3xl font-bold text-gray-900">Make a Loan Repayment</h1>
-  <p className="mt-2 text-lg text-gray-600">
-    Enter your loan ID to begin repayment process
-  </p>
-</div>
-```
-- Displays a title and descriptive text
-- Uses Tailwind classes for styling and spacing
-
-### 3. **Loan Search Form**
-```jsx
-<div className="bg-white shadow rounded-lg overflow-hidden mb-6">
-  <form onSubmit={handleSearchLoan} className="flex gap-2">
-    <input 
-      type="text"
-      value={loanId}
-      onChange={(e) => setLoanId(e.target.value)}
-      /* ... */
-    />
-    <button
-      type="submit"
-      disabled={isLoadingLoan}
-      /* ... */
-    >
-      {isLoadingLoan ? 'Searching...' : 'Search'}
-    </button>
-  </form>
-</div>
-```
-- White card with shadow and rounded corners
-- Input field with error handling
-- Search button with loading state
-
-### 4. **Conditional Loan Details Display**
-Only renders when `loan` state exists:
-```jsx
-{loan && (
-  <div className="bg-white shadow rounded-lg overflow-hidden">
-    {/* Loan details content */}
-  </div>
-)}
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import axiosInstance from '../../utils/axiosInstance';
+import { API_PATHS } from '../../utils/apiPaths';
+import DashboardLayout from '../../Components/layouts/DashboardLayout';
 ```
 
-### 5. **Loan Status Header**
-```jsx
-<div className={`px-6 py-4 ${
-  loan.status === 'rejected' ? 'bg-red-600' :
-  loan.status === 'pending' ? 'bg-yellow-600' :
-  loan.status === 'completed' ? 'bg-green-600' :
-  'bg-amber-700'
-}`}>
-  <h2 className="text-xl font-semibold text-white">
-    Loan Summary
-    {/* Status indicators */}
-  </h2>
-</div>
-```
-- Dynamically colored based on loan status
-- Shows appropriate status label
+- **React Hooks**:
+  - `useState`: Manages component state for `repayments`, `loading`, `error`, and `activeTab`.
+  - `useEffect`: Handles side effects, specifically fetching repayment data when the component mounts or `userId` changes.
+- **React Router**:
+  - `useParams`: Extracts `userId` from the URL (e.g., `/repayments/:userId`).
+  - `useNavigate`: Provides programmatic navigation (e.g., for redirecting on error or going back).
+- **Axios**: `axiosInstance` is a custom Axios instance (likely pre-configured with base URL and headers) used to make API requests.
+- **API Paths**: `API_PATHS.REPAYMENT.GET_REPAYMENT_BY_USER(userId)` provides the endpoint for fetching repayments, likely a utility for consistent API routes.
+- **DashboardLayout**: A wrapper component that provides a consistent layout (e.g., sidebar, header) for dashboard pages.
 
-### 6. **Loan Information Grid**
+---
+
+## 3. Component Structure and State
+The component is a functional component that uses state and hooks to manage data and UI rendering:
+
 ```jsx
-<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+const ViewMyRepayments = () => {
+  const { userId } = useParams();
+  const navigate = useNavigate();
+  const [repayments, setRepayments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState('all');
+  // ... rest of the component
+};
+```
+
+- **State Variables**:
+  - `repayments`: An array of repayment objects fetched from the API. Each object contains details like `loan`, `lastPayment`, `paymentDate`, `paymentMethod`, etc.
+  - `loading`: A boolean indicating whether data is being fetched (initially `true`).
+  - `error`: Stores any error message if the API request fails or `userId` is invalid.
+  - `activeTab`: Tracks the current filter tab (`'all'`, `'active'`, or `'completed'`).
+
+- **Derived Data**:
+  - `filteredRepayments`: Filters `repayments` based on `activeTab` to show all repayments or those for active/completed loans.
+  - `totalPaid`: Sums the `lastPayment` of all repayments using `reduce`.
+  - `activeLoans`: Counts unique loan IDs using `Set` to determine the number of active loans.
+
+- **Navigation**:
+  - `handleGoBack`: Uses `navigate(-1)` to return to the previous page in the browser history.
+
+---
+
+## 4. Data Fetching and Logic
+The component fetches repayment data when it mounts or when `userId` changes, using the `useEffect` hook:
+
+```jsx
+useEffect(() => {
+  if (!userId) {
+    setError('User ID is missing');
+    setLoading(false);
+    return;
+  }
+
+  const fetchRepayments = async () => {
+    try {
+      setLoading(true);
+      const response = await axiosInstance.get(
+        API_PATHS.REPAYMENT.GET_REPAYMENT_BY_USER(userId)
+      );
+      
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Failed to fetch repayments');
+      }
+      
+      setRepayments(response.data.repayments);
+      setError(null);
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || 'Failed to fetch repayments');
+      if (err.response?.status === 401 || err.response?.status === 400) {
+        // navigate('/login');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchRepayments();
+}, [userId, navigate]);
+```
+
+- **Validation**: Checks if `userId` exists; if not, sets an error and stops loading.
+- **API Call**: Uses `axiosInstance` to fetch repayments for the given `userId`.
+- **Error Handling**:
+  - Checks `response.data.success` to ensure the API call was successful.
+  - Catches errors and sets an error message, prioritizing `err.response?.data?.message`.
+  - Plans to redirect to `/login` for 401 (unauthorized) or 400 (bad request) errors, though this is commented out.
+- **State Updates**: Sets `repayments` on success, clears `error`, and sets `loading` to `false` in the `finally` block.
+- **Dependencies**: The effect runs when `userId` or `navigate` changes.
+
+**Logic for Filtering and Metrics**:
+```jsx
+const filteredRepayments = repayments.filter(rep => {
+  if (activeTab === 'all') return true;
+  return rep.loan.status === activeTab;
+});
+
+const totalPaid = repayments.reduce((sum, rep) => sum + rep.lastPayment, 0);
+const activeLoans = [...new Set(repayments.map(rep => rep.loan._id))].length;
+```
+
+- `filteredRepayments`: Filters repayments based on the `activeTab` state. If `'all'`, includes all repayments; otherwise, matches `rep.loan.status` to `activeTab`.
+- `totalPaid`: Aggregates the `lastPayment` field across all repayments.
+- `activeLoans`: Uses `Set` to count unique `loan._id` values, representing the number of distinct loans.
+
+---
+
+## 5. UI Components and Layout
+The UI is structured within a `DashboardLayout` component and uses Tailwind CSS for styling. It consists of several sections:
+
+### Header Section
+```jsx
+<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
   <div>
-    <p className="text-sm font-medium text-gray-500">Loan Amount</p>
-    <p className="text-lg font-semibold text-gray-900">
-      {formatCurrency(loan.amount)}
-    </p>
+    <h1 className="text-2xl sm:text-3xl font-bold font-serif text-gray-900">Repayment Dashboard</h1>
+    <p className="text-gray-600 mt-2 text-sm sm:text-base">Track all your loan repayments</p>
   </div>
-  {/* 3 more similar blocks for balance, due date, interest */}
+  <button
+    onClick={handleGoBack}
+    className="mt-4 sm:mt-0 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md text-gray-800 text-sm flex items-center justify-center w-full sm:w-auto"
+  >
+    <svg className="h-4 w-4 sm:h-5 sm:w-5 mr-2" ... />
+    Back
+  </button>
 </div>
 ```
-- Responsive 2-column grid on desktop
-- Each field has a label and formatted value
 
-### 7. **Repayment Form**
-```jsx
-<form onSubmit={handleSubmit}>
-  <fieldset disabled={/* based on loan status */}>
-    {/* Form fields */}
-  </fieldset>
-</form>
-```
-- Disables form if loan isn't repayable
-- Contains all input fields
+- **Purpose**: Displays the page title, a description, and a "Back" button.
+- **Responsiveness**: Uses `flex-col sm:flex-row` to stack vertically on mobile and align horizontally on small screens. The button is full-width on mobile (`w-full sm:w-auto`).
+- **Styling**: Bold serif font for the title, smaller text for the description, and a gray button with hover effects.
 
-### 8. **Amount Input Field**
+### Stats Cards
 ```jsx
-<div className="relative rounded-md shadow-sm">
-  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-    <span className="text-gray-500 sm:text-sm">₦</span>
-  </div>
-  <input
-    type="number"
-    /* ... */
-  />
-  <div className="absolute inset-y-0 right-0 flex items-center">
-    <button
-      type="button"
-      onClick={/* set full amount */}
-      /* ... */
-    >
-      Pay Full
-    </button>
-  </div>
-</div>
-```
-- Currency symbol prefix
-- "Pay Full" button appended
-- Proper number input attributes
-
-### 9. **File Upload Area**
-```jsx
-<div className="flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-  {previewImage ? (
-    <img src={previewImage} /* ... */ />
-  ) : (
-    <>
-      <svg className="mx-auto h-12 w-12 text-gray-400" /* ... */ />
-      <div className="flex text-sm text-gray-600">
-        <label htmlFor="evidence">
-          <span>Upload a file</span>
-          <input id="evidence" type="file" /* ... */ />
-        </label>
-        <p className="pl-1">or drag and drop</p>
+<div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+  <div className="bg-white rounded-lg shadow p-4">
+    <div className="flex items-center">
+      <div className="p-2 rounded-full bg-amber-100 text-amber-600">
+        <svg ... />
       </div>
-    </>
-  )}
+      <div className="ml-3">
+        <h3 className="text-xs font-medium text-gray-500">Total Repaid</h3>
+        <p className="text-lg font-semibold text-gray-900">#{totalPaid.toLocaleString()}</p>
+      </div>
+    </div>
+  </div>
+  {/* Similar cards for Active Loans and Total Repayments */}
 </div>
 ```
-- Shows upload prompt or image preview
-- Drag-and-drop styling
-- File type restrictions
 
-### 10. **Form Buttons**
+- **Purpose**: Displays key metrics: total repaid amount, number of active loans, and total repayments.
+- **Structure**: Three cards in a grid, each with an icon, label, and value.
+- **Responsiveness**: Stacks vertically on mobile (`grid-cols-1`) and uses three columns on small screens (`sm:grid-cols-3`). Reduced padding (`p-4`) and font sizes for mobile.
+- **Styling**: White background with shadow, amber-themed icons, and clear typography.
+
+### Tabs for Filtering
 ```jsx
-<div className="mt-8 flex justify-end space-x-3">
-  <button type="button" onClick={() => navigate(-1)}>
-    Cancel
-  </button>
-  <button type="submit" disabled={isSubmitting}>
-    {isSubmitting ? 'Processing...' : 'Submit Payment'}
-  </button>
+<div className="mb-4 border-b border-gray-200">
+  <nav className="flex space-x-4 sm:space-x-8 overflow-x-auto">
+    <button
+      onClick={() => setActiveTab('all')}
+      className={`${
+        activeTab === 'all' ? 'border-amber-600 text-amber-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+      } whitespace-nowrap py-3 px-2 border-b-2 font-medium text-xs sm:text-sm`}
+    >
+      All Repayments
+    </button>
+    {/* Similar buttons for Active Loans and Completed Loans */}
+  </nav>
 </div>
 ```
-- Cancel button goes back
-- Submit button shows loading state
-- Right-aligned button group
 
-### Key Rendering Behaviors:
-1. **Conditional Rendering**: Many sections only appear when relevant data exists (like loan details)
-2. **Dynamic Styling**: Colors and disabled states change based on loan status
-3. **Responsive Design**: Grid layouts adapt to screen size
-4. **Loading States**: Buttons show activity indicators during API calls
-5. **Validation Feedback**: Errors appear below relevant fields with red borders
-6. **Preview Capability**: Image uploads show thumbnails before submission
+- **Purpose**: Allows filtering repayments by loan status.
+- **Structure**: A navigation bar with three buttons, each setting `activeTab` to filter `filteredRepayments`.
+- **Responsiveness**: Uses `overflow-x-auto` for horizontal scrolling on very small screens. Smaller font sizes (`text-xs sm:text-sm`) and padding for mobile.
+- **Styling**: Active tab highlighted with amber border and text; inactive tabs have hover effects.
 
-The UI progressively discloses complexity - starting with just a search form, then revealing more detailed repayment options after loan selection.
+### Repayments Table (Desktop) and Card View (Mobile)
+```jsx
+<div className="bg-white shadow rounded-lg">
+  {/* Mobile Card View */}
+  <div className="block sm:hidden space-y-4 p-4">
+    {filteredRepayments.length > 0 ? (
+      filteredRepayments.map((repayment) => (
+        <div key={repayment._id} className="border rounded-lg p-4">
+          {/* Card content */}
+        </div>
+      ))
+    ) : (
+      <div className="text-center text-sm text-gray-500 p-4">
+        No repayments found for the selected filter
+      </div>
+    )}
+  </div>
 
+  {/* Desktop Table View */}
+  <div className="hidden sm:block overflow-x-auto">
+    <table className="min-w-full divide-y divide-gray-200">
+      <thead className="bg-gray-50">
+        <tr>
+          <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Loan Details
+          </th>
+          {/* Other headers */}
+        </tr>
+      </thead>
+      <tbody className="bg-white divide-y divide-gray-200">
+        {/* Table rows */}
+      </tbody>
+    </table>
+  </div>
+</div>
+```
 
-************************************************************************
-* I added validation in createRepayment controller backend. status validation to only repay active loan.
-* I insatlled react toastify to enable feedback message.
-* then i activated ToastContainer in app.jsx
-* 
+- **Purpose**: Displays repayment details, either as a table (desktop) or cards (mobile).
+- **Mobile Card View**:
+  - Shown on mobile (`block sm:hidden`).
+  - Each repayment is a card with loan type, ID, payment date, method, amounts, status, and a receipt button (if applicable).
+  - Cards are stacked vertically with borders for clarity.
+- **Desktop Table View**:
+  - Shown on small screens and up (`hidden sm:block`).
+  - Columns: Loan Details, Payment Info, Amounts, Status, Actions.
+  - Each row displays a repayment with an icon, loan type, ID, payment details, amounts, status badge, and a receipt button.
+- **Responsiveness**: Switches between card and table views at the `sm` breakpoint (640px). Table uses `overflow-x-auto` for horizontal scrolling if needed.
+- **Styling**: Cards and table use consistent amber and gray color schemes, with status badges in green (active) or purple (completed).
+
+### Summary Section
+```jsx
+<div className="mt-6 grid grid-cols-1 gap-4">
+  <div className="bg-white p-4 rounded-lg shadow">
+    <h3 className="text-base font-medium text-gray-900 mb-3">Repayment Summary</h3>
+    <div className="space-y-3">
+      {[...new Set(repayments.map(r => r.loan._id))].map(loanId => {
+        const loanRepayments = repayments.filter(r => r.loan._id === loanId);
+        const loan = loanRepayments[0].loan;
+        const totalPaid = loanRepayments.reduce((sum, r) => sum + r.lastPayment, 0);
+        return (
+          <div key={loanId} className="border-b border-gray-200 pb-3 last:border-0 last:pb-0">
+            {/* Loan summary details */}
+          </div>
+        );
+      })}
+    </div>
+  </div>
+</div>
+```
+
+- **Purpose**: Summarizes each loan’s details (type, ID, original amount, paid amount, balance).
+- **Structure**: Iterates over unique loan IDs, displaying a card for each loan with its status, original amount, paid amount, and balance (for active loans).
+- **Responsiveness**: Stacks vertically on all screens for simplicity (`grid-cols-1`).
+- **Styling**: White card with shadow, clear typography, and color-coded status badges.
+
+### Recent Activity Section
+```jsx
+<div className="bg-white p-4 rounded-lg shadow">
+  <h3 className="text-base font-medium text-gray-900 mb-3">Recent Activity</h3>
+  <div className="space-y-3">
+    {repayments.slice(0, 3).map(repayment => (
+      <div key={repayment._id} className="flex items-start border-b border-gray-200 pb-3 last:border-0 last:pb-0">
+        {/* Activity details */}
+      </div>
+    ))}
+  </div>
+</div>
+```
+
+- **Purpose**: Shows the three most recent repayments.
+- **Structure**: Each activity includes an icon, payment amount, date, loan type, payment method, and status.
+- **Responsiveness**: Stacked vertically, with smaller icons and text for mobile.
+- **Styling**: Consistent with other sections, using amber icons and color-coded status badges.
+
+---
+
+## 6. Responsive Design
+The component is optimized for smaller screens with the following changes:
+- **Container**: Uses `max-w-4xl` to limit width, ensuring content fits on mobile.
+- **Grids**: Stats cards switch to three columns at `sm` (640px); summary and activity sections remain single-column for clarity.
+- **Table vs. Cards**: Table view is replaced with a card view on mobile (`block sm:hidden`) to avoid horizontal scrolling issues.
+- **Typography**: Smaller font sizes on mobile (e.g., `text-xs sm:text-sm`, `text-2xl sm:text-3xl`).
+- **Spacing**: Reduced padding and margins (e.g., `p-4`, `mb-6`) to save space.
+- **Buttons**: Full-width on mobile for better tap targets.
+- **Tabs**: Horizontal scrolling (`overflow-x-auto`) for narrow screens.
+
+The `sm` breakpoint (640px) is used consistently to transition from mobile to desktop layouts, ensuring a smooth experience across devices.
+
+---
+
+## 7. Styling with Tailwind CSS
+The component uses Tailwind CSS for styling, leveraging utility classes for:
+- **Layout**: Flexbox (`flex`, `flex-col`, `sm:flex-row`), grids (`grid-cols-1 sm:grid-cols-3`), and containers (`max-w-4xl`).
+- **Typography**: Responsive font sizes (`text-xs sm:text-sm`, `text-2xl sm:text-3xl`), weights (`font-medium`, `font-bold`), and colors (`text-gray-900`, `text-amber-600`).
+- **Colors**: Amber for accents (`bg-amber-100`, `text-amber-600`), green for active status (`bg-green-100`), purple for completed status (`bg-purple-100`), and gray for neutral elements.
+- **Components**: Cards (`bg-white shadow rounded-lg`), buttons (`bg-gray-200 hover:bg-gray-300`), and badges (`rounded-full`).
+- **Interactivity**: Hover effects (`hover:bg-gray-300`, `hover:text-amber-900`) and transitions (`transition-colors duration-200`).
+
+The consistent use of Tailwind ensures maintainable and scalable styling.
+
+---
+
+## 8. Error and Loading States
+- **Loading State**:
+  ```jsx
+  if (loading) {
+    return (
+      <DashboardLayout className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-amber-600"></div>
+      </DashboardLayout>
+    );
+  }
+  ```
+  - Displays a centered spinner with amber accents during data fetching.
+  - Uses `min-h-screen` to ensure full-screen coverage.
+
+- **Error State**:
+  ```jsx
+  if (error) {
+    return (
+      <DashboardLayout className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4">
+        <p className="font-bold text-sm sm:text-base">Error</p>
+        <p className="text-sm">{error}</p>
+        <button ...>Go Back</button>
+      </DashboardLayout>
+    );
+  }
+  ```
+  - Shows an error message with a red alert style.
+  - Includes a "Go Back" button for navigation.
+  - Responsive typography ensures readability on mobile.
+
+---
+
+## 9. Potential Improvements
+1. **Accessibility**:
+   - Add ARIA attributes for tabs (e.g., `aria-selected`, `role="tablist"`) and table (`role="grid"`).
+   - Ensure keyboard navigation for buttons and tabs.
+   - Add alt text or `aria-label` for icons.
+
+2. **Performance**:
+   - Memoize `filteredRepayments`, `totalPaid`, and `activeLoans` with `useMemo` to prevent unnecessary recalculations.
+   - Implement pagination or infinite scroll for large `repayments` arrays to improve performance.
+
+3. **Error Handling**:
+   - Uncomment and refine the redirect logic for 401/400 errors.
+   - Add retry functionality for failed API calls.
+
+4. **Interactivity**:
+   - Make the "Receipt" button functional (e.g., open a modal or download a file).
+   - Add sorting options for the table (e.g., by date or amount).
+
+5. **Data Validation**:
+   - Validate `repayments` data structure to handle missing fields (e.g., `loan.type`, `lastPayment`).
+   - Add fallback UI for unexpected data formats.
+
+6. **Mobile Enhancements**:
+   - Add a collapsible section for the summary to save space.
+   - Implement a search bar for filtering repayments by loan ID or type.
+
+7. **Testing**:
+   - Add unit tests for state management, filtering logic, and rendering.
+   - Test responsiveness across various devices and screen sizes.
+
+---
+
+## 10. Summary
+The `ViewMyRepayments` component is a robust, responsive dashboard for displaying loan repayment information. It fetches data using Axios, manages state with React hooks, and presents a clean UI with Tailwind CSS. The layout adapts to mobile devices with a card view for repayments, smaller typography, and optimized spacing. Key features include filtering by loan status, displaying metrics, and summarizing loan details. While functional, it could benefit from accessibility improvements, performance optimizations, and additional interactivity. The code is maintainable and scalable, assuming the `DashboardLayout` and API utilities are well-implemented.
+
+If you have specific questions about any part of the component or need further enhancements, let me know!
