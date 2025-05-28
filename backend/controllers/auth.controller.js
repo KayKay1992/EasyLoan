@@ -126,28 +126,97 @@ const getUserProfile = asyncHandler(async (req, res) => {
 // @route   PUT /api/auth/profile
 // @access  Private
 const updateUserProfile = asyncHandler(async (req, res) => {
-  // TODO: update and return updated profile
-  const user = await User.findById(req.user.id);
-  if(!user){
-      return res.status(404).json({message: 'User not found'})
-  }
-  user.name = req.body.name || user.name;
-  user.email= req.body.email || user.email;
-  user.role=req.body.role||user.role;
+  try {
+    console.log('Update profile request received:', req.body);
+    const startTime = Date.now();
 
-  if(req.body.password){
+    const user = await User.findById(req.user.id);
+    console.log('User fetch time:', Date.now() - startTime, 'ms');
+    if (!user) {
+      console.log('User not found with ID:', req.user.id);
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // Validate email format if being updated
+    if (req.body.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(req.body.email)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please enter a valid email address',
+      });
+    }
+
+    // Validate profileImageUrl if provided
+    if (req.body.profileImageUrl) {
+      try {
+        new URL(req.body.profileImageUrl);
+      } catch {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid profile image URL',
+        });
+      }
+    }
+
+    // Update fields
+    user.name = req.body.name || user.name;
+    if (req.body.email && req.body.email !== user.email) {
+      console.log('Checking email availability:', req.body.email);
+      const emailExists = await User.findOne({ email: req.body.email });
+      console.log('Email check time:', Date.now() - startTime, 'ms');
+      if (emailExists) {
+        return res.status(400).json({
+          success: false,
+          message: 'Email already in use',
+        });
+      }
+      user.email = req.body.email;
+    }
+
+    if (req.body.profileImageUrl) {
+      user.profileImageUrl = req.body.profileImageUrl;
+    }
+
+    if (req.body.password) {
+      console.log('Hashing password...');
+      if (req.body.password.length < 6) {
+        return res.status(400).json({
+          success: false,
+          message: 'Password must be at least 6 characters',
+        });
+      }
       const salt = await bcrypt.genSalt(10);
-      user.password = await bcrypt.hash(req.body.password, salt)
-  }
+      user.password = await bcrypt.hash(req.body.password, salt);
+      console.log('Password hash time:', Date.now() - startTime, 'ms');
+    }
 
-  const updatedUser = await user.save()
-  res.json({
-      _id: updatedUser._id,
-      name:updatedUser.name,
-      email: updatedUser.email,
-      role: updatedUser.role,
-      token: generateToken(updatedUser._id)
-  })
+    console.log('Saving user...');
+    const updatedUser = await user.save();
+    console.log('User save time:', Date.now() - startTime, 'ms');
+
+    res.status(200).json({
+      success: true,
+      data: {
+        _id: updatedUser._id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        role: updatedUser.role,
+        profileImageUrl: updatedUser.profileImageUrl,
+        token: generateToken(updatedUser._id),
+      },
+    });
+  } catch (error) {
+    console.error('Profile update error:', {
+      message: error.message,
+      stack: error.stack,
+      body: req.body,
+      user: req.user,
+    });
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Server error during profile update',
+      ...(process.env.NODE_ENV === 'development' && { stack: error.stack }),
+    });
+  }
 });
 
 module.exports = {

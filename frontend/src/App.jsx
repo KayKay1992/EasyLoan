@@ -26,6 +26,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ViewMyRepayments from './Pages/UserPages/ViewMyRepayments';
 import NotificationPage from './Pages/UserPages/GetNotifications';
+import ProfileUpdate from './Pages/AuthPages/ProfileUpdate';
 
 
 const App = () => {
@@ -39,6 +40,7 @@ const App = () => {
           {/* <Route path="/" element={<Home />} /> */}
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route path="/profile-update" element={<ProfileUpdate />} />
 
           {/* User routes go here */}
           <Route element={<PrivateRoute allowedRoles={["admin"]} />}>

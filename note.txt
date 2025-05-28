@@ -1,503 +1,170 @@
-Creating GetNotifications component and integrating the backend API using all the get and put notification  controllers.
+Creating ProfileUpdate component and integrating the backend API.
 
-installed heroicons/react package
+i created uploadProfilePic.js middleware just to upload or update a profile pic since we only need png/jpg and jpeg files we dont need to use the other one.
 
-Let’s dive into a detailed explanation of the `NotificationPage` React component, breaking it down from imports to rendering, covering its functionality, structure, and purpose step by step.
+Here's a 10-line explanation of the code:
 
-### Overview
-The `NotificationPage` component is a React functional component designed to display and manage user notifications within a dashboard interface. It allows users to view all notifications or filter for unread ones, mark notifications as read, delete them, and view detailed information in a modal. The component integrates with an API to fetch and update notification data, uses context for user authentication, and employs a clean, responsive UI with Tailwind CSS for styling.
+1. The code uses `multer` to handle image uploads in a Node.js/Express app.
+2. It ensures an `uploads/` directory exists to store uploaded files.
+3. `multer.diskStorage` is configured to save files with a unique name and original extension.
+4. A file filter restricts uploads to JPEG, JPG, or PNG image formats.
+5. File size is limited to 5MB to prevent large uploads.
+6. The upload handler expects a single file in the `image` field of a form.
+7. An async controller handles the upload and responds to success or error.
+8. If the upload fails (wrong type, too big, or missing), an appropriate error message is sent.
+9. On success, the controller responds with the public URL of the uploaded image.
+10. The `uploadProfilePic` controller is exported for use in routes.
 
-### 1. **Imports**
-```jsx
-import { useState, useEffect, useContext } from 'react';
-import { BellIcon, CheckCircleIcon, ExclamationTriangleIcon, InformationCircleIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import axios from 'axios';
-import { UserContext } from '../../context/userContext';
-import axiosInstance from '../../utils/axiosInstance';
-import DashboardLayout from '../../Components/layouts/DashboardLayout';
-```
-- **React Hooks**:
-  - `useState`: Manages component state (e.g., notifications, loading status, errors).
-  - `useEffect`: Handles side effects, such as fetching data when the component mounts or when the user changes.
-  - `useContext`: Accesses the `UserContext` to retrieve the authenticated user.
-- **Heroicons**: Provides icons (`BellIcon`, `CheckCircleIcon`, etc.) for visual feedback (e.g., notification types and actions).
-- **Axios**: Used for HTTP requests, though the component uses `axiosInstance`, a pre-configured Axios instance (likely with base URL and interceptors).
-- **UserContext**: A React context providing user data, likely including authentication details.
-- **axiosInstance**: A custom Axios instance for API requests, possibly configured with a base URL and default headers.
-- **DashboardLayout**: A layout component that wraps the page, providing a consistent dashboard structure (e.g., sidebar, header) and accepting an `activeMenu` prop to highlight the "Notifications" menu.
 
-### 2. **Component Definition**
-```jsx
-const NotificationPage = () => {
-```
-This is a functional component that encapsulates the notification management UI and logic.
 
-### 3. **State Management**
-The component uses several `useState` hooks to manage its state:
-```jsx
-const [notifications, setNotifications] = useState([]);
-const [unreadNotifications, setUnreadNotifications] = useState([]);
-const [loading, setLoading] = useState(true);
+
+********************************************************
+
+# ProfileUpdate Component Analysis
+
+This is a comprehensive React component for updating user profile information. Let's break it down in detail:
+
+## Overview
+
+The `ProfileUpdate` component provides a form interface for users to:
+- Update their profile picture
+- Change their name and email
+- Optionally change their password
+- Save these changes to the server
+
+## Key Features
+
+1. **Profile Picture Management**: Users can select/upload a new profile photo
+2. **Basic Information Update**: Fields for name and email
+3. **Optional Password Change**: Toggle-able password change fields
+4. **Form Validation**: Client-side validation for email and password matching
+5. **Error Handling**: Comprehensive error handling and user feedback
+6. **Loading States**: Visual feedback during API operations
+7. **Context Integration**: Uses UserContext to access and update current user data
+
+## Component Structure
+
+### Imports
+- React hooks (`useState`, `useEffect`, `useContext`)
+- Layout and input components (`AuthLayout`, `ProfilePhotoSelector`, `Input`)
+- Routing utilities (`Link`, `useNavigate`)
+- API utilities (`axiosInstance`, `API_PATHS`)
+- Context (`UserContext`)
+- Helper functions (`uploadImage`, `validateEmail`)
+- Notification system (`toast`)
+
+### State Management
+```javascript
+const [profilePic, setProfilePic] = useState(null);
+const [fullName, setFullName] = useState("");
+const [email, setEmail] = useState("");
+const [currentPassword, setCurrentPassword] = useState("");
+const [newPassword, setNewPassword] = useState("");
+const [confirmPassword, setConfirmPassword] = useState("");
+const [showPasswordFields, setShowPasswordFields] = useState(false);
 const [error, setError] = useState(null);
-const [activeTab, setActiveTab] = useState('all');
-const [selectedNotification, setSelectedNotification] = useState(null);
-const [showModal, setShowModal] = useState(false);
+const [loading, setLoading] = useState(false);
 ```
-- `notifications`: Stores the list of all notifications fetched from the API.
-- `unreadNotifications`: Stores the list of unread notifications.
-- `loading`: Tracks whether data is being fetched (initially `true`).
-- `error`: Stores any error messages from failed API calls.
-- `activeTab`: Tracks the active tab ("all" or "unread") to toggle between notification views.
-- `selectedNotification`: Stores the currently selected notification for the modal.
-- `showModal`: Controls the visibility of the notification detail modal.
-- `const { user } = useContext(UserContext)`: Retrieves the authenticated user from context, used to trigger data fetching when the user changes.
 
-### 4. **Data Fetching with `useEffect`**
-```jsx
+### Context and Navigation
+```javascript
+const { user: currentUser, updateUser } = useContext(UserContext);
+const navigate = useNavigate();
+```
+
+### Initialization Effect
+Populates form fields with current user data when component mounts or user changes:
+```javascript
 useEffect(() => {
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      
-      // Fetch all notifications
-      const allResponse = await axiosInstance.get('/api/notification', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
-      
-      // Fetch unread notifications
-      const unreadResponse = await axiosInstance.get('/api/notification/unread', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
-
-      setNotifications(allResponse.data.notifications);
-      setUnreadNotifications(unreadResponse.data.notifications);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to fetch notifications');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  fetchData();
-}, [user]);
-```
-- **Purpose**: Fetches notifications when the component mounts or when the `user` changes.
-- **Logic**:
-  - Sets `loading` to `true` to show a loading spinner.
-  - Makes two API calls using `axiosInstance`:
-    - `/api/notification`: Fetches all notifications.
-    - `/api/notification/unread`: Fetches unread notifications.
-  - Includes an `Authorization` header with a JWT token from `localStorage`.
-  - Updates state with fetched data or sets an error message if the request fails.
-  - Sets `loading` to `false` in the `finally` block.
-- **Dependency Array**: `[user]` ensures the effect runs when the user changes (e.g., login/logout).
-
-### 5. **Notification Actions**
-The component defines several functions to interact with notifications:
-
-#### `markAsRead`
-```jsx
-const markAsRead = async (id) => {
-  try {
-    await axiosInstance.put(`/api/notification/read/${id}`, {}, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-    });
-    
-    setNotifications(notifications.map(n => 
-      n._id === id ? { ...n, read: true } : n
-    ));
-    setUnreadNotifications(unreadNotifications.filter(n => n._id !== id));
-  } catch (err) {
-    console.error('Error marking as read:', err);
+  if (currentUser) {
+    setFullName(currentUser.name || "");
+    setEmail(currentUser.email || "");
+    setProfilePic(currentUser.profileImageUrl || null);
   }
-};
+}, [currentUser]);
 ```
-- **Purpose**: Marks a single notification as read.
-- **Logic**:
-  - Sends a `PUT` request to `/api/notification/read/:id`.
-  - Updates the `notifications` state by setting the `read` property to `true` for the matching notification.
-  - Removes the notification from `unreadNotifications`.
-  - Logs errors without updating the UI.
 
-#### `deleteNotification`
-```jsx
-const deleteNotification = async (id) => {
-  try {
-    await axiosInstance.delete(`/api/notification/${id}`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-    });
-    
-    setNotifications(notifications.filter(n => n._id !== id));
-    setUnreadNotifications(unreadNotifications.filter(n => n._id !== id));
-    if (selectedNotification && selectedNotification._id === id) {
-      setShowModal(false);
-    }
-  } catch (err) {
-    console.error('Error deleting notification:', err);
-  }
-};
-```
-- **Purpose**: Deletes a notification.
-- **Logic**:
-  - Sends a `DELETE` request to `/api/notification/:id`.
-  - Removes the notification from both `notifications` and `unreadNotifications`.
-  - Closes the modal if the deleted notification is currently displayed.
-  - Logs errors without updating the UI.
+### Core Functions
 
-#### `markAllAsRead`
-```jsx
-const markAllAsRead = async () => {
-  try {
-    await axiosInstance.put('/api/notification/mark-all-read', {}, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-    });
-    
-    setNotifications(notifications.map(n => ({ ...n, read: true })));
-    setUnreadNotifications([]);
-  } catch (err) {
-    console.error('Error marking all as read:', err);
-  }
-};
-```
-- **Purpose**: Marks all notifications as read.
-- **Logic**:
-  - Sends a `PUT` request to `/api/notification/mark-all-read`.
-  - Updates all notifications in `notifications` to have `read: true`.
-  - Clears `unreadNotifications`.
-  - Logs errors without updating the UI.
+1. **handleProfileUpdate**:
+   - Main form submission handler
+   - Validates inputs
+   - Handles image upload if needed
+   - Constructs payload and sends to server
+   - Updates user context on success
+   - Provides comprehensive error handling
 
-#### `getNotificationById`
-```jsx
-const getNotificationById = async (id) => {
-  try {
-    const response = await axiosInstance.get(`/api/notification/${id}`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-    });
-    return response.data.notification;
-  } catch (err) {
-    console.error('Error fetching notification:', err);
-    return null;
-  }
-};
-```
-- **Purpose**: Fetches a single notification’s details for the modal.
-- **Logic**:
-  - Sends a `GET` request to `/api/notification/:id`.
-  - Returns the notification data or `null` if the request fails.
+2. **handleImageUpload**:
+   - Dedicated function for image uploads
+   - Validates file size
+   - Uses FormData for multipart upload
+   - Detailed error handling
 
-#### `handleNotificationClick`
-```jsx
-const handleNotificationClick = async (id) => {
-  try {
-    const notification = await getNotificationById(id);
-    if (notification) {
-      setSelectedNotification(notification);
-      setShowModal(true);
-      
-      if (!notification.read) {
-        await markAsRead(id);
-      }
-    }
-  } catch (err) {
-    console.error('Error handling notification click:', err);
-  }
-};
-```
-- **Purpose**: Handles clicking a notification to view its details.
-- **Logic**:
-  - Fetches the notification by ID.
-  - Sets it as the `selectedNotification` and opens the modal.
-  - Marks the notification as read if it’s unread.
+### Form Rendering
+- Uses `AuthLayout` as a wrapper
+- Conditionally renders password fields based on `showPasswordFields` state
+- Shows error messages when present
+- Displays loading state during API calls
+- Provides navigation back to dashboard
 
-#### `getNotificationIcon`
-```jsx
-const getNotificationIcon = (type) => {
-  switch (type) {
-    case 'success':
-      return <CheckCircleIcon className="h-6 w-6 text-green-500" />;
-    case 'warning':
-      return <ExclamationTriangleIcon className="h-6 w-6 text-yellow-500" />;
-    case 'error':
-      return <ExclamationTriangleIcon className="h-6 w-6 text-red-500" />;
-    default:
-      return <InformationCircleIcon className="h-6 w-6 text-blue-500" />;
-  }
-};
-```
-- **Purpose**: Returns an appropriate icon based on the notification type.
-- **Logic**:
-  - Maps notification types (`success`, `warning`, `error`) to specific icons with corresponding colors.
-  - Defaults to `InformationCircleIcon` for unknown types.
+## Detailed Flow
 
-### 6. **Conditional Rendering**
-The component conditionally renders based on `loading` and `error` states:
-```jsx
-if (loading) {
-  return (
-    <DashboardLayout activeMenu='Notifications' className="flex justify-center items-center h-screen bg-amber-600">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
-    </DashboardLayout>
-  );
-}
+1. **Initialization**:
+   - Component mounts and loads current user data from context
+   - Form fields are populated with existing user information
 
-if (error) {
-  return (
-    <DashboardLayout activeMenu='Notifications' className="flex justify-center items-center h-screen bg-amber-600">
-      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-        {error}
-      </div>
-    </DashboardLayout>
-  );
-}
-```
-- **Loading State**: Displays a spinning loader centered on the screen.
-- **Error State**: Shows an error message in a red alert box.
-- Both are wrapped in `DashboardLayout` with the "Notifications" menu active.
+2. **Form Interaction**:
+   - User can:
+     - Select a new profile picture
+     - Edit name and email
+     - Toggle password change fields
+     - Enter new password (if toggled)
 
-### 7. **Main UI**
-The main content is rendered if there’s no loading or error state:
-```jsx
-return (
-  <DashboardLayout activeMenu='Notifications' className="min-h-screen">
-    <div className="max-w-3xl mx-auto px-4 py-8">
-      <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-        {/* Header, Tabs, Notification List, and Modal */}
-      </div>
-    </div>
-  </DashboardLayout>
-);
-```
-- **Structure**:
-  - Wrapped in `DashboardLayout` for consistent styling.
-  - Content is centered with a max width of `3xl` (Tailwind CSS).
-  - The main container is a white card with rounded corners and a shadow.
+3. **Form Submission**:
+   - Validation checks run
+   - If new image selected, it's uploaded first
+   - Profile update payload is sent to server
+   - On success:
+     - User context is updated
+     - Success notification shown
+     - Password fields are hidden if they were visible
+   - On failure:
+     - Appropriate error message is displayed
+     - Error notification shown
 
-#### Header
-```jsx
-<div className="bg-amber-700 px-6 py-4 flex items-center justify-between">
-  <div className="flex items-center">
-    <BellIcon className="h-8 w-8 text-white mr-3" />
-    <h1 className="text-2xl font-bold text-white">Notifications</h1>
-    {unreadNotifications.length > 0 && (
-      <span className="ml-3 bg-white text-amber-700 text-xs font-semibold px-2.5 py-0.5 rounded-full">
-        {unreadNotifications.length} new
-      </span>
-    )}
-  </div>
-  {unreadNotifications.length > 0 && (
-    <button
-      onClick={markAllAsRead}
-      className="text-sm font-medium text-white hover:text-amber-100 transition-colors"
-    >
-      Mark all as read
-    </button>
-  )}
-</div>
-```
-- Displays a header with a bell icon, "Notifications" title, and a badge showing the number of unread notifications.
-- Includes a "Mark all as read" button if there are unread notifications.
+## Error Handling
 
-#### Tabs
-```jsx
-<div className="border-b border-gray-200">
-  <nav className="flex -mb-px">
-    <button
-      onClick={() => setActiveTab('all')}
-      className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${activeTab === 'all' ? 'border-amber-500 text-amber-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
-    >
-      All Notifications
-    </button>
-    <button
-      onClick={() => setActiveTab('unread')}
-      className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${activeTab === 'unread' ? 'border-amber-500 text-amber-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
-    >
-      Unread
-      {unreadNotifications.length > 0 && (
-        <span className="ml-1 bg-amber-100 text-amber-800 text-xs font-semibold px-2 py-0.5 rounded-full">
-          {unreadNotifications.length}
-        </span>
-      )}
-    </button>
-  </nav>
-</div>
-```
-- Two tabs: "All Notifications" and "Unread".
-- Clicking a tab updates `activeTab`.
-- The active tab has an amber border and text; inactive tabs have hover effects.
-- The "Unread" tab shows a badge with the number of unread notifications.
+The component implements multiple layers of error handling:
+1. Client-side validation for required fields and email format
+2. Password matching verification
+3. Image upload size restrictions
+4. API error responses from both image upload and profile update
+5. Network error detection (timeouts)
+6. User-friendly error messages via toast notifications
 
-#### Notification List
-```jsx
-const displayedNotifications = activeTab === 'all' ? notifications : unreadNotifications;
+## Security Considerations
 
-<div className="divide-y divide-gray-200">
-  {displayedNotifications.length === 0 ? (
-    <div className="text-center py-12">
-      <BellIcon className="mx-auto h-12 w-12 text-gray-400" />
-      <h3 className="mt-2 text-lg font-medium text-gray-900">
-        {activeTab === 'all' ? 'No notifications' : 'No unread notifications'}
-      </h3>
-      <p className="mt-1 text-sm text-gray-500">
-        {activeTab === 'all' ? "You don't have any notifications yet." : "You've read all your notifications."}
-      </p>
-    </div>
-  ) : (
-    displayedNotifications.map((notification) => (
-      <div
-        key={notification._id}
-        className={`p-4 ${!notification.read ? 'bg-amber-50' : 'bg-white'} cursor-pointer`}
-        onClick={() => handleNotificationClick(notification._id)}
-      >
-        <div className="flex items-start">
-          <div className="flex-shrink-0 pt-0.5">
-            {getNotificationIcon(notification.type)}
-          </div>
-          <div className="ml-3 flex-1">
-            <div className="flex items-center justify-between">
-              <p className={`text-sm font-medium ${notification.read ? 'text-gray-700' : 'text-gray-900'}`}>
-                {notification.title}
-              </p>
-              <div className="flex space-x-2">
-                {!notification.read && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      markAsRead(notification._id);
-                    }}
-                    className="text-xs text-amber-600 hover:text-amber-800 transition-colors"
-                  >
-                    Mark as read
-                  </button>
-                )}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteNotification(notification._id);
-                  }}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  <XMarkIcon className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-            <p className="mt-1 text-sm text-gray-600 line-clamp-2">
-              {notification.message}
-            </p>
-            <div className="mt-2 flex items-center text-xs text-gray-500">
-              <span>
-                {new Date(notification.createdAt).toLocaleString('en-US', {
-                  month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit'
-                })}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    ))
-  )}
-</div>
-```
-- **Logic**:
-  - `displayedNotifications` selects either all or unread notifications based on `activeTab`.
-  - If no notifications, displays a placeholder with an icon and message.
-  - Otherwise, maps over notifications to render a list.
-- **Each Notification**:
-  - Displays an icon based on type, title, truncated message, and timestamp.
-  - Unread notifications have a light amber background.
-  - Clicking a notification opens the modal via `handleNotificationClick`.
-  - Includes buttons for "Mark as read" (if unread) and "Delete" (stops event propagation to prevent modal opening).
+1. Password fields are properly typed as "password"
+2. Current password is required for password changes
+3. Authorization token is included in request headers
+4. Sensitive operations are protected behind authentication
 
-#### Notification Detail Modal
-```jsx
-{showModal && selectedNotification && (
-  <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-    <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-      <div className="p-6">
-        <div className="flex justify-between items-start">
-          <div className="flex items-center">
-            {getNotificationIcon(selectedNotification.type)}
-            <h3 className="ml-2 text-lg font-medium text-gray-900">
-              {selectedNotification.title}
-            </h3>
-          </div>
-          <button
-            onClick={() => setShowModal(false)}
-            className="text-gray-400 hover:text-gray-500"
-          >
-            <XMarkIcon className="h-6 w-6" />
-          </button>
-        </div>
-        
-        <div className="mt-4">
-          <p className="text-sm text-gray-600 whitespace-pre-line">
-            {selectedNotification.message}
-          </p>
-          
-          <div className="mt-4 text-xs text-gray-500">
-            <p>
-              Received: {new Date(selectedNotification.createdAt).toLocaleString()}
-            </p>
-            {selectedNotification.read && (
-              <p className="mt-1">
-                Read: {new Date(selectedNotification.updatedAt).toLocaleString()}
-              </p>
-            )}
-          </div>
-        </div>
-        
-        <div className="mt-6 flex justify-end space-x-3">
-          <button
-            onClick={() => {
-              deleteNotification(selectedNotification._id);
-              setShowModal(false);
-            }}
-            className="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-800"
-          >
-            Delete
-          </button>
-          <button
-            onClick={() => setShowModal(false)}
-            className="px-4 py-2 text-sm font-medium text-amber-700 hover:text-amber-800"
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-)}
-```
-- **Purpose**: Displays detailed information about a selected notification in a modal.
-- **Logic**:
-  - Shown when `showModal` is `true` and `selectedNotification` exists.
-  - Displays the notification’s icon, title, full message, creation time, and read time (if applicable).
-  - Includes "Delete" and "Close" buttons.
-  - The modal is fixed, centered, and scrollable with a max height of 90% of the viewport.
+## UI/UX Features
 
-### 8. **Export**
-```jsx
-export default NotificationPage;
-```
-Exports the component for use in other parts of the application.
+1. Responsive layout (grid changes between mobile and desktop)
+2. Clear visual hierarchy
+3. Loading states prevent duplicate submissions
+4. Helpful error messages near relevant fields
+5. Toast notifications for important actions
+6. Toggle-able password fields to reduce clutter
 
-### 9. **Key Features and Functionality**
-- **Authentication**: Uses a JWT token from Artifacts
-- **Responsive Design**: Uses Tailwind CSS for a responsive, clean UI.
-- **Error Handling**: Displays errors gracefully and logs failures.
-- **User Experience**: Provides visual feedback (e.g., loading spinner, icons, badges) and intuitive interactions (tabs, modal, action buttons).
+## Potential Improvements
 
-### 10. **Assumptions and Dependencies**
-- **API**: Assumes a backend with endpoints for fetching, marking as read, and deleting notifications.
-- **Authentication**: Relies on `UserContext` and a token in `localStorage`.
-- **Styling**: Uses Tailwind CSS and Heroicons for styling and icons.
-- **Layout**: Assumes `DashboardLayout` provides a sidebar or navigation structure.
+1. Add password strength meter
+2. Implement email verification when email changes
+3. Add confirmation dialog for significant changes
+4. Add more comprehensive form validation
+5. Implement progressive image loading for profile pictures
+6. Add cancel/undo functionality
 
-### 11. **Potential Improvements**
-- **Optimistic Updates**: Update the UI immediately after actions (e.g., mark as read) and revert on failure.
-- **Debouncing**: Add debouncing for rapid tab switching to prevent unnecessary renders.
-- **Pagination**: Implement pagination for large notification lists.
-- **Accessibility**: Add ARIA attributes for screen reader support.
-- **Error Recovery**: Provide a retry option for failed API calls.
-
-### 12. **Summary**
-The `NotificationPage` component is a robust, user-friendly interface for managing notifications. It fetches data from an API, supports filtering, reading, and deleting notifications, and displays details in a modal. It’s styled with Tailwind CSS, uses Heroicons for visual elements, and integrates with a dashboard layout for a cohesive experience. The code is well-structured, handles errors gracefully, and provides a solid foundation for further enhancements.
+This component provides a robust solution for user profile management with attention to both functionality and user experience.

@@ -45,6 +45,13 @@ const SideMenu = ({activeMenu}) => {
         <p className="text-[12px] text-gray-300">
           {user?.email || ''}
         </p>
+
+         <button
+                        onClick={() => navigate("/profile-update")}
+                        className="text-amber-400 hover:text-white border border-amber-700 hover:bg-amber-900 px-3 py-1 rounded-md text-sm mt-5"
+                      >
+                        Update Profile
+                      </button>
     </div>
 
     {SideMenuData.map((item, index) => (
