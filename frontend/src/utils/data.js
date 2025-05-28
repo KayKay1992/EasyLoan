@@ -88,24 +88,18 @@ import {
     },
     {
       id: "04",
-      label: "Transactions",
-      icon: LuArrowRightLeft,
-      path: "/user/transactions"
-    },
-    {
-      id: "05",
       label: "Repayments",
       icon: LuBanknote,
       path: "/user/repayments"
     },
     {
-      id: "06",
+      id: "05",
       label: "Notifications",
       icon: LuBell,
       path: "/user/notifications"
     },
     {
-      id: "07",
+      id: "06",
       label: "Logout",
       icon: LuLogOut,
       path: "logout"

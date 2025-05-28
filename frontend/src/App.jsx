@@ -25,6 +25,7 @@ import CreateRepayment from './Pages/UserPages/CreateRepayment'
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ViewMyRepayments from './Pages/UserPages/ViewMyRepayments';
+import NotificationPage from './Pages/UserPages/GetNotifications';
 
 
 const App = () => {
@@ -47,6 +48,7 @@ const App = () => {
             <Route path="/user/repayments" element={<CreateRepayment />} />
             <Route path="/user/loans" element={<MyLoans />} />
             <Route path="/user/apply-loan" element={<ApplyLoan/>} />
+            <Route path="/user/notifications" element={<NotificationPage/>} />
             <Route path="/user/loan-form" element={<LoanApplicationForm/>} />
           </Route>
 

@@ -229,6 +229,20 @@ const deleteNotification = asyncHandler(async (req, res) => {
   });
 });
 
+// @desc    Mark all notifications as read
+// @route   PUT /api/notification/mark-all-read
+// @access  Private
+const markAllNotificationsAsRead = asyncHandler(async (req, res) => {
+  await Notification.updateMany(
+    { user: req.user._id, read: false },
+    { read: true }
+  );
+
+  res.status(200).json({
+    message: "All notifications marked as read"
+  });
+});
+
 module.exports = {
   getAllNotifications,
   getUnreadNotifications,
@@ -237,4 +251,5 @@ module.exports = {
   markAsRead,
   deleteNotification,
   createNotificationForAllUsers,
+  markAllNotificationsAsRead,
 };

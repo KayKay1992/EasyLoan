@@ -1,418 +1,503 @@
-Creating ViewMyRepayment component and integrating the backend API using GetRepaymentByUser controller.
+Creating GetNotifications component and integrating the backend API using all the get and put notification  controllers.
 
+installed heroicons/react package
 
-The `ViewMyRepayments` component is a React functional component designed to display a user's loan repayment information in a dashboard format. It fetches repayment data for a specific user, filters and displays it based on loan status, and provides a responsive UI for tracking repayments. Below, I’ll break down the component extensively, covering its structure, functionality, styling, responsiveness, and potential improvements. The explanation will reference the modified version of the code provided earlier, which was optimized for smaller screens.
+Let’s dive into a detailed explanation of the `NotificationPage` React component, breaking it down from imports to rendering, covering its functionality, structure, and purpose step by step.
 
----
+### Overview
+The `NotificationPage` component is a React functional component designed to display and manage user notifications within a dashboard interface. It allows users to view all notifications or filter for unread ones, mark notifications as read, delete them, and view detailed information in a modal. The component integrates with an API to fetch and update notification data, uses context for user authentication, and employs a clean, responsive UI with Tailwind CSS for styling.
 
-## Table of Contents
-1. **Overview**
-2. **Imports and Dependencies**
-3. **Component Structure and State**
-4. **Data Fetching and Logic**
-5. **UI Components and Layout**
-   - Header Section
-   - Stats Cards
-   - Tabs for Filtering
-   - Repayments Table (Desktop) and Card View (Mobile)
-   - Summary Section
-   - Recent Activity Section
-6. **Responsive Design**
-7. **Styling with Tailwind CSS**
-8. **Error and Loading States**
-9. **Potential Improvements**
-10. **Summary**
-
----
-
-## 1. Overview
-The `ViewMyRepayments` component is part of a dashboard application, likely for a financial or loan management system. It:
-- Fetches repayment data for a user based on their `userId` from the URL parameters.
-- Displays key metrics (total repaid, active loans, total repayments).
-- Allows filtering repayments by loan status (all, active, completed) via tabs.
-- Presents repayment details in a table (desktop) or card view (mobile).
-- Includes a summary of loans and recent activity sections.
-- Handles loading and error states gracefully.
-- Uses Tailwind CSS for responsive styling and a `DashboardLayout` component for consistent layout structure.
-
-The component is designed to be user-friendly, with a clean interface for tracking loan repayments, and is optimized for both desktop and mobile devices.
-
----
-
-## 2. Imports and Dependencies
-The component relies on several dependencies:
-
+### 1. **Imports**
 ```jsx
-import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useState, useEffect, useContext } from 'react';
+import { BellIcon, CheckCircleIcon, ExclamationTriangleIcon, InformationCircleIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import axios from 'axios';
+import { UserContext } from '../../context/userContext';
 import axiosInstance from '../../utils/axiosInstance';
-import { API_PATHS } from '../../utils/apiPaths';
 import DashboardLayout from '../../Components/layouts/DashboardLayout';
 ```
-
 - **React Hooks**:
-  - `useState`: Manages component state for `repayments`, `loading`, `error`, and `activeTab`.
-  - `useEffect`: Handles side effects, specifically fetching repayment data when the component mounts or `userId` changes.
-- **React Router**:
-  - `useParams`: Extracts `userId` from the URL (e.g., `/repayments/:userId`).
-  - `useNavigate`: Provides programmatic navigation (e.g., for redirecting on error or going back).
-- **Axios**: `axiosInstance` is a custom Axios instance (likely pre-configured with base URL and headers) used to make API requests.
-- **API Paths**: `API_PATHS.REPAYMENT.GET_REPAYMENT_BY_USER(userId)` provides the endpoint for fetching repayments, likely a utility for consistent API routes.
-- **DashboardLayout**: A wrapper component that provides a consistent layout (e.g., sidebar, header) for dashboard pages.
+  - `useState`: Manages component state (e.g., notifications, loading status, errors).
+  - `useEffect`: Handles side effects, such as fetching data when the component mounts or when the user changes.
+  - `useContext`: Accesses the `UserContext` to retrieve the authenticated user.
+- **Heroicons**: Provides icons (`BellIcon`, `CheckCircleIcon`, etc.) for visual feedback (e.g., notification types and actions).
+- **Axios**: Used for HTTP requests, though the component uses `axiosInstance`, a pre-configured Axios instance (likely with base URL and interceptors).
+- **UserContext**: A React context providing user data, likely including authentication details.
+- **axiosInstance**: A custom Axios instance for API requests, possibly configured with a base URL and default headers.
+- **DashboardLayout**: A layout component that wraps the page, providing a consistent dashboard structure (e.g., sidebar, header) and accepting an `activeMenu` prop to highlight the "Notifications" menu.
 
----
-
-## 3. Component Structure and State
-The component is a functional component that uses state and hooks to manage data and UI rendering:
-
+### 2. **Component Definition**
 ```jsx
-const ViewMyRepayments = () => {
-  const { userId } = useParams();
-  const navigate = useNavigate();
-  const [repayments, setRepayments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('all');
-  // ... rest of the component
-};
+const NotificationPage = () => {
 ```
+This is a functional component that encapsulates the notification management UI and logic.
 
-- **State Variables**:
-  - `repayments`: An array of repayment objects fetched from the API. Each object contains details like `loan`, `lastPayment`, `paymentDate`, `paymentMethod`, etc.
-  - `loading`: A boolean indicating whether data is being fetched (initially `true`).
-  - `error`: Stores any error message if the API request fails or `userId` is invalid.
-  - `activeTab`: Tracks the current filter tab (`'all'`, `'active'`, or `'completed'`).
+### 3. **State Management**
+The component uses several `useState` hooks to manage its state:
+```jsx
+const [notifications, setNotifications] = useState([]);
+const [unreadNotifications, setUnreadNotifications] = useState([]);
+const [loading, setLoading] = useState(true);
+const [error, setError] = useState(null);
+const [activeTab, setActiveTab] = useState('all');
+const [selectedNotification, setSelectedNotification] = useState(null);
+const [showModal, setShowModal] = useState(false);
+```
+- `notifications`: Stores the list of all notifications fetched from the API.
+- `unreadNotifications`: Stores the list of unread notifications.
+- `loading`: Tracks whether data is being fetched (initially `true`).
+- `error`: Stores any error messages from failed API calls.
+- `activeTab`: Tracks the active tab ("all" or "unread") to toggle between notification views.
+- `selectedNotification`: Stores the currently selected notification for the modal.
+- `showModal`: Controls the visibility of the notification detail modal.
+- `const { user } = useContext(UserContext)`: Retrieves the authenticated user from context, used to trigger data fetching when the user changes.
 
-- **Derived Data**:
-  - `filteredRepayments`: Filters `repayments` based on `activeTab` to show all repayments or those for active/completed loans.
-  - `totalPaid`: Sums the `lastPayment` of all repayments using `reduce`.
-  - `activeLoans`: Counts unique loan IDs using `Set` to determine the number of active loans.
-
-- **Navigation**:
-  - `handleGoBack`: Uses `navigate(-1)` to return to the previous page in the browser history.
-
----
-
-## 4. Data Fetching and Logic
-The component fetches repayment data when it mounts or when `userId` changes, using the `useEffect` hook:
-
+### 4. **Data Fetching with `useEffect`**
 ```jsx
 useEffect(() => {
-  if (!userId) {
-    setError('User ID is missing');
-    setLoading(false);
-    return;
-  }
-
-  const fetchRepayments = async () => {
+  const fetchData = async () => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get(
-        API_PATHS.REPAYMENT.GET_REPAYMENT_BY_USER(userId)
-      );
       
-      if (!response.data.success) {
-        throw new Error(response.data.message || 'Failed to fetch repayments');
-      }
+      // Fetch all notifications
+      const allResponse = await axiosInstance.get('/api/notification', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
       
-      setRepayments(response.data.repayments);
-      setError(null);
+      // Fetch unread notifications
+      const unreadResponse = await axiosInstance.get('/api/notification/unread', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+
+      setNotifications(allResponse.data.notifications);
+      setUnreadNotifications(unreadResponse.data.notifications);
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Failed to fetch repayments');
-      if (err.response?.status === 401 || err.response?.status === 400) {
-        // navigate('/login');
-      }
+      setError(err.response?.data?.message || 'Failed to fetch notifications');
     } finally {
       setLoading(false);
     }
   };
 
-  fetchRepayments();
-}, [userId, navigate]);
+  fetchData();
+}, [user]);
 ```
+- **Purpose**: Fetches notifications when the component mounts or when the `user` changes.
+- **Logic**:
+  - Sets `loading` to `true` to show a loading spinner.
+  - Makes two API calls using `axiosInstance`:
+    - `/api/notification`: Fetches all notifications.
+    - `/api/notification/unread`: Fetches unread notifications.
+  - Includes an `Authorization` header with a JWT token from `localStorage`.
+  - Updates state with fetched data or sets an error message if the request fails.
+  - Sets `loading` to `false` in the `finally` block.
+- **Dependency Array**: `[user]` ensures the effect runs when the user changes (e.g., login/logout).
 
-- **Validation**: Checks if `userId` exists; if not, sets an error and stops loading.
-- **API Call**: Uses `axiosInstance` to fetch repayments for the given `userId`.
-- **Error Handling**:
-  - Checks `response.data.success` to ensure the API call was successful.
-  - Catches errors and sets an error message, prioritizing `err.response?.data?.message`.
-  - Plans to redirect to `/login` for 401 (unauthorized) or 400 (bad request) errors, though this is commented out.
-- **State Updates**: Sets `repayments` on success, clears `error`, and sets `loading` to `false` in the `finally` block.
-- **Dependencies**: The effect runs when `userId` or `navigate` changes.
+### 5. **Notification Actions**
+The component defines several functions to interact with notifications:
 
-**Logic for Filtering and Metrics**:
+#### `markAsRead`
 ```jsx
-const filteredRepayments = repayments.filter(rep => {
-  if (activeTab === 'all') return true;
-  return rep.loan.status === activeTab;
-});
-
-const totalPaid = repayments.reduce((sum, rep) => sum + rep.lastPayment, 0);
-const activeLoans = [...new Set(repayments.map(rep => rep.loan._id))].length;
+const markAsRead = async (id) => {
+  try {
+    await axiosInstance.put(`/api/notification/read/${id}`, {}, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    });
+    
+    setNotifications(notifications.map(n => 
+      n._id === id ? { ...n, read: true } : n
+    ));
+    setUnreadNotifications(unreadNotifications.filter(n => n._id !== id));
+  } catch (err) {
+    console.error('Error marking as read:', err);
+  }
+};
 ```
+- **Purpose**: Marks a single notification as read.
+- **Logic**:
+  - Sends a `PUT` request to `/api/notification/read/:id`.
+  - Updates the `notifications` state by setting the `read` property to `true` for the matching notification.
+  - Removes the notification from `unreadNotifications`.
+  - Logs errors without updating the UI.
 
-- `filteredRepayments`: Filters repayments based on the `activeTab` state. If `'all'`, includes all repayments; otherwise, matches `rep.loan.status` to `activeTab`.
-- `totalPaid`: Aggregates the `lastPayment` field across all repayments.
-- `activeLoans`: Uses `Set` to count unique `loan._id` values, representing the number of distinct loans.
-
----
-
-## 5. UI Components and Layout
-The UI is structured within a `DashboardLayout` component and uses Tailwind CSS for styling. It consists of several sections:
-
-### Header Section
+#### `deleteNotification`
 ```jsx
-<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
-  <div>
-    <h1 className="text-2xl sm:text-3xl font-bold font-serif text-gray-900">Repayment Dashboard</h1>
-    <p className="text-gray-600 mt-2 text-sm sm:text-base">Track all your loan repayments</p>
-  </div>
-  <button
-    onClick={handleGoBack}
-    className="mt-4 sm:mt-0 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md text-gray-800 text-sm flex items-center justify-center w-full sm:w-auto"
-  >
-    <svg className="h-4 w-4 sm:h-5 sm:w-5 mr-2" ... />
-    Back
-  </button>
-</div>
+const deleteNotification = async (id) => {
+  try {
+    await axiosInstance.delete(`/api/notification/${id}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    });
+    
+    setNotifications(notifications.filter(n => n._id !== id));
+    setUnreadNotifications(unreadNotifications.filter(n => n._id !== id));
+    if (selectedNotification && selectedNotification._id === id) {
+      setShowModal(false);
+    }
+  } catch (err) {
+    console.error('Error deleting notification:', err);
+  }
+};
 ```
+- **Purpose**: Deletes a notification.
+- **Logic**:
+  - Sends a `DELETE` request to `/api/notification/:id`.
+  - Removes the notification from both `notifications` and `unreadNotifications`.
+  - Closes the modal if the deleted notification is currently displayed.
+  - Logs errors without updating the UI.
 
-- **Purpose**: Displays the page title, a description, and a "Back" button.
-- **Responsiveness**: Uses `flex-col sm:flex-row` to stack vertically on mobile and align horizontally on small screens. The button is full-width on mobile (`w-full sm:w-auto`).
-- **Styling**: Bold serif font for the title, smaller text for the description, and a gray button with hover effects.
-
-### Stats Cards
+#### `markAllAsRead`
 ```jsx
-<div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-  <div className="bg-white rounded-lg shadow p-4">
-    <div className="flex items-center">
-      <div className="p-2 rounded-full bg-amber-100 text-amber-600">
-        <svg ... />
+const markAllAsRead = async () => {
+  try {
+    await axiosInstance.put('/api/notification/mark-all-read', {}, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    });
+    
+    setNotifications(notifications.map(n => ({ ...n, read: true })));
+    setUnreadNotifications([]);
+  } catch (err) {
+    console.error('Error marking all as read:', err);
+  }
+};
+```
+- **Purpose**: Marks all notifications as read.
+- **Logic**:
+  - Sends a `PUT` request to `/api/notification/mark-all-read`.
+  - Updates all notifications in `notifications` to have `read: true`.
+  - Clears `unreadNotifications`.
+  - Logs errors without updating the UI.
+
+#### `getNotificationById`
+```jsx
+const getNotificationById = async (id) => {
+  try {
+    const response = await axiosInstance.get(`/api/notification/${id}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    });
+    return response.data.notification;
+  } catch (err) {
+    console.error('Error fetching notification:', err);
+    return null;
+  }
+};
+```
+- **Purpose**: Fetches a single notification’s details for the modal.
+- **Logic**:
+  - Sends a `GET` request to `/api/notification/:id`.
+  - Returns the notification data or `null` if the request fails.
+
+#### `handleNotificationClick`
+```jsx
+const handleNotificationClick = async (id) => {
+  try {
+    const notification = await getNotificationById(id);
+    if (notification) {
+      setSelectedNotification(notification);
+      setShowModal(true);
+      
+      if (!notification.read) {
+        await markAsRead(id);
+      }
+    }
+  } catch (err) {
+    console.error('Error handling notification click:', err);
+  }
+};
+```
+- **Purpose**: Handles clicking a notification to view its details.
+- **Logic**:
+  - Fetches the notification by ID.
+  - Sets it as the `selectedNotification` and opens the modal.
+  - Marks the notification as read if it’s unread.
+
+#### `getNotificationIcon`
+```jsx
+const getNotificationIcon = (type) => {
+  switch (type) {
+    case 'success':
+      return <CheckCircleIcon className="h-6 w-6 text-green-500" />;
+    case 'warning':
+      return <ExclamationTriangleIcon className="h-6 w-6 text-yellow-500" />;
+    case 'error':
+      return <ExclamationTriangleIcon className="h-6 w-6 text-red-500" />;
+    default:
+      return <InformationCircleIcon className="h-6 w-6 text-blue-500" />;
+  }
+};
+```
+- **Purpose**: Returns an appropriate icon based on the notification type.
+- **Logic**:
+  - Maps notification types (`success`, `warning`, `error`) to specific icons with corresponding colors.
+  - Defaults to `InformationCircleIcon` for unknown types.
+
+### 6. **Conditional Rendering**
+The component conditionally renders based on `loading` and `error` states:
+```jsx
+if (loading) {
+  return (
+    <DashboardLayout activeMenu='Notifications' className="flex justify-center items-center h-screen bg-amber-600">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
+    </DashboardLayout>
+  );
+}
+
+if (error) {
+  return (
+    <DashboardLayout activeMenu='Notifications' className="flex justify-center items-center h-screen bg-amber-600">
+      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+        {error}
       </div>
-      <div className="ml-3">
-        <h3 className="text-xs font-medium text-gray-500">Total Repaid</h3>
-        <p className="text-lg font-semibold text-gray-900">#{totalPaid.toLocaleString()}</p>
+    </DashboardLayout>
+  );
+}
+```
+- **Loading State**: Displays a spinning loader centered on the screen.
+- **Error State**: Shows an error message in a red alert box.
+- Both are wrapped in `DashboardLayout` with the "Notifications" menu active.
+
+### 7. **Main UI**
+The main content is rendered if there’s no loading or error state:
+```jsx
+return (
+  <DashboardLayout activeMenu='Notifications' className="min-h-screen">
+    <div className="max-w-3xl mx-auto px-4 py-8">
+      <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        {/* Header, Tabs, Notification List, and Modal */}
       </div>
     </div>
+  </DashboardLayout>
+);
+```
+- **Structure**:
+  - Wrapped in `DashboardLayout` for consistent styling.
+  - Content is centered with a max width of `3xl` (Tailwind CSS).
+  - The main container is a white card with rounded corners and a shadow.
+
+#### Header
+```jsx
+<div className="bg-amber-700 px-6 py-4 flex items-center justify-between">
+  <div className="flex items-center">
+    <BellIcon className="h-8 w-8 text-white mr-3" />
+    <h1 className="text-2xl font-bold text-white">Notifications</h1>
+    {unreadNotifications.length > 0 && (
+      <span className="ml-3 bg-white text-amber-700 text-xs font-semibold px-2.5 py-0.5 rounded-full">
+        {unreadNotifications.length} new
+      </span>
+    )}
   </div>
-  {/* Similar cards for Active Loans and Total Repayments */}
+  {unreadNotifications.length > 0 && (
+    <button
+      onClick={markAllAsRead}
+      className="text-sm font-medium text-white hover:text-amber-100 transition-colors"
+    >
+      Mark all as read
+    </button>
+  )}
 </div>
 ```
+- Displays a header with a bell icon, "Notifications" title, and a badge showing the number of unread notifications.
+- Includes a "Mark all as read" button if there are unread notifications.
 
-- **Purpose**: Displays key metrics: total repaid amount, number of active loans, and total repayments.
-- **Structure**: Three cards in a grid, each with an icon, label, and value.
-- **Responsiveness**: Stacks vertically on mobile (`grid-cols-1`) and uses three columns on small screens (`sm:grid-cols-3`). Reduced padding (`p-4`) and font sizes for mobile.
-- **Styling**: White background with shadow, amber-themed icons, and clear typography.
-
-### Tabs for Filtering
+#### Tabs
 ```jsx
-<div className="mb-4 border-b border-gray-200">
-  <nav className="flex space-x-4 sm:space-x-8 overflow-x-auto">
+<div className="border-b border-gray-200">
+  <nav className="flex -mb-px">
     <button
       onClick={() => setActiveTab('all')}
-      className={`${
-        activeTab === 'all' ? 'border-amber-600 text-amber-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-      } whitespace-nowrap py-3 px-2 border-b-2 font-medium text-xs sm:text-sm`}
+      className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${activeTab === 'all' ? 'border-amber-500 text-amber-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
     >
-      All Repayments
+      All Notifications
     </button>
-    {/* Similar buttons for Active Loans and Completed Loans */}
+    <button
+      onClick={() => setActiveTab('unread')}
+      className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${activeTab === 'unread' ? 'border-amber-500 text-amber-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+    >
+      Unread
+      {unreadNotifications.length > 0 && (
+        <span className="ml-1 bg-amber-100 text-amber-800 text-xs font-semibold px-2 py-0.5 rounded-full">
+          {unreadNotifications.length}
+        </span>
+      )}
+    </button>
   </nav>
 </div>
 ```
+- Two tabs: "All Notifications" and "Unread".
+- Clicking a tab updates `activeTab`.
+- The active tab has an amber border and text; inactive tabs have hover effects.
+- The "Unread" tab shows a badge with the number of unread notifications.
 
-- **Purpose**: Allows filtering repayments by loan status.
-- **Structure**: A navigation bar with three buttons, each setting `activeTab` to filter `filteredRepayments`.
-- **Responsiveness**: Uses `overflow-x-auto` for horizontal scrolling on very small screens. Smaller font sizes (`text-xs sm:text-sm`) and padding for mobile.
-- **Styling**: Active tab highlighted with amber border and text; inactive tabs have hover effects.
-
-### Repayments Table (Desktop) and Card View (Mobile)
+#### Notification List
 ```jsx
-<div className="bg-white shadow rounded-lg">
-  {/* Mobile Card View */}
-  <div className="block sm:hidden space-y-4 p-4">
-    {filteredRepayments.length > 0 ? (
-      filteredRepayments.map((repayment) => (
-        <div key={repayment._id} className="border rounded-lg p-4">
-          {/* Card content */}
-        </div>
-      ))
-    ) : (
-      <div className="text-center text-sm text-gray-500 p-4">
-        No repayments found for the selected filter
-      </div>
-    )}
-  </div>
+const displayedNotifications = activeTab === 'all' ? notifications : unreadNotifications;
 
-  {/* Desktop Table View */}
-  <div className="hidden sm:block overflow-x-auto">
-    <table className="min-w-full divide-y divide-gray-200">
-      <thead className="bg-gray-50">
-        <tr>
-          <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Loan Details
-          </th>
-          {/* Other headers */}
-        </tr>
-      </thead>
-      <tbody className="bg-white divide-y divide-gray-200">
-        {/* Table rows */}
-      </tbody>
-    </table>
-  </div>
+<div className="divide-y divide-gray-200">
+  {displayedNotifications.length === 0 ? (
+    <div className="text-center py-12">
+      <BellIcon className="mx-auto h-12 w-12 text-gray-400" />
+      <h3 className="mt-2 text-lg font-medium text-gray-900">
+        {activeTab === 'all' ? 'No notifications' : 'No unread notifications'}
+      </h3>
+      <p className="mt-1 text-sm text-gray-500">
+        {activeTab === 'all' ? "You don't have any notifications yet." : "You've read all your notifications."}
+      </p>
+    </div>
+  ) : (
+    displayedNotifications.map((notification) => (
+      <div
+        key={notification._id}
+        className={`p-4 ${!notification.read ? 'bg-amber-50' : 'bg-white'} cursor-pointer`}
+        onClick={() => handleNotificationClick(notification._id)}
+      >
+        <div className="flex items-start">
+          <div className="flex-shrink-0 pt-0.5">
+            {getNotificationIcon(notification.type)}
+          </div>
+          <div className="ml-3 flex-1">
+            <div className="flex items-center justify-between">
+              <p className={`text-sm font-medium ${notification.read ? 'text-gray-700' : 'text-gray-900'}`}>
+                {notification.title}
+              </p>
+              <div className="flex space-x-2">
+                {!notification.read && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      markAsRead(notification._id);
+                    }}
+                    className="text-xs text-amber-600 hover:text-amber-800 transition-colors"
+                  >
+                    Mark as read
+                  </button>
+                )}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteNotification(notification._id);
+                  }}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <XMarkIcon className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+            <p className="mt-1 text-sm text-gray-600 line-clamp-2">
+              {notification.message}
+            </p>
+            <div className="mt-2 flex items-center text-xs text-gray-500">
+              <span>
+                {new Date(notification.createdAt).toLocaleString('en-US', {
+                  month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                })}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    ))
+  )}
 </div>
 ```
+- **Logic**:
+  - `displayedNotifications` selects either all or unread notifications based on `activeTab`.
+  - If no notifications, displays a placeholder with an icon and message.
+  - Otherwise, maps over notifications to render a list.
+- **Each Notification**:
+  - Displays an icon based on type, title, truncated message, and timestamp.
+  - Unread notifications have a light amber background.
+  - Clicking a notification opens the modal via `handleNotificationClick`.
+  - Includes buttons for "Mark as read" (if unread) and "Delete" (stops event propagation to prevent modal opening).
 
-- **Purpose**: Displays repayment details, either as a table (desktop) or cards (mobile).
-- **Mobile Card View**:
-  - Shown on mobile (`block sm:hidden`).
-  - Each repayment is a card with loan type, ID, payment date, method, amounts, status, and a receipt button (if applicable).
-  - Cards are stacked vertically with borders for clarity.
-- **Desktop Table View**:
-  - Shown on small screens and up (`hidden sm:block`).
-  - Columns: Loan Details, Payment Info, Amounts, Status, Actions.
-  - Each row displays a repayment with an icon, loan type, ID, payment details, amounts, status badge, and a receipt button.
-- **Responsiveness**: Switches between card and table views at the `sm` breakpoint (640px). Table uses `overflow-x-auto` for horizontal scrolling if needed.
-- **Styling**: Cards and table use consistent amber and gray color schemes, with status badges in green (active) or purple (completed).
-
-### Summary Section
+#### Notification Detail Modal
 ```jsx
-<div className="mt-6 grid grid-cols-1 gap-4">
-  <div className="bg-white p-4 rounded-lg shadow">
-    <h3 className="text-base font-medium text-gray-900 mb-3">Repayment Summary</h3>
-    <div className="space-y-3">
-      {[...new Set(repayments.map(r => r.loan._id))].map(loanId => {
-        const loanRepayments = repayments.filter(r => r.loan._id === loanId);
-        const loan = loanRepayments[0].loan;
-        const totalPaid = loanRepayments.reduce((sum, r) => sum + r.lastPayment, 0);
-        return (
-          <div key={loanId} className="border-b border-gray-200 pb-3 last:border-0 last:pb-0">
-            {/* Loan summary details */}
+{showModal && selectedNotification && (
+  <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+    <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <div className="p-6">
+        <div className="flex justify-between items-start">
+          <div className="flex items-center">
+            {getNotificationIcon(selectedNotification.type)}
+            <h3 className="ml-2 text-lg font-medium text-gray-900">
+              {selectedNotification.title}
+            </h3>
           </div>
-        );
-      })}
+          <button
+            onClick={() => setShowModal(false)}
+            className="text-gray-400 hover:text-gray-500"
+          >
+            <XMarkIcon className="h-6 w-6" />
+          </button>
+        </div>
+        
+        <div className="mt-4">
+          <p className="text-sm text-gray-600 whitespace-pre-line">
+            {selectedNotification.message}
+          </p>
+          
+          <div className="mt-4 text-xs text-gray-500">
+            <p>
+              Received: {new Date(selectedNotification.createdAt).toLocaleString()}
+            </p>
+            {selectedNotification.read && (
+              <p className="mt-1">
+                Read: {new Date(selectedNotification.updatedAt).toLocaleString()}
+              </p>
+            )}
+          </div>
+        </div>
+        
+        <div className="mt-6 flex justify-end space-x-3">
+          <button
+            onClick={() => {
+              deleteNotification(selectedNotification._id);
+              setShowModal(false);
+            }}
+            className="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-800"
+          >
+            Delete
+          </button>
+          <button
+            onClick={() => setShowModal(false)}
+            className="px-4 py-2 text-sm font-medium text-amber-700 hover:text-amber-800"
+          >
+            Close
+          </button>
+        </div>
+      </div>
     </div>
   </div>
-</div>
+)}
 ```
+- **Purpose**: Displays detailed information about a selected notification in a modal.
+- **Logic**:
+  - Shown when `showModal` is `true` and `selectedNotification` exists.
+  - Displays the notification’s icon, title, full message, creation time, and read time (if applicable).
+  - Includes "Delete" and "Close" buttons.
+  - The modal is fixed, centered, and scrollable with a max height of 90% of the viewport.
 
-- **Purpose**: Summarizes each loan’s details (type, ID, original amount, paid amount, balance).
-- **Structure**: Iterates over unique loan IDs, displaying a card for each loan with its status, original amount, paid amount, and balance (for active loans).
-- **Responsiveness**: Stacks vertically on all screens for simplicity (`grid-cols-1`).
-- **Styling**: White card with shadow, clear typography, and color-coded status badges.
-
-### Recent Activity Section
+### 8. **Export**
 ```jsx
-<div className="bg-white p-4 rounded-lg shadow">
-  <h3 className="text-base font-medium text-gray-900 mb-3">Recent Activity</h3>
-  <div className="space-y-3">
-    {repayments.slice(0, 3).map(repayment => (
-      <div key={repayment._id} className="flex items-start border-b border-gray-200 pb-3 last:border-0 last:pb-0">
-        {/* Activity details */}
-      </div>
-    ))}
-  </div>
-</div>
+export default NotificationPage;
 ```
+Exports the component for use in other parts of the application.
 
-- **Purpose**: Shows the three most recent repayments.
-- **Structure**: Each activity includes an icon, payment amount, date, loan type, payment method, and status.
-- **Responsiveness**: Stacked vertically, with smaller icons and text for mobile.
-- **Styling**: Consistent with other sections, using amber icons and color-coded status badges.
+### 9. **Key Features and Functionality**
+- **Authentication**: Uses a JWT token from Artifacts
+- **Responsive Design**: Uses Tailwind CSS for a responsive, clean UI.
+- **Error Handling**: Displays errors gracefully and logs failures.
+- **User Experience**: Provides visual feedback (e.g., loading spinner, icons, badges) and intuitive interactions (tabs, modal, action buttons).
 
----
+### 10. **Assumptions and Dependencies**
+- **API**: Assumes a backend with endpoints for fetching, marking as read, and deleting notifications.
+- **Authentication**: Relies on `UserContext` and a token in `localStorage`.
+- **Styling**: Uses Tailwind CSS and Heroicons for styling and icons.
+- **Layout**: Assumes `DashboardLayout` provides a sidebar or navigation structure.
 
-## 6. Responsive Design
-The component is optimized for smaller screens with the following changes:
-- **Container**: Uses `max-w-4xl` to limit width, ensuring content fits on mobile.
-- **Grids**: Stats cards switch to three columns at `sm` (640px); summary and activity sections remain single-column for clarity.
-- **Table vs. Cards**: Table view is replaced with a card view on mobile (`block sm:hidden`) to avoid horizontal scrolling issues.
-- **Typography**: Smaller font sizes on mobile (e.g., `text-xs sm:text-sm`, `text-2xl sm:text-3xl`).
-- **Spacing**: Reduced padding and margins (e.g., `p-4`, `mb-6`) to save space.
-- **Buttons**: Full-width on mobile for better tap targets.
-- **Tabs**: Horizontal scrolling (`overflow-x-auto`) for narrow screens.
+### 11. **Potential Improvements**
+- **Optimistic Updates**: Update the UI immediately after actions (e.g., mark as read) and revert on failure.
+- **Debouncing**: Add debouncing for rapid tab switching to prevent unnecessary renders.
+- **Pagination**: Implement pagination for large notification lists.
+- **Accessibility**: Add ARIA attributes for screen reader support.
+- **Error Recovery**: Provide a retry option for failed API calls.
 
-The `sm` breakpoint (640px) is used consistently to transition from mobile to desktop layouts, ensuring a smooth experience across devices.
-
----
-
-## 7. Styling with Tailwind CSS
-The component uses Tailwind CSS for styling, leveraging utility classes for:
-- **Layout**: Flexbox (`flex`, `flex-col`, `sm:flex-row`), grids (`grid-cols-1 sm:grid-cols-3`), and containers (`max-w-4xl`).
-- **Typography**: Responsive font sizes (`text-xs sm:text-sm`, `text-2xl sm:text-3xl`), weights (`font-medium`, `font-bold`), and colors (`text-gray-900`, `text-amber-600`).
-- **Colors**: Amber for accents (`bg-amber-100`, `text-amber-600`), green for active status (`bg-green-100`), purple for completed status (`bg-purple-100`), and gray for neutral elements.
-- **Components**: Cards (`bg-white shadow rounded-lg`), buttons (`bg-gray-200 hover:bg-gray-300`), and badges (`rounded-full`).
-- **Interactivity**: Hover effects (`hover:bg-gray-300`, `hover:text-amber-900`) and transitions (`transition-colors duration-200`).
-
-The consistent use of Tailwind ensures maintainable and scalable styling.
-
----
-
-## 8. Error and Loading States
-- **Loading State**:
-  ```jsx
-  if (loading) {
-    return (
-      <DashboardLayout className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-amber-600"></div>
-      </DashboardLayout>
-    );
-  }
-  ```
-  - Displays a centered spinner with amber accents during data fetching.
-  - Uses `min-h-screen` to ensure full-screen coverage.
-
-- **Error State**:
-  ```jsx
-  if (error) {
-    return (
-      <DashboardLayout className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4">
-        <p className="font-bold text-sm sm:text-base">Error</p>
-        <p className="text-sm">{error}</p>
-        <button ...>Go Back</button>
-      </DashboardLayout>
-    );
-  }
-  ```
-  - Shows an error message with a red alert style.
-  - Includes a "Go Back" button for navigation.
-  - Responsive typography ensures readability on mobile.
-
----
-
-## 9. Potential Improvements
-1. **Accessibility**:
-   - Add ARIA attributes for tabs (e.g., `aria-selected`, `role="tablist"`) and table (`role="grid"`).
-   - Ensure keyboard navigation for buttons and tabs.
-   - Add alt text or `aria-label` for icons.
-
-2. **Performance**:
-   - Memoize `filteredRepayments`, `totalPaid`, and `activeLoans` with `useMemo` to prevent unnecessary recalculations.
-   - Implement pagination or infinite scroll for large `repayments` arrays to improve performance.
-
-3. **Error Handling**:
-   - Uncomment and refine the redirect logic for 401/400 errors.
-   - Add retry functionality for failed API calls.
-
-4. **Interactivity**:
-   - Make the "Receipt" button functional (e.g., open a modal or download a file).
-   - Add sorting options for the table (e.g., by date or amount).
-
-5. **Data Validation**:
-   - Validate `repayments` data structure to handle missing fields (e.g., `loan.type`, `lastPayment`).
-   - Add fallback UI for unexpected data formats.
-
-6. **Mobile Enhancements**:
-   - Add a collapsible section for the summary to save space.
-   - Implement a search bar for filtering repayments by loan ID or type.
-
-7. **Testing**:
-   - Add unit tests for state management, filtering logic, and rendering.
-   - Test responsiveness across various devices and screen sizes.
-
----
-
-## 10. Summary
-The `ViewMyRepayments` component is a robust, responsive dashboard for displaying loan repayment information. It fetches data using Axios, manages state with React hooks, and presents a clean UI with Tailwind CSS. The layout adapts to mobile devices with a card view for repayments, smaller typography, and optimized spacing. Key features include filtering by loan status, displaying metrics, and summarizing loan details. While functional, it could benefit from accessibility improvements, performance optimizations, and additional interactivity. The code is maintainable and scalable, assuming the `DashboardLayout` and API utilities are well-implemented.
-
-If you have specific questions about any part of the component or need further enhancements, let me know!
+### 12. **Summary**
+The `NotificationPage` component is a robust, user-friendly interface for managing notifications. It fetches data from an API, supports filtering, reading, and deleting notifications, and displays details in a modal. It’s styled with Tailwind CSS, uses Heroicons for visual elements, and integrates with a dashboard layout for a cohesive experience. The code is well-structured, handles errors gracefully, and provides a solid foundation for further enhancements.
