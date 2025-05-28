@@ -136,7 +136,7 @@ const NotificationPage = () => {
   if (loading) {
     return (
       <DashboardLayout activeMenu='Notifications' className="flex justify-center items-center h-screen bg-amber-600">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-600 items-center justify-center m-auto mt-50"></div>
       </DashboardLayout>
     );
   }
