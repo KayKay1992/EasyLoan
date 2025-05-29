@@ -241,7 +241,7 @@ const markAllNotificationsAsRead = asyncHandler(async (req, res) => {
   res.status(200).json({
     message: "All notifications marked as read"
   });
-});
+})
 
 module.exports = {
   getAllNotifications,
