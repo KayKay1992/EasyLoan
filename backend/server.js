@@ -1,6 +1,5 @@
 require('dotenv').config();
 const express = require('express');
-const serverless = require('serverless-http');
 const cors = require('cors');
 const path = require('path');
 const connectDB = require('./config/db');
@@ -15,45 +14,35 @@ const errorHandler = require('./middleware/errorHanlerMiddleware');
 
 const app = express();
 
-// Middleware to handle cors
 app.use(cors({
     origin: process.env.CLIENT_URL || '*',
     methods: ['GET', 'POST','PUT','DELETE'], 
     allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
-//ConnectDatabase
-connectDB()
-
-//Middleware
+connectDB();
 app.use(express.json());
 
-//for static files
-// app.use('/uploads', express.static('uploads'));
-
-
-// Routes
 app.use("/api/auth", authRoute);
 app.use("/api/users", userRoute);
 app.use("/api/loan", loanRoute);
-app.use("/api/transaction", transactionRoute)
+app.use("/api/transaction", transactionRoute);
 app.use("/api/repayment", repaymentRoute);
 app.use("/api/notification", notificationRoute);
 app.use("/api/setting", settingRoute);
-
-// Global error handler (this should be added at the end, after all routes)
 app.use(errorHandler);
 
-//saves upload folder
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
-//start server
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`)////
+app.get('/api/test', (req, res) => {
+  res.json({ message: 'Hello from Express on Vercel!' });
 });
 
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
 
-// Export handler for Vercel
-module.exports = app;
-module.exports.handler = serverless(app);
+module.exports = app; // ONLY export the app
