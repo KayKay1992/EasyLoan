@@ -14,36 +14,40 @@ const errorHandler = require('./middleware/errorHanlerMiddleware');
 
 const app = express();
 
-console.log('CLIENT_URL:', process.env.CLIENT_URL || '*');
-console.log('NODE_ENV:', process.env.NODE_ENV);
-
+// Middleware to handle cors
 app.use(cors({
-  origin: process.env.CLIENT_URL || '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+    origin: process.env.CLIENT_URL || '*',
+    methods: ['GET', 'POST','PUT','DELETE'], 
+    allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
-connectDB().then(() => {
-  console.log('Database connected successfully');
-}).catch(err => {
-  console.error('Database connection error:', err);
-});
+//ConnectDatabase
+connectDB()
 
+//Middleware
 app.use(express.json());
 
-app.use('/api/auth', authRoute);
-app.use('/api/users', userRoute);
-app.use('/api/loan', loanRoute);
-app.use('/api/transaction', transactionRoute);
-app.use('/api/repayment', repaymentRoute);
-app.use('/api/notification', notificationRoute);
-app.use('/api/setting', settingRoute);
+//for static files
+// app.use('/uploads', express.static('uploads'));
+
+
+// Routes
+app.use("/api/auth", authRoute);
+app.use("/api/users", userRoute);
+app.use("/api/loan", loanRoute);
+app.use("/api/transaction", transactionRoute)
+app.use("/api/repayment", repaymentRoute);
+app.use("/api/notification", notificationRoute);
+app.use("/api/setting", settingRoute);
+
+// Global error handler (this should be added at the end, after all routes)
 app.use(errorHandler);
 
-app.use('/uploads', express.static(path.join(__dirname, 'Uploads')));
+//saves upload folder
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
+//start server
 
-app.get('/api/test', (req, res) => {
-  res.json({ message: 'Hello from Express on Vercel!' });
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`)////
 });
-
-module.exports = app;
