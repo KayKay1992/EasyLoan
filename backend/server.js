@@ -45,7 +45,7 @@ app.use(errorHandler);
 
 app.use('/uploads', express.static(path.join(__dirname, 'Uploads')));
 
-app.get('/', (req, res) => {
+app.get('/api/test', (req, res) => {
   res.json({ message: 'Hello from Express on Render!' });
 });
 
