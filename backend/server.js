@@ -14,40 +14,42 @@ const errorHandler = require('./middleware/errorHanlerMiddleware');
 
 const app = express();
 
-// Middleware to handle cors
+console.log('CLIENT_URL:', process.env.CLIENT_URL || '*');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('MONGODB_URI:', process.env.MONGODB_URI ? 'Set' : 'Not set');
+
 app.use(cors({
-    origin: process.env.CLIENT_URL || '*',
-    methods: ['GET', 'POST','PUT','DELETE'], 
-    allowedHeaders: ['Content-Type', 'Authorization'],
+  origin: process.env.CLIENT_URL || '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
-//ConnectDatabase
-connectDB()
-
-//Middleware
 app.use(express.json());
 
-//for static files
-// app.use('/uploads', express.static('uploads'));
+// Connect to DB
+connectDB().then(() => {
+  console.log('Database connected successfully');
+}).catch(err => {
+  console.error('Database connection error:', err.message);
+  process.exit(1);
+});
 
-
-// Routes
-app.use("/api/auth", authRoute);
-app.use("/api/users", userRoute);
-app.use("/api/loan", loanRoute);
-app.use("/api/transaction", transactionRoute)
-app.use("/api/repayment", repaymentRoute);
-app.use("/api/notification", notificationRoute);
-app.use("/api/setting", settingRoute);
-
-// Global error handler (this should be added at the end, after all routes)
+app.use('/api/auth', authRoute);
+app.use('/api/users', userRoute);
+app.use('/api/loan', loanRoute);
+app.use('/api/transaction', transactionRoute);
+app.use('/api/repayment', repaymentRoute);
+app.use('/api/notification', notificationRoute);
+app.use('/api/setting', settingRoute);
 app.use(errorHandler);
 
-//saves upload folder
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
-//start server
+app.use('/uploads', express.static(path.join(__dirname, 'Uploads')));
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`)////
+app.get('/api/test', (req, res) => {
+  res.json({ message: 'Hello from Express on Render!' });
 });
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+module.exports = app;
