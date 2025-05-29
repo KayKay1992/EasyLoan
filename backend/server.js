@@ -16,7 +16,7 @@ const app = express();
 
 console.log('CLIENT_URL:', process.env.CLIENT_URL || '*');
 console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('MONGODB_URI:', process.env.MONGODB_URI ? 'Set' : 'Not set');
+console.log('MONGODB_URI:', process.env.MONGO_URI ? 'Set' : 'Not set');
 
 app.use(cors({
   origin: process.env.CLIENT_URL || '*',
@@ -45,7 +45,7 @@ app.use(errorHandler);
 
 app.use('/uploads', express.static(path.join(__dirname, 'Uploads')));
 
-app.get('/api/test', (req, res) => {
+app.get('/', (req, res) => {
   res.json({ message: 'Hello from Express on Render!' });
 });
 
