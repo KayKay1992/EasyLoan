@@ -30,7 +30,7 @@ const SideMenu = ({activeMenu, isMobile = false}) => {
     }, [user])
 
     return (
-        <div className={`${isMobile ? 'block' : 'hidden lg:block'} w-full h-full bg-yellow-800 overflow-y-auto`}>
+        <div className={`${isMobile ? 'block' : 'hidden sm:block'} w-full h-full bg-yellow-800 overflow-y-auto`}>
             <div className="flex flex-col items-center justify-center mb-7 pt-5">
                 <div className="relative">
                     <img 
