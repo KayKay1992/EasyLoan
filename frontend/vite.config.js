@@ -8,7 +8,18 @@ export default defineConfig({
   plugins: [react(), tailwindcss(),
     
   ],
-  build: {
-    chunkSizeWarningLimit: 1000, // Increase to 1000 kB to reduce warnings
+ build: {
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'axios'],
+          antd: ['antd'],
+          recharts: ['recharts'],
+          framer: ['framer-motion'],
+          pdf: ['jspdf', 'jspdf-autotable'],
+        },
+      },
+    },
   },
 })
