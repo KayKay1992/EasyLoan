@@ -17,10 +17,7 @@ const app = express();
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('MONGODB_URI:', process.env.MONGO_URI ? 'Set' : 'Not set');
 
-const allowedOrigins = [
-  'https://easyloan-1.onrender.com',
-];
-
+const allowedOrigins = ['https://easyloan-1.onrender.com'];
 if (process.env.NODE_ENV !== 'production') {
   allowedOrigins.push('http://localhost:5173');
 }
@@ -31,11 +28,21 @@ app.use((req, res, next) => {
   next();
 });
 
+// Health check endpoint (before CORS middleware)
+app.get('/health', (req, res) => {
+  console.log('Health check hit from', req.get('Origin') || 'undefined');
+  res.status(200).send('OK');
+});
+
+// CORS configuration
 app.use(cors({
   origin: (origin, callback) => {
     console.log('CORS check for origin:', origin);
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, origin || '*');
+    if (!origin) {
+      return callback(null, true); // Allow non-browser requests
+    }
+    if (allowedOrigins.includes(origin)) {
+      callback(null, origin);
     } else {
       callback(new Error('Not allowed by CORS'));
     }
