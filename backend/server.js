@@ -14,13 +14,12 @@ const errorHandler = require('./middleware/errorHanlerMiddleware');
 
 const app = express();
 
-
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('MONGODB_URI:', process.env.MONGO_URI ? 'Set' : 'Not set');
 
 const allowedOrigins = [
   'https://easyloan-1.onrender.com',
-  
+  // 'http://localhost:5173' // Keep for local development
 ];
 
 if (process.env.NODE_ENV !== 'production') {
@@ -34,7 +33,6 @@ app.use(cors({
   credentials: true,
 }));
 
-
 app.use(express.json());
 
 // Connect to DB
@@ -45,6 +43,7 @@ connectDB().then(() => {
   process.exit(1);
 });
 
+// API Routes
 app.use('/api/auth', authRoute);
 app.use('/api/users', userRoute);
 app.use('/api/loan', loanRoute);
@@ -52,13 +51,25 @@ app.use('/api/transaction', transactionRoute);
 app.use('/api/repayment', repaymentRoute);
 app.use('/api/notification', notificationRoute);
 app.use('/api/setting', settingRoute);
-app.use(errorHandler);
 
+// Static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Test route
 app.get('/api/test', (req, res) => {
   res.json({ message: 'Hello from Express on Render!' });
 });
+
+// React Frontend Handling (Production Only)
+if (process.env.NODE_ENV === 'production') {
+  // Serve static files from React build
+  app.use(express.static(path.join(__dirname, '../frontend/dist')));
+
+  // Handle React routing, return all requests to React app
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/dist', 'index.html'));
+  });
+}
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
