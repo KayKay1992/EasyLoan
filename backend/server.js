@@ -14,16 +14,26 @@ const errorHandler = require('./middleware/errorHanlerMiddleware');
 
 const app = express();
 
-console.log('CLIENT_URL:', process.env.CLIENT_URL || '*');
+
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('MONGODB_URI:', process.env.MONGO_URI ? 'Set' : 'Not set');
 
+const allowedOrigins = [
+  'https://easyloan-1.onrender.com',
+  
+];
+
+if (process.env.NODE_ENV !== 'production') {
+  allowedOrigins.push('http://localhost:5173');
+}
+
 app.use(cors({
-  origin: ['https://easyloan-1.onrender.com', 'http://localhost:5173'],
+  origin: allowedOrigins,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
 }));
+
 
 app.use(express.json());
 
@@ -44,17 +54,7 @@ app.use('/api/notification', notificationRoute);
 app.use('/api/setting', settingRoute);
 app.use(errorHandler);
 
-// Instead of
-app.use('/uploads', express.static('uploads'));
-
-// Use something like this to ensure HTTPS URLs
-app.use('/uploads', (req, res, next) => {
-  if (req.secure) {
-    express.static('uploads')(req, res, next);
-  } else {
-    res.redirect(`https://${req.headers.host}${req.url}`);
-  }
-});
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.get('/api/test', (req, res) => {
   res.json({ message: 'Hello from Express on Render!' });
