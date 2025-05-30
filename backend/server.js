@@ -2,7 +2,6 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const fs = require('fs');
 const connectDB = require('./config/db');
 const authRoute = require('./routes/auth.route');
 const userRoute = require('./routes/user.route');
@@ -18,43 +17,26 @@ const app = express();
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('MONGODB_URI:', process.env.MONGO_URI ? 'Set' : 'Not set');
 
-// Enhanced CORS configuration
 const allowedOrigins = [
   'https://easyloan-1.onrender.com',
-  'https://easyloan.onrender.com', // Add your backend domain if different
-'http://localhost:5173' // Optional: Use environment variable
 ];
 
-// Development origins
 if (process.env.NODE_ENV !== 'production') {
   allowedOrigins.push('http://localhost:5173');
 }
 
-// Dynamic CORS origin checking
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin && process.env.NODE_ENV !== 'production') {
-      // Allow requests with no origin (like mobile apps or Postman)
-      return callback(null, true);
-    }
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.warn('Blocked by CORS:', origin);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+// Log incoming requests
+app.use((req, res, next) => {
+  console.log(`Request: ${req.method} ${req.url} from ${req.get('Origin')}`);
+  next();
+});
+
+app.use(cors({
+  origin: allowedOrigins,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
-  preflightContinue: false,
-  optionsSuccessStatus: 204
-};
-
-app.use(cors(corsOptions));
-
-// Handle preflight requests
-app.options('*', cors(corsOptions));
+}));
 
 app.use(express.json());
 
@@ -64,12 +46,6 @@ connectDB().then(() => {
 }).catch(err => {
   console.error('Database connection error:', err.message);
   process.exit(1);
-});
-
-// Request logging middleware
-app.use((req, res, next) => {
-  console.log(`Incoming ${req.method} request for ${req.path}`);
-  next();
 });
 
 // API Routes
@@ -82,39 +58,23 @@ app.use('/api/notification', notificationRoute);
 app.use('/api/setting', settingRoute);
 
 // Static files
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'Uploads')));
 
 // Test route
 app.get('/api/test', (req, res) => {
-  res.json({ 
-    message: 'API is working!',
-    frontend: allowedOrigins,
-    environment: process.env.NODE_ENV
-  });
+  res.json({ message: 'Hello from Express on Render!' });
 });
 
 // React Frontend Handling (Production Only)
 if (process.env.NODE_ENV === 'production') {
-  const frontendPath = path.join(__dirname, '../frontend/dist');
-  
-  // Verify frontend build exists
-  try {
-    const files = fs.readdirSync(frontendPath);
-    console.log('Frontend build files:', files);
-  } catch (err) {
-    console.error('Frontend build not found at:', frontendPath);
-    console.error('Please build your React app first (npm run build)');
-    process.exit(1);
-  }
-
-  // Serve static files from React build
-  app.use(express.static(frontendPath));
-
-  // Handle React routing - exclude API routes
+  app.use(express.static(path.join(__dirname, '../frontend/dist')));
   app.get(/^(?!\/api).*/, (req, res) => {
-    res.sendFile(path.join(frontendPath, 'index.html'));
+    res.sendFile(path.join(__dirname, '../frontend/dist', 'index.html'));
   });
 }
+
+// Error handler (place after all routes)
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
