@@ -25,14 +25,21 @@ if (process.env.NODE_ENV !== 'production') {
   allowedOrigins.push('http://localhost:5173');
 }
 
-// Log incoming requests
+// Log all incoming requests
 app.use((req, res, next) => {
-  console.log(`Request: ${req.method} ${req.url} from ${req.get('Origin')}`);
+  console.log(`Request: ${req.method} ${req.url} from Origin: ${req.get('Origin') || 'undefined'}`);
   next();
 });
 
 app.use(cors({
-  origin: allowedOrigins,
+  origin: (origin, callback) => {
+    console.log('CORS check for origin:', origin);
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, origin || '*');
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
@@ -58,10 +65,11 @@ app.use('/api/notification', notificationRoute);
 app.use('/api/setting', settingRoute);
 
 // Static files
-app.use('/uploads', express.static(path.join(__dirname, 'Uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Test route
 app.get('/api/test', (req, res) => {
+  console.log('Test route hit from', req.get('Origin'));
   res.json({ message: 'Hello from Express on Render!' });
 });
 
@@ -69,11 +77,12 @@ app.get('/api/test', (req, res) => {
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../frontend/dist')));
   app.get(/^(?!\/api).*/, (req, res) => {
+    console.log('Serving React app for', req.url);
     res.sendFile(path.join(__dirname, '../frontend/dist', 'index.html'));
   });
 }
 
-// Error handler (place after all routes)
+// Error handler
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
