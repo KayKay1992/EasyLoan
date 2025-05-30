@@ -20,9 +20,9 @@ console.log('MONGODB_URI:', process.env.MONGO_URI ? 'Set' : 'Not set');
 
 app.use(cors({
   origin: ['https://easyloan-1.onrender.com', 'http://localhost:3000'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true, // If your app uses cookies/auth tokens
+  credentials: true,
 }));
 
 app.use(express.json());
