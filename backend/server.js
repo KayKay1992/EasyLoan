@@ -17,7 +17,7 @@ const app = express();
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('MONGODB_URI:', process.env.MONGO_URI ? 'Set' : 'Not set');
 
-const allowedOrigins = ['https://easyloan-1.onrender.com'];
+const allowedOrigins = ['https://easyloan.onrender.com', 'https://easyloan-1.onrender.com'];
 if (process.env.NODE_ENV !== 'production') {
   allowedOrigins.push('http://localhost:5173');
 }
@@ -28,21 +28,31 @@ app.use((req, res, next) => {
   next();
 });
 
-// Health check endpoint (before CORS middleware)
+// Health check endpoint
 app.get('/health', (req, res) => {
   console.log('Health check hit from', req.get('Origin') || 'undefined');
   res.status(200).send('OK');
+});
+
+// Debug endpoint to list assets
+app.get('/debug/files', (req, res) => {
+  const fs = require('fs');
+  const dir = path.join(__dirname, '../frontend/dist/assets');
+  fs.readdir(dir, (err, files) => {
+    if (err) {
+      console.error(`Error reading assets directory: ${err.message}`);
+      return res.status(500).json({ error: err.message });
+    }
+    res.json({ files });
+  });
 });
 
 // CORS configuration
 app.use(cors({
   origin: (origin, callback) => {
     console.log('CORS check for origin:', origin);
-    if (!origin) {
-      return callback(null, true); // Allow non-browser requests
-    }
-    if (allowedOrigins.includes(origin)) {
-      callback(null, origin);
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
     }
@@ -74,18 +84,29 @@ app.use('/api/setting', settingRoute);
 // Static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Test route
-app.get('/api/test', (req, res) => {
-  console.log('Test route hit from', req.get('Origin'));
-  res.json({ message: 'Hello from Express on Render!' });
-});
-
-// React Frontend Handling (Production Only)
+// Production static file serving
 if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../frontend/dist')));
+  const staticPath = path.join(__dirname, '../frontend/dist');
+  app.use(express.static(staticPath, {
+    setHeaders: (res, path) => {
+      console.log(`Serving static file: ${path}`);
+    },
+    fallthrough: true,
+  }));
+  app.use((req, res, next) => {
+    if (req.url.startsWith('/assets')) {
+      console.log(`Static file not found: ${req.url}`);
+    }
+    next();
+  })
   app.get(/^(?!\/api).*/, (req, res) => {
     console.log('Serving React app for', req.url);
-    res.sendFile(path.join(__dirname, '../frontend/dist', 'index.html'));
+    res.sendFile(path.join(staticPath, 'index.html'), err => {
+      if (err) {
+        console.error(`Error serving index.html: ${err.message}`);
+        res.status(500).send('Error serving page');
+      }
+    });
   });
 }
 
