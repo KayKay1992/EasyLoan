@@ -129,7 +129,7 @@ try {
 console.log("Routes registered successfully");
 
 // Uploads
-app.use("/uploads", express.static(path.join(__dirname, "Uploads")));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 console.log("Uploads static route set");
 
 // Serve frontend in production
