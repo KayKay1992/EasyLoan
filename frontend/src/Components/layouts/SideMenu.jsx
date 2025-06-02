@@ -12,8 +12,9 @@ const SideMenu = ({ activeMenu, isMobile = false }) => {
 
   const sanitizeImageUrl = (url) => {
     console.log('Original URL:', url);
-    if (!url) return '';
-    const baseUrl = axiosInstance.defaults.baseURL || 'https://easyloan.onrender.com';
+    if (!url) return 'https://via.placeholder.com/80';
+    const baseUrl = import.meta.env.VITE_API_URL || 'https://easyloan.onrender.com';
+    const normalizedBaseUrl = baseUrl.replace(/\/+$/, ''); // Remove trailing slashes
     let sanitized = url;
     const patterns = [
       'http://localhost:3000',
@@ -21,8 +22,10 @@ const SideMenu = ({ activeMenu, isMobile = false }) => {
       'https://easyloan-1.onrender.com'
     ];
     patterns.forEach(pattern => {
-      sanitized = sanitized.replaceAll(pattern, baseUrl);
+      sanitized = sanitized.replaceAll(pattern, normalizedBaseUrl);
     });
+    // Fix path and case
+    sanitized = sanitized.replace(/\/+[uU]ploads\//g, '/uploads/'); // Use uppercase
     console.log('Sanitized URL:', sanitized);
     return sanitized;
   };

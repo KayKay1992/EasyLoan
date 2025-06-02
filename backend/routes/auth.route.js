@@ -1,18 +1,18 @@
 const express = require('express');
 const { registerUser, loginUser, getCurrentUser, getUserProfile, updateUserProfile } = require('../controllers/auth.controller');
 const { protect } = require('../middleware/authMiddleware');
-const upload = require('../middleware/uploadMiddleware');
-const multer = require('multer');
 const { uploadProfilePic } = require('../middleware/uploadProfilePic');
-const router = express.Router();
 
+const router = express.Router();
 
 // @route   POST /api/auth/register
 // @desc    Register a new user
+// @access  Public
 router.post('/register', registerUser);
 
 // @route   POST /api/auth/login
 // @desc    Login user & get token
+// @access  Public
 router.post('/login', loginUser);
 
 // @route   GET /api/auth/me
@@ -30,6 +30,9 @@ router.get('/profile', protect, getUserProfile);
 // @access  Private
 router.put('/profile', protect, updateUserProfile);
 
-router.post('/upload-image', uploadProfilePic)
+// @route   POST /api/auth/upload-image
+// @desc    Upload user profile image
+// @access  Private
+router.post('/upload-image', protect, uploadProfilePic);
 
 module.exports = router;

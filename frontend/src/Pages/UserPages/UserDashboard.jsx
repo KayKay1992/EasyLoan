@@ -33,10 +33,11 @@ const UserDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const sanitizeImageUrl = (url) => {
-    console.log('UserDashboard Original URL:', url);
+ const sanitizeImageUrl = (url) => {
+    console.log('UserDashboard: Original URL:', url);
     if (!url) return '';
-    const baseUrl = axiosInstance.defaults.baseURL || 'https://easyloan.onrender.com';
+    const baseUrl = import.meta.env.VITE_API_URL || 'https://easyloan.onrender.com';
+    const normalizedBaseUrl = baseUrl.replace(/\/+$/, '');
     let sanitized = url;
     const patterns = [
       'http://localhost:3000',
@@ -44,9 +45,10 @@ const UserDashboard = () => {
       'https://easyloan-1.onrender.com'
     ];
     patterns.forEach(pattern => {
-      sanitized = sanitized.replaceAll(pattern, baseUrl);
+      sanitized = sanitized.replaceAll(pattern, normalizedBaseUrl);
     });
-    console.log('UserDashboard Sanitized URL:', sanitized);
+    sanitized = sanitized.replace(/\/+[uU]ploads\//g, '/uploads/');
+    console.log('UserDashboard: Sanitized URL:', sanitized);
     return sanitized;
   };
 
@@ -76,16 +78,22 @@ const UserDashboard = () => {
 
     setBarChartData(loanTypeLevelData);
   };
-
-  const getDashboardData = async () => {
+const getDashboardData = async () => {
     try {
       setLoading(true);
       const response = await axiosInstance.get(
         API_PATHS.LOANS.GET_USER_DASHBOARD_DATA
       );
       if (response.data) {
-        setDashboardData(response.data);
-        prepareChartData(response.data?.charts || null);
+        const sanitizedData = {
+          ...response.data,
+          recentLoans: response.data.recentLoans?.map(loan => ({
+            ...loan,
+            documents: loan.documents?.map(doc => sanitizeImageUrl(doc)) || []
+          }))
+        };
+        setDashboardData(sanitizedData);
+        prepareChartData(sanitizedData?.charts || null);
       }
     } catch (error) {
       console.error("Error fetching dashboard data", error);
