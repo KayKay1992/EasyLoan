@@ -12,6 +12,7 @@ import LoanListTable from "../../Components/LoanListTable";
 import { LuArrowRight } from "react-icons/lu";
 import CustomPieChart from "../../Components/Charts/CustomPieChart";
 import CustomBarChart from "../../Components/Charts/CustomBarChart";
+import toast from "react-hot-toast";
 
 const COLORS = [
   "#8b5cf6",
@@ -24,25 +25,39 @@ const COLORS = [
 
 const UserDashboard = () => {
   useUserAuth();
-
   const { user } = useContext(UserContext);
-
   const navigate = useNavigate();
-
   const [dashboardData, setDashboardData] = useState(null);
   const [pieChartData, setPieChartData] = useState([]);
   const [barChartData, setBarChartData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  //PREPARE CHART DATA
+  const sanitizeImageUrl = (url) => {
+    console.log('UserDashboard Original URL:', url);
+    if (!url) return '';
+    const baseUrl = axiosInstance.defaults.baseURL || 'https://easyloan.onrender.com';
+    let sanitized = url;
+    const patterns = [
+      'http://localhost:3000',
+      'https://localhost:3000',
+      'https://easyloan-1.onrender.com'
+    ];
+    patterns.forEach(pattern => {
+      sanitized = sanitized.replaceAll(pattern, baseUrl);
+    });
+    console.log('UserDashboard Sanitized URL:', sanitized);
+    return sanitized;
+  };
+
   const prepareChartData = (data) => {
     const loanDistribution = data?.loanDistribution || null;
-    const loanTypeLevels =data?.loanTypeLevels || null;
+    const loanTypeLevels = data?.loanTypeLevels || null;
 
     const loanDistributionData = [
       { status: "active", count: loanDistribution?.active || 0 },
       { status: "approved", count: loanDistribution?.approved || 0 },
       { status: "completed", count: loanDistribution?.completed || 0 },
-
       { status: "defaulted", count: loanDistribution?.defaulted || 0 },
       { status: "pending", count: loanDistribution?.pending || 0 },
       { status: "rejected", count: loanDistribution?.rejected || 0 },
@@ -51,19 +66,20 @@ const UserDashboard = () => {
     setPieChartData(loanDistributionData);
 
     const loanTypeLevelData = [
-      {loanType: 'personal', count: loanTypeLevels?.personal || 0},
-      {loanType: 'business', count: loanTypeLevels?.business || 0},
-      {loanType: 'student', count: loanTypeLevels?.student || 0},
-      {loanType: 'mortgage', count: loanTypeLevels?.mortgage || 0},
-      {loanType: 'car loan', count: loanTypeLevels?.['car loan'] || 0},
-      {loanType: 'quickie loan', count: loanTypeLevels?.['quickie loan'] || 0},
+      { loanType: 'personal', count: loanTypeLevels?.personal || 0 },
+      { loanType: 'business', count: loanTypeLevels?.business || 0 },
+      { loanType: 'student', count: loanTypeLevels?.student || 0 },
+      { loanType: 'mortgage', count: loanTypeLevels?.mortgage || 0 },
+      { loanType: 'car loan', count: loanTypeLevels?.['car loan'] || 0 },
+      { loanType: 'quickie loan', count: loanTypeLevels?.['quickie loan'] || 0 },
     ];
 
-    setBarChartData(loanTypeLevelData)
+    setBarChartData(loanTypeLevelData);
   };
 
   const getDashboardData = async () => {
     try {
+      setLoading(true);
       const response = await axiosInstance.get(
         API_PATHS.LOANS.GET_USER_DASHBOARD_DATA
       );
@@ -72,18 +88,25 @@ const UserDashboard = () => {
         prepareChartData(response.data?.charts || null);
       }
     } catch (error) {
-      console.error("Error fetching users", error);
+      console.error("Error fetching dashboard data", error);
+      setError(error.response?.data?.message || 'Failed to load dashboard data');
+      toast.error('Failed to load dashboard data');
+    } finally {
+      setLoading(false);
     }
   };
 
   const onSeeMore = () => {
-    navigate("/admin/loan");
+    navigate("/user/loans");
   };
 
   useEffect(() => {
     getDashboardData();
     return () => {};
   }, []);
+
+  if (loading) return <DashboardLayout activeMenu="Dashboard"><div>Loading...</div></DashboardLayout>;
+  if (error) return <DashboardLayout activeMenu="Dashboard"><div>Error: {error}</div></DashboardLayout>;
 
   return (
     <DashboardLayout activeMenu="Dashboard">
@@ -96,7 +119,7 @@ const UserDashboard = () => {
             </p>
           </div>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 md:gap-6 ">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 md:gap-6">
           <InfoCard
             label="Total Applied Loans"
             value={addThousandsSeparator(
@@ -152,10 +175,9 @@ const UserDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-4 md:my-6">
         <div className="">
           <div className="card">
-            <div className="flex items-center justify-between ">
+            <div className="flex items-center justify-between">
               <h5 className="font-medium">Loan Distribution</h5>
             </div>
-
             <CustomPieChart data={pieChartData} colors={COLORS} />
           </div>
         </div>
@@ -163,15 +185,11 @@ const UserDashboard = () => {
         <div className="">
           <div className="card">
             <div className="flex items-center justify-between">
-              <h5 className="font-medium">
-                Loan Type Distribution
-              </h5>
-              </div>
-              <CustomBarChart data={barChartData} />
-           
+              <h5 className="font-medium">Loan Type Distribution</h5>
+            </div>
+            <CustomBarChart data={barChartData} />
           </div>
-         </div>
-
+        </div>
 
         <div className="md:col-span-2">
           <div className="card">

@@ -4,6 +4,9 @@ import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  server: {
+    port: 5173,
+  },
   build: {
     outDir: 'dist', // Explicitly set output directory
     assetsDir: 'assets', // Explicitly set assets directory
@@ -21,5 +24,5 @@ export default defineConfig({
     },
     assetsInclude: ['**/*.svg'], // Include SVG files
     sourcemap: false, // Disable sourcemaps for production
-  }
+  },
 });

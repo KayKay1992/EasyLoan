@@ -33,114 +33,129 @@ const ProfileUpdate = () => {
     }
   }, [currentUser]);
 
-const handleProfileUpdate = async (e) => {
-  e.preventDefault();
-  setError("");
-  setLoading(true);
-
-  try {
-    // Validate inputs
-    if (!fullName.trim()) throw new Error("Full name is required");
-    if (!validateEmail(email)) throw new Error("Valid email is required");
-    if (showPasswordFields && newPassword !== confirmPassword) {
-      throw new Error("Passwords don't match");
-    }
-
-    let imageUrl = null;
-    if (profilePic && profilePic instanceof File) {
-      console.log('Uploading new profile image...');
-      try {
-        imageUrl = await handleImageUpload(profilePic);
-        console.log('New image URL:', imageUrl);
-      } catch (uploadError) {
-        console.warn('Image upload failed, continuing without image update:', uploadError.message);
-        toast.error('Image upload failed: ' + uploadError.message);
-        setError('Image upload failed: ' + uploadError.message);
-      }
-    }
-
-    const payload = {
-      name: fullName,
-      email,
-      ...(imageUrl && { profileImageUrl: imageUrl }),
-      ...(showPasswordFields && newPassword && { password: newPassword }),
-    };
-
-    console.log('Sending profile update:', payload);
-
-    const response = await axiosInstance.put(
-      API_PATHS.AUTH.UPDATE_USER_PROFILE,
-      payload,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${currentUser.token}`,
-        },
-      }
-    );
-
-    if (!response.data?.success) {
-      throw new Error(response.data?.message || "Profile update failed");
-    }
-
-    updateUser(response.data.data);
-    toast.success("Profile updated successfully!");
-    setShowPasswordFields(false);
-  } catch (error) {
-    console.error('Profile update error:', {
-      message: error.message,
-      response: error.response?.data,
-      stack: error.stack,
+  const sanitizeImageUrl = (url) => {
+    console.log('Original URL:', url);
+    if (!url) return '';
+    const baseUrl = axiosInstance.defaults.baseURL || 'https://easyloan.onrender.com';
+    let sanitized = url;
+    const patterns = [
+      'http://localhost:3000',
+      'https://localhost:3000',
+      'https://easyloan-1.onrender.com'
+    ];
+    patterns.forEach(pattern => {
+      sanitized = sanitized.replaceAll(pattern, baseUrl);
     });
+    console.log('Sanitized URL:', sanitized);
+    return sanitized;
+  };
 
-    const errorMessage = error.message.includes('timeout')
-      ? 'Profile update timed out. Please try again or check your connection.'
-      : error.response?.data?.message || error.message || 'Profile update failed. Please try again.';
-    
-    setError(errorMessage);
-    toast.error(errorMessage);
-  } finally {
-    setLoading(false);
-  }
-};
-
-
-// Separate image upload handler
-const handleImageUpload = async (imageFile) => {
-  try {
-    console.log('Starting image upload...');
-    if (!imageFile) throw new Error('No image file provided');
-    if (imageFile.size > 5 * 1024 * 1024) throw new Error('File size exceeds 5MB limit');
-    const formData = new FormData();
-    formData.append('image', imageFile);
-    console.log('Uploading to:', API_PATHS.IMAGE.UPLOAD_IMAGE);
-    const response = await axiosInstance.post(
-      API_PATHS.IMAGE.UPLOAD_IMAGE,
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+  const handleImageUpload = async (imageFile) => {
+    try {
+      console.log('Starting image upload...');
+      if (!imageFile) throw new Error('No image file provided');
+      if (imageFile.size > 5 * 1024 * 1024) throw new Error('File size exceeds 5MB limit');
+      const formData = new FormData();
+      formData.append('image', imageFile);
+      console.log('Uploading to:', API_PATHS.IMAGE.UPLOAD_IMAGE);
+      const response = await axiosInstance.post(
+        API_PATHS.IMAGE.UPLOAD_IMAGE,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+      console.log('Upload response:', response.data);
+      if (!response.data?.data?.imageUrl) {
+        throw new Error('Server did not return image URL');
       }
-    );
-    console.log('Upload response:', response.data);
-    if (!response.data?.imageUrl) {
-      throw new Error('Server did not return image URL');
+      const imageUrl = sanitizeImageUrl(response.data.data.imageUrl);
+      return imageUrl;
+    } catch (error) {
+      console.error('Detailed upload error:', {
+        message: error.message,
+        response: error.response?.data,
+        config: error.config,
+      });
+      const errorMessage = error.message.includes('timeout')
+        ? 'Image upload timed out. Please check your connection or try a smaller file.'
+        : error.response?.data?.message || 'Failed to upload image. Please try again.';
+      throw new Error(errorMessage);
     }
-    return response.data.imageUrl;
-  } catch (error) {
-    console.error('Detailed upload error:', {
-      message: error.message,
-      response: error.response?.data,
-      config: error.config,
-    });
-    const errorMessage = error.message.includes('timeout')
-      ? 'Image upload timed out. Please check your connection or try a smaller file.'
-      : error.response?.data?.message || 'Failed to upload image. Please try again.';
-    throw new Error(errorMessage);
-  }
-};
+  };
 
+  const handleProfileUpdate = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      // Validate inputs
+      if (!fullName.trim()) throw new Error("Full name is required");
+      if (!validateEmail(email)) throw new Error("Valid email is required");
+      if (showPasswordFields && newPassword !== confirmPassword) {
+        throw new Error("Passwords don't match");
+      }
+
+      let imageUrl = null;
+      if (profilePic && profilePic instanceof File) {
+        console.log('Uploading new profile image...');
+        try {
+          imageUrl = await handleImageUpload(profilePic);
+          console.log('New image URL:', imageUrl);
+        } catch (uploadError) {
+          console.warn('Image upload failed, continuing without image update:', uploadError.message);
+          toast.error('Image upload failed: ' + uploadError.message);
+          setError('Image upload failed: ' + uploadError.message);
+        }
+      }
+
+      const payload = {
+        name: fullName,
+        email,
+        ...(imageUrl && { profileImageUrl: imageUrl }),
+        ...(showPasswordFields && newPassword && { password: newPassword }),
+      };
+
+      console.log('Sending profile update:', payload);
+
+      const response = await axiosInstance.put(
+        API_PATHS.AUTH.UPDATE_USER_PROFILE,
+        payload,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${currentUser.token}`,
+          },
+        }
+      );
+
+      if (!response.data?.success) {
+        throw new Error(response.data?.message || "Profile update failed");
+      }
+
+      updateUser(response.data.data);
+      toast.success("Profile updated successfully!");
+      setShowPasswordFields(false);
+    } catch (error) {
+      console.error('Profile update error:', {
+        message: error.message,
+        response: error.response?.data,
+        stack: error.stack,
+      });
+
+      const errorMessage = error.message.includes('timeout')
+        ? 'Profile update timed out. Please try again or check your connection.'
+        : error.response?.data?.message || error.message || 'Profile update failed. Please try again.';
+      
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <AuthLayout>

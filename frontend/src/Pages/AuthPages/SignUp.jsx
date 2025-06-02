@@ -17,15 +17,19 @@ const SignUp = () => {
   const [adminInviteToken, setAdminInviteToken] = useState("");
   const [error, setError] = useState(null);
 
-  
-  const {updateUser} = useContext(UserContext)
+  const { updateUser } = useContext(UserContext);
   const navigate = useNavigate();
 
-  //handle signUp form submit
+  const sanitizeImageUrl = (url) => {
+    if (!url) return '';
+    const baseUrl = axiosInstance.defaults.baseURL || 'https://easyloan.onrender.com';
+    return url.replace('http://localhost:3000', baseUrl);
+  };
+
   const handleSignUp = async (e) => {
     e.preventDefault();
 
-     let  profileImageUrl = ''
+    let profileImageUrl = '';
 
     if (!fullName) {
       setError("Please Enter your fullname");
@@ -41,47 +45,44 @@ const SignUp = () => {
     }
     setError("");
 
-    //SignUp API call
-    try{
-
-      //upload image if present
-      if(profilePic){
+    try {
+      if (profilePic) {
         const imgUploadRes = await uploadImage(profilePic);
-        profileImageUrl = imgUploadRes.imageUrl || '';
+        profileImageUrl = sanitizeImageUrl(imgUploadRes.imageUrl || '');
+        console.log('Sanitized profileImageUrl:', profileImageUrl); // Debug
       }
-      const response =await axiosInstance.post(API_PATHS.AUTH.REGISTER, {
+      const response = await axiosInstance.post(API_PATHS.AUTH.REGISTER, {
         name: fullName,
         email,
         password,
         profileImageUrl,
-        adminInviteToken
+        adminInviteToken,
       });
 
-      const {token, role} = response.data;
+      const { token, role } = response.data;
 
-      if(token) {
+      if (token) {
         localStorage.setItem('token', token);
         updateUser(response.data);
 
-        //Redirect base on role
-        if(role === 'admin'){
-          navigate('/admin/dashboard')
-        }else{
-          navigate('/user/dashboard')
+        if (role === 'admin') {
+          navigate('/admin/dashboard');
+        } else {
+          navigate('/user/dashboard');
         }
       }
-    }catch(error){
-      if(error.response && error.response.data.message){
+    } catch (error) {
+      if (error.response && error.response.data.message) {
         setError(error.response.data.message);
-      }else {
+      } else {
         setError('Something went wrong. Please try again');
       }
     }
   };
-  
+
   return (
     <AuthLayout>
-      <div className="lg:w-[100%] h-auto md:h-full mt-10 md:mt-0 flex flex-col justify-center ">
+      <div className="lg:w-[100%] h-auto md:h-full mt-10 md:mt-0 flex flex-col justify-center">
         <h3 className="text-xl font-semibold text-black">Create an Account</h3>
         <p className="text-xs text-slate-700 mt-[5px] mb-6">
           Join Us Today by Entering Your Details Below
@@ -89,7 +90,7 @@ const SignUp = () => {
 
         <form onSubmit={handleSignUp}>
           <ProfilePhotoSelector image={profilePic} setImage={setProfilePic} />
-          <div className="grid grid-col-1 md:grid-cols-2 gap-4 ">
+          <div className="grid grid-col-1 md:grid-cols-2 gap-4">
             <Input
               value={fullName}
               onChange={({ target }) => setFullName(target.value)}
@@ -97,7 +98,6 @@ const SignUp = () => {
               placeholder="John Doe"
               type="text"
             />
-
             <Input
               value={email}
               onChange={({ target }) => setEmail(target.value)}
@@ -112,7 +112,6 @@ const SignUp = () => {
               placeholder="min 8 characters"
               type="password"
             />
-
             <Input
               value={adminInviteToken}
               onChange={({ target }) => setAdminInviteToken(target.value)}
@@ -120,20 +119,19 @@ const SignUp = () => {
               placeholder="6 digit code"
               type="text"
             />
-             </div>
-            {error && <p className="text-red-600 text-xs pb-2.5">{error}</p>}
+          </div>
+          {error && <p className="text-red-600 text-xs pb-2.5">{error}</p>}
 
-            <button type="submit" className="btn-primary">
-              SIGN UP
-            </button>
+          <button type="submit" className="btn-primary">
+            SIGN UP
+          </button>
 
-            <p className="text-[13px] text-slate-800 mt-3 ">
-              Already have an account?{" "}
-              <Link className="font-medium text-primary underline" to="/login">
-                Login
-              </Link>
-            </p>
-         
+          <p className="text-[13px] text-slate-800 mt-3">
+            Already have an account?{" "}
+            <Link className="font-medium text-primary underline" to="/login">
+              Login
+            </Link>
+          </p>
         </form>
       </div>
     </AuthLayout>

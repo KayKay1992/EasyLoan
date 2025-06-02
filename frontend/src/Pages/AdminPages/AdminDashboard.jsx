@@ -77,7 +77,7 @@ const AdminDashboard = () => {
   };
 
   const onSeeMore = () => {
-    navigate("/admin/loan");
+    navigate("/admin/loans");
   };
 
   useEffect(() => {
