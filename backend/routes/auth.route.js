@@ -1,7 +1,7 @@
 const express = require('express');
 const { registerUser, loginUser, getCurrentUser, getUserProfile, updateUserProfile } = require('../controllers/auth.controller');
 const { protect } = require('../middleware/authMiddleware');
-const { uploadProfilePic } = require('../middleware/uploadProfilePic');
+const { handleImageUpload } = require('../middleware/uploadProfilePic');
 
 const router = express.Router();
 
@@ -33,6 +33,6 @@ router.put('/profile', protect, updateUserProfile);
 // @route   POST /api/auth/upload-image
 // @desc    Upload user profile image
 // @access  Private
-router.post('/upload-image', protect, uploadProfilePic);
+router.post('/upload-image', protect, handleImageUpload);
 
 module.exports = router;

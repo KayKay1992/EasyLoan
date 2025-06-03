@@ -1,3 +1,4 @@
+// controllers/upload.controller.js
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs').promises;
@@ -38,7 +39,7 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 },
 }).single('image');
 
-module.exports = (req, res, next) => {
+const handleImageUpload = (req, res) => {
   upload(req, res, (err) => {
     if (err) {
       console.error('Upload error:', err.message);
@@ -52,4 +53,8 @@ module.exports = (req, res, next) => {
     console.log('Generated imageUrl:', imageUrl);
     res.status(200).json({ success: true, data: { imageUrl } });
   });
+};
+
+module.exports = {
+  handleImageUpload,
 };
