@@ -1,4 +1,4 @@
-export const BASE_URL = import.meta.env.VITE_API_URL || 'https://easyloan.onrender.com/api'
+export const BASE_URL = import.meta.env.VITE_API_URL || 'https://easyloan.onrender.com'
 
 //utils /apiPaths.js
 export const API_PATHS = {
