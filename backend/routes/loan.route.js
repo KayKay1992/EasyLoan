@@ -18,7 +18,7 @@ const {
   getLoanOfferById
 } = require('../controllers/loan.controller');
 const { uploadDocument } = require('../middleware/fileUploadMiddleware');
-const upload = require('../middleware/uploadMiddleware');
+const upload = require('../middleware/upload');
 
 const router = express.Router();
 

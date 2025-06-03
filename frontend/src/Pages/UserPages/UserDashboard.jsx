@@ -33,24 +33,25 @@ const UserDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
- const sanitizeImageUrl = (url) => {
-    console.log('UserDashboard: Original URL:', url);
-    if (!url) return '';
-    const baseUrl = import.meta.env.VITE_API_URL || 'https://easyloan.onrender.com';
-    const normalizedBaseUrl = baseUrl.replace(/\/+$/, '');
-    let sanitized = url;
-    const patterns = [
-      'http://localhost:3000',
-      'https://localhost:3000',
-      'https://easyloan-1.onrender.com'
-    ];
-    patterns.forEach(pattern => {
-      sanitized = sanitized.replaceAll(pattern, normalizedBaseUrl);
-    });
-    sanitized = sanitized.replace(/\/+[uU]ploads\//g, '/uploads/');
-    console.log('UserDashboard: Sanitized URL:', sanitized);
-    return sanitized;
-  };
+const sanitizeImageUrl = (url) => {
+  console.log('UserDashboard: Original URL:', url);
+  if (!url) return '';
+  const baseUrl = import.meta.env.VITE_API_URL || 'https://easyloan.onrender.com';
+  const normalizedBaseUrl = baseUrl.replace(/\/+$/, '');
+  let sanitized = url || '';
+  const patterns = [
+    'http://localhost:3000',
+    'https://localhost:3000',
+    'https://easyloan-1.onrender.com'
+  ];
+  patterns.forEach(pattern => {
+    sanitized = sanitized.replace(new RegExp(pattern, 'g'), normalizedBaseUrl);
+  });
+  sanitized = sanitized.replace(/\/*[uU]ploads\//g, '/uploads/');
+  sanitized = sanitized.startsWith(normalizedBaseUrl) ? sanitized : `${normalizedBaseUrl}${sanitized.startsWith('/uploads/') ? '' : '/uploads/'}${sanitized.split('/uploads/').pop() || ''}`;
+  console.log('UserDashboard: Sanitized URL:', sanitized);
+  return sanitized;
+};
 
   const prepareChartData = (data) => {
     const loanDistribution = data?.loanDistribution || null;

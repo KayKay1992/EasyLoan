@@ -6,6 +6,7 @@ const createUploadDir = async () => {
   try {
     await fs.mkdir(uploadDir, { recursive: true });
   } catch (err) {
+    console.error('Failed to create upload directory:', err.message);
     throw new Error('Failed to create upload directory');
   }
 };

@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+const fs = require("fs").promises;
 const connectDB = require("./config/db");
 const errorHandler = require("./middleware/errorHanlerMiddleware");
 
@@ -46,7 +47,6 @@ app.use(
 );
 console.log("✅ CORS setup complete");
 
-// Log incoming requests
 app.use((req, res, next) => {
   console.log(
     `Request: ${req.method} ${req.url} from Origin: ${req.get("Origin") || "unknown"}`
@@ -55,30 +55,31 @@ app.use((req, res, next) => {
 });
 console.log("✅ Request logging enabled");
 
-// Health check
 app.get("/health", (req, res) => {
   res.status(200).send("OK");
 });
 console.log("✅ Health check route configured");
 
-// Parse JSON
 app.use(express.json());
 console.log("✅ JSON parsing enabled");
 
-// Connect to database
 console.log("Connecting to database...");
 connectDB()
   .then(() => console.log("✅ Database connected successfully"))
   .catch((err) => {
     console.error("ERROR: Database connection failed:", err.message);
     process.exit(1);
-});
+  });
 
-// Serve uploads
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, "uploads");
+fs.mkdir(uploadsDir, { recursive: true })
+  .then(() => console.log("✅ Uploads directory ensured"))
+  .catch((err) => console.error("ERROR: Failed to create uploads directory:", err.message));
+
+app.use("/uploads", express.static(uploadsDir));
 console.log("✅ Uploads static route configured");
 
-// Routes
 console.log("Installing routes...");
 app.use("/api/auth", authRoute);
 console.log("✔️ Installed auth routes");
@@ -96,11 +97,9 @@ app.use("/api/setting", settingRoute);
 console.log("✔️ Installed setting routes");
 console.log("✅ Routes installed successfully");
 
-// Error handler
 app.use(errorHandler);
 console.log("✅ Error handler installed");
 
-// Start server
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
 console.log("🚀 Server starting...");

@@ -395,8 +395,8 @@ const LoanApplicationForm = () => {
 
         // Show success message for 3 seconds before navigating
         setTimeout(() => {
-          navigate("/user/apply-loan");
-        }, 10000);
+          navigate("/user/dashboard");
+        }, 3000); // Reduced from 10000 to 3000
       }
     } catch (error) {
       console.error('Detailed error:', {
