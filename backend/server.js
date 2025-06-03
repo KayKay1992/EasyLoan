@@ -22,6 +22,7 @@ console.log("Route files imported successfully");
 
 const app = express();
 
+// === CORS Setup ===
 console.log("Setting up CORS...");
 const allowedOrigins = [
   "https://easyloan.onrender.com",
@@ -34,7 +35,7 @@ app.use(
     origin: (origin, callback) => {
       console.log("CORS Origin Check:", origin);
       if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, origin);
+        callback(null, true); // ✅ fixed here
       } else {
         console.error("Blocked by CORS:", origin);
         callback(new Error("Not allowed by CORS"));
@@ -71,7 +72,7 @@ connectDB()
     process.exit(1);
   });
 
-// Ensure uploads directory exists
+// === Uploads directory ===
 const uploadsDir = path.join(__dirname, "uploads");
 fs.mkdir(uploadsDir, { recursive: true })
   .then(() => console.log("✅ Uploads directory ensured"))
@@ -80,6 +81,7 @@ fs.mkdir(uploadsDir, { recursive: true })
 app.use("/uploads", express.static(uploadsDir));
 console.log("✅ Uploads static route configured");
 
+// === Routes ===
 console.log("Installing routes...");
 app.use("/api/auth", authRoute);
 console.log("✔️ Installed auth routes");
@@ -97,9 +99,11 @@ app.use("/api/setting", settingRoute);
 console.log("✔️ Installed setting routes");
 console.log("✅ Routes installed successfully");
 
+// === Error Handler ===
 app.use(errorHandler);
 console.log("✅ Error handler installed");
 
+// === Server Start ===
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
 console.log("🚀 Server starting...");
