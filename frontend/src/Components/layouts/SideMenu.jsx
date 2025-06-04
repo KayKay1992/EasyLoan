@@ -12,7 +12,7 @@ const SideMenu = ({ activeMenu, isMobile = false }) => {
 
  const sanitizeImageUrl = (url) => {
   console.log('Original URL:', url);
-  if (!url) return 'https://via.placeholder.com/80';
+  if (!url) return '/images/placeholder.png';
   const baseUrl = import.meta.env.VITE_API_URL || 'https://easyloan.onrender.com';
   const normalizedBaseUrl = baseUrl.replace(/\/+$/, '');
   let sanitized = url || '';
@@ -55,7 +55,7 @@ const SideMenu = ({ activeMenu, isMobile = false }) => {
       <div className="flex flex-col items-center justify-center mb-7 pt-5">
         <div className="relative">
           <img 
-            src={user?.profileImageUrl ? sanitizeImageUrl(user.profileImageUrl) : 'https://via.placeholder.com/80'} 
+            src={user?.profileImageUrl ? sanitizeImageUrl(user.profileImageUrl) : '/images/placeholder.png'} 
             alt='profile' 
             className='w-20 h-20 bg-slate-400 rounded-full'
             onError={() => console.error('Failed to load profile image')}
