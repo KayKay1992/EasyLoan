@@ -1,37 +1,55 @@
-import React, { useContext, useEffect } from 'react';
-import { UserContext } from '../../context/userContext';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ADMIN_SIDEBAR, USER_SIDEBAR } from '../../utils/data';
-import axiosInstance from '../../utils/axiosInstance';
+import React, { useContext, useEffect } from "react";
+import { UserContext } from "../../context/userContext";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { ADMIN_SIDEBAR, USER_SIDEBAR } from "../../utils/data";
+import axiosInstance from "../../utils/axiosInstance";
 
 const SideMenu = ({ activeMenu, isMobile = false }) => {
   const { user, clearUser } = useContext(UserContext);
   const [SideMenuData, setSideMenuData] = useState([]);
   const navigate = useNavigate();
 
- const sanitizeImageUrl = (url) => {
-  console.log('Original URL:', url);
-  if (!url) return '/images/placeholder.png';
-  const baseUrl = import.meta.env.VITE_API_URL || 'https://easyloan.onrender.com';
-  const normalizedBaseUrl = baseUrl.replace(/\/+$/, '');
-  let sanitized = url || '';
-  const patterns = [
-    'http://localhost:3000',
-    'https://localhost:3000',
-    'https://easyloan-1.onrender.com'
-  ];
-  patterns.forEach(pattern => {
-    sanitized = sanitized.replace(new RegExp(pattern, 'g'), normalizedBaseUrl);
-  });
-  sanitized = sanitized.replace(/\/*[uU]ploads\//g, '/uploads/');
-  sanitized = sanitized.startsWith(normalizedBaseUrl) ? sanitized : `${normalizedBaseUrl}${sanitized.startsWith('/uploads/') ? '' : '/uploads/'}${sanitized.split('/uploads/').pop() || ''}`;
-  console.log('Sanitized URL:', sanitized);
-  return sanitized;
-};
+  const sanitizeImageUrl = (url) => {
+    if (!url) return "/images/placeholder.png";
+
+    const baseUrl =
+      import.meta.env.VITE_API_URL || "https://easyloan.onrender.com";
+    const normalizedBaseUrl = baseUrl.replace(/\/+$/, "");
+
+    let sanitized = url;
+
+    // Replace known dev URLs with base URL
+    [
+      "http://localhost:3000",
+      "https://localhost:3000",
+      "https://easyloan-1.onrender.com",
+    ].forEach((pattern) => {
+      sanitized = sanitized.replace(
+        new RegExp(pattern, "g"),
+        normalizedBaseUrl
+      );
+    });
+
+    // Normalize uploads folder casing and slashes
+    sanitized = sanitized.replace(/\/*[uU]ploads\//g, "/uploads/");
+
+    // Ensure sanitized URL has base URL prefix
+    if (!sanitized.startsWith(normalizedBaseUrl)) {
+      if (sanitized.startsWith("/uploads/")) {
+        sanitized = normalizedBaseUrl + sanitized;
+      } else {
+        // If sanitized doesn't include /uploads/, append it before filename
+        const filePart = sanitized.split("/uploads/").pop() || "";
+        sanitized = normalizedBaseUrl + "/uploads/" + filePart;
+      }
+    }
+
+    return sanitized;
+  };
 
   const handleClick = (route) => {
-    if (route === 'logout') {
+    if (route === "logout") {
       handleLogout();
       return;
     }
@@ -41,37 +59,44 @@ const SideMenu = ({ activeMenu, isMobile = false }) => {
   const handleLogout = () => {
     localStorage.clear();
     clearUser();
-    navigate('/login');
+    navigate("/login");
   };
 
   useEffect(() => {
     if (user) {
-      setSideMenuData(user?.role === 'admin' ? ADMIN_SIDEBAR : USER_SIDEBAR);
+      setSideMenuData(user?.role === "admin" ? ADMIN_SIDEBAR : USER_SIDEBAR);
     }
   }, [user]);
 
   return (
-    <div className={`${isMobile ? 'block' : 'hidden sm:block'} w-full h-full bg-yellow-800 overflow-y-auto`}>
+    <div
+      className={`${isMobile ? 'block' : 'hidden'} sm:block w-full h-full bg-yellow-800 overflow-y-auto`}
+    >
       <div className="flex flex-col items-center justify-center mb-7 pt-5">
         <div className="relative">
-          <img 
-            src={user?.profileImageUrl ? sanitizeImageUrl(user.profileImageUrl) : '/images/placeholder.png'} 
-            alt='profile' 
-            className='w-20 h-20 bg-slate-400 rounded-full'
-            onError={() => console.error('Failed to load profile image')}
+          <img
+            src={
+              user?.profileImageUrl
+                ? sanitizeImageUrl(user.profileImageUrl)
+                : "/images/placeholder.png"
+            }
+            alt="profile"
+            className="w-20 h-20 bg-slate-400 rounded-full"
+            onError={(e) => {
+              e.currentTarget.onerror = null; // prevent infinite loop
+              e.currentTarget.src = "/images/placeholder.png";
+            }}
           />
         </div>
-        {user?.role === 'admin' && (
+        {user?.role === "admin" && (
           <div className="text-[10px] font-medium text-white bg-primary px-3 py-0.5 rounded mt-1">
             Admin
           </div>
         )}
         <h5 className="text-gray-950 font-medium leading-6 mt-3">
-          {user?.name || ''}
+          {user?.name || ""}
         </h5>
-        <p className="text-[12px] text-gray-300">
-          {user?.email || ''}
-        </p>
+        <p className="text-[12px] text-gray-300">{user?.email || ""}</p>
         <button
           onClick={() => navigate("/profile-update")}
           className="text-amber-400 hover:text-white border border-amber-700 hover:bg-amber-900 px-3 py-1 rounded-md text-sm mt-5"
@@ -84,13 +109,13 @@ const SideMenu = ({ activeMenu, isMobile = false }) => {
         <button
           key={`menu_${index}`}
           className={`w-full flex items-center gap-4 text-[15px] ${
-            activeMenu === item.label 
-              ? "text-primary bg-blue-50/40 border-r-4 border-blue-500" 
+            activeMenu === item.label
+              ? "text-primary bg-blue-50/40 border-r-4 border-blue-500"
               : "text-gray-200 hover:bg-amber-900"
           } py-3 px-6 mb-3 cursor-pointer`}
           onClick={() => handleClick(item.path)}
         >
-          <item.icon className='text-xl'/>
+          <item.icon className="text-xl" />
           {item.label}
         </button>
       ))}

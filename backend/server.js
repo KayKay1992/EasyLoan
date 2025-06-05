@@ -2,7 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
-const fs = require("fs").promises;
+const fs = require("fs");
 const connectDB = require("./config/db");
 const errorHandler = require("./middleware/errorHanlerMiddleware");
 
@@ -73,10 +73,12 @@ connectDB()
   });
 
 // === Uploads directory ===
-const uploadsDir = path.join(__dirname, "uploads");
-fs.mkdir(uploadsDir, { recursive: true })
-  .then(() => console.log("✅ Uploads directory ensured"))
-  .catch((err) => console.error("ERROR: Failed to create uploads directory:", err.message));
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true })
+   console.log("✅ Uploads directory ensured");
+}
+
 
 app.use("/uploads", express.static(uploadsDir));
 console.log("✅ Uploads static route configured");

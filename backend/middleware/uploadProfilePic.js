@@ -1,22 +1,17 @@
-// controllers/upload.controller.js
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs').promises;
+const fs = require('fs');
 
-const uploadDir = 'uploads';
-const createUploadDir = async () => {
-  try {
-    await fs.mkdir(uploadDir, { recursive: true });
-    console.log("✅ Uploads directory created/verified");
-  } catch (err) {
-    console.error('Failed to create upload directory:', err.message);
-    throw new Error('Failed to create upload directory');
-  }
-};
+const uploadDir = path.join(__dirname, 'uploads')
+
+// Ensure uploads directory exists **synchronously**
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+  console.log("✅ Uploads directory created");
+}
 
 const storage = multer.diskStorage({
-  destination: async (req, file, cb) => {
-    await createUploadDir();
+  destination: (req, file, cb) => {
     cb(null, uploadDir);
   },
   filename: (req, file, cb) => {

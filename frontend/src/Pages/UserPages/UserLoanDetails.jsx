@@ -12,40 +12,41 @@ const UserLoanDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Sanitize document URLs
   const sanitizeDocumentUrl = (url) => {
     if (!url) return '';
     const baseUrl = import.meta.env.VITE_API_URL || 'https://easyloan.onrender.com';
     const normalizedBaseUrl = baseUrl.replace(/\/+$/, '');
-    let sanitized = url || '';
     const patterns = [
       'http://localhost:3000',
       'https://localhost:3000',
-      'https://easyloan-1.onrender.com'
+      'https://easyloan-1.onrender.com',
     ];
-    patterns.forEach(pattern => {
+    let sanitized = url;
+    patterns.forEach((pattern) => {
       sanitized = sanitized.replace(new RegExp(pattern, 'g'), normalizedBaseUrl);
     });
     sanitized = sanitized.replace(/\/*[uU]ploads\//g, '/uploads/');
-    sanitized = sanitized.startsWith(normalizedBaseUrl) ? sanitized : `${normalizedBaseUrl}${sanitized.startsWith('/uploads/') ? '' : '/uploads/'}${sanitized.split('/uploads/').pop() || ''}`;
-    console.log('Original Document URL:', url, 'Sanitized:', sanitized);
+    if (!sanitized.startsWith(normalizedBaseUrl)) {
+      sanitized = `${normalizedBaseUrl}/uploads/${sanitized.split('/uploads/').pop()}`;
+    }
+
     return sanitized;
   };
 
   useEffect(() => {
     const fetchLoanDetails = async () => {
       try {
-        if (!id) {
-          throw new Error('Loan ID is missing');
-        }
+        if (!id) throw new Error('Loan ID is missing');
         const response = await axiosInstance.get(API_PATHS.LOANS.GET_LOAN_BY_ID(id));
         setLoan(response.data);
+        setError(null);
       } catch (err) {
         setError(err.response?.data?.message || err.message || 'Failed to fetch loan details');
       } finally {
         setLoading(false);
       }
     };
+
     fetchLoanDetails();
   }, [id]);
 
@@ -67,18 +68,17 @@ const UserLoanDetails = () => {
     }
   };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-NG', {
+  const formatCurrency = (amount) =>
+    new Intl.NumberFormat('en-NG', {
       style: 'currency',
-      currency: 'NGN'
+      currency: 'NGN',
     }).format(amount);
-  };
 
   if (loading) {
     return (
       <DashboardLayout activeMenu="My Loans">
         <div className="flex justify-center items-center min-h-[60vh]">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-600 items-center justify-center m-auto mt-50"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-600" />
         </div>
       </DashboardLayout>
     );
@@ -118,77 +118,62 @@ const UserLoanDetails = () => {
             ← Back to Loans
           </button>
         </div>
+
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <h2 className="text-xl font-semibold mb-4">Basic Information</h2>
               <div className="space-y-4">
-                <div className="border-b pb-4">
-                  <p className="text-sm font-medium text-gray-500">Loan ID</p>
-                  <p className="mt-1">{loan._id}</p>
-                </div>
-                <div className="border-b pb-4">
-                  <p className="text-sm font-medium text-gray-500">User</p>
-                  <p className="mt-1">{loan.user.name} ({loan.user.email})</p>
-                </div>
-                <div className="border-b pb-4">
-                  <p className="text-sm font-medium text-gray-500">Loan Type</p>
-                  <p className="mt-1 capitalize">{loan.loanType}</p>
-                </div>
-                <div className="border-b pb-4">
-                  <p className="text-sm font-medium text-gray-500">Status</p>
-                  <span className={`mt-1 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(loan.status)}`}>
-                    {loan.status.charAt(0).toUpperCase() + loan.status.slice(1)}
-                  </span>
-                </div>
-                <div className="border-b pb-4">
-                  <p className="text-sm font-medium text-gray-500">Date Created</p>
-                  <p className="mt-1">{format(new Date(loan.createdAt), 'MMMM d, yyyy h:mm a')}</p>
-                </div>
+                <InfoBlock label="Loan ID" value={loan._id} />
+                <InfoBlock
+                  label="User"
+                  value={`${loan?.user?.name || 'N/A'} (${loan?.user?.email || 'N/A'})`}
+                />
+                <InfoBlock label="Loan Type" value={loan.loanType} capitalize />
+                <InfoBlock
+                  label="Status"
+                  value={
+                    <span
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(loan.status)}`}
+                    >
+                      {loan.status.charAt(0).toUpperCase() + loan.status.slice(1)}
+                    </span>
+                  }
+                />
+                <InfoBlock
+                  label="Date Created"
+                  value={format(new Date(loan.createdAt), 'MMMM d, yyyy h:mm a')}
+                />
                 {endDate && (
-                  <div className="border-b pb-4">
-                    <p className="text-sm font-medium text-gray-500">Projected End Date</p>
-                    <p className="mt-1">{format(endDate, 'MMMM d, yyyy')}</p>
-                  </div>
+                  <InfoBlock
+                    label="Projected End Date"
+                    value={format(endDate, 'MMMM d, yyyy')}
+                  />
                 )}
               </div>
             </div>
+
             <div>
               <h2 className="text-xl font-semibold mb-4">Financial Details</h2>
               <div className="space-y-4">
-                <div className="border-b pb-4">
-                  <p className="text-sm font-medium text-gray-500">Loan Amount</p>
-                  <p className="mt-1">{formatCurrency(loan.amount)}</p>
-                </div>
-                <div className="border-b pb-4">
-                  <p className="text-sm font-medium text-gray-500">Interest Rate</p>
-                  <p className="mt-1">{loan.interestRate}%</p>
-                </div>
-                <div className="border-b pb-4">
-                  <p className="text-sm font-medium text-gray-500">Term</p>
-                  <p className="mt-1">{loan.termMonths} months</p>
-                </div>
-                <div className="border-b pb-4">
-                  <p className="text-sm font-medium text-gray-500">Monthly Payment</p>
-                  <p className="mt-1">{formatCurrency(loan.monthlyPayment)}</p>
-                </div>
-                <div className="border-b pb-4">
-                  <p className="text-sm font-medium text-gray-500">Total Repayable</p>
-                  <p className="mt-1">{formatCurrency(loan.totalRepayable)}</p>
-                </div>
+                <InfoBlock label="Loan Amount" value={formatCurrency(loan.amount)} />
+                <InfoBlock label="Interest Rate" value={`${loan.interestRate}%`} />
+                <InfoBlock label="Term" value={`${loan.termMonths} months`} />
+                <InfoBlock label="Monthly Payment" value={formatCurrency(loan.monthlyPayment)} />
+                <InfoBlock label="Total Repayable" value={formatCurrency(loan.totalRepayable)} />
               </div>
             </div>
           </div>
         </div>
-        {/* Documents section */}
-        {loan.documents && loan.documents.length > 0 ? (
-          <section className="mb-8">
-            <h3 className="text-lg font-medium text-gray-800 border-b-2 border-amber-200 pb-2 mb-4">
-              Documents
-            </h3>
+
+        <section className="mb-8">
+          <h3 className="text-lg font-medium text-gray-800 border-b-2 border-amber-200 pb-2 mb-4">
+            Documents
+          </h3>
+          {loan.documents?.length > 0 ? (
             <ul className="space-y-2">
               {loan.documents.map((doc, index) => (
-                <li key={index}>
+                <li key={`${loan._id}-doc-${index}`}>
                   <a
                     href={sanitizeDocumentUrl(doc)}
                     target="_blank"
@@ -200,18 +185,21 @@ const UserLoanDetails = () => {
                 </li>
               ))}
             </ul>
-          </section>
-        ) : (
-          <section className="mb-8">
-            <h3 className="text-lg font-medium text-gray-800 border-b-2 border-amber-200 pb-2 mb-4">
-              Documents
-            </h3>
+          ) : (
             <p className="text-gray-600">No documents available.</p>
-          </section>
-        )}
+          )}
+        </section>
       </div>
     </DashboardLayout>
   );
 };
+
+// Reusable subcomponent for neatness
+const InfoBlock = ({ label, value, capitalize = false }) => (
+  <div className="border-b pb-4">
+    <p className="text-sm font-medium text-gray-500">{label}</p>
+    <p className={`mt-1 ${capitalize ? 'capitalize' : ''}`}>{value}</p>
+  </div>
+);
 
 export default UserLoanDetails;
