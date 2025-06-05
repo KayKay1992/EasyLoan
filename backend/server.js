@@ -106,31 +106,6 @@ app.use(errorHandler);
 console.log("✅ Error handler installed");
 
 // Serve frontend last
-if (process.env.NODE_ENV === "production") {
-  const path = require('path');
-const frontendPath = path.join(__dirname, '../../frontend/dist');
-
-  
-  console.log(`Serving frontend from: ${frontendPath}`);
-
-  // Serve static assets first
-  app.use(express.static(frontendPath));
-
-  // Create a custom regex-based catch-all that excludes API routes
-  app.get(/^(?!\/api\/).*/, (req, res) => {
-    console.log(`Handling SPA route: ${req.path}`);
-    res.sendFile(path.join(frontendPath, 'index.html'), (err) => {
-      if (err) {
-        console.error('SPA delivery error:', err);
-        res.status(500).send('Application loading failed');
-      }
-    });
-  });
-
-  console.log('✅ Production frontend configured');
-}
-
-
 
 // === Server Start ===
 const PORT = process.env.PORT || 10000;
