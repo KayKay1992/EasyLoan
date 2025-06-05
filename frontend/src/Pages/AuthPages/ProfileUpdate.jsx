@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+ import React, { useContext, useEffect, useState } from "react";
 import AuthLayout from "../../Components/layouts/AuthLayout";
 import ProfilePhotoSelector from "../../Components/inputs/ProfilePhotoSelector";
 import Input from "../../Components/inputs/Inputs";
@@ -99,22 +99,25 @@ const ProfileUpdate = () => {
         throw new Error("Passwords don't match");
       }
 
-     let imageUrl = null;
-     if (profilePic && profilePic instanceof File) {
-      imageUrl = await handleImageUpload(profilePic);
-} else if (typeof profilePic === 'string') {
-  imageUrl = profilePic;
-}
+      let imageUrl = null;
+      if (profilePic && profilePic instanceof File) {
+        console.log('Uploading new profile image...');
+        try {
+          imageUrl = await handleImageUpload(profilePic);
+          console.log('New image URL:', imageUrl);
+        } catch (uploadError) {
+          console.warn('Image upload failed, continuing without image update:', uploadError.message);
+          toast.error('Image upload failed: ' + uploadError.message);
+          setError('Image upload failed: ' + uploadError.message);
+        }
+      }
 
-
-     const payload = {
-  name: fullName,
-  email,
-  profileImageUrl: imageUrl,
-  ...(showPasswordFields && newPassword && { password: newPassword }),
-  ...(showPasswordFields && currentPassword && { currentPassword }), // if needed by backend
-};
-
+      const payload = {
+        name: fullName,
+        email,
+        ...(imageUrl && { profileImageUrl: imageUrl }),
+        ...(showPasswordFields && newPassword && { password: newPassword }),
+      };
 
       console.log('Sending profile update:', payload);
 

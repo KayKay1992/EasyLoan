@@ -1,15 +1,27 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
+import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    viteStaticCopy({
+      targets: [
+        {
+          src: 'public/_redirects', // the file you want to copy
+          dest: '.' // copied to dist root
+        }
+      ]
+    })
+  ],
   server: {
     port: 5173,
   },
   build: {
-    outDir: 'dist', // Explicitly set output directory
-    assetsDir: 'assets', // Explicitly set assets directory
+    outDir: 'dist',
+    assetsDir: 'assets',
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
@@ -22,7 +34,7 @@ export default defineConfig({
         },
       },
     },
-    assetsInclude: ['**/*.svg'], // Include SVG files
-    sourcemap: false, // Disable sourcemaps for production
+    assetsInclude: ['**/*.svg'],
+    sourcemap: false,
   },
 });

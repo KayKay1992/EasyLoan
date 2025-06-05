@@ -108,7 +108,8 @@ console.log("✅ Error handler installed");
 // Serve frontend last
 if (process.env.NODE_ENV === "production") {
   const path = require('path');
-  const frontendPath = path.join(__dirname, '../frontend/dist');
+const frontendPath = path.join(__dirname, '../../frontend/dist');
+
   
   console.log(`Serving frontend from: ${frontendPath}`);
 
