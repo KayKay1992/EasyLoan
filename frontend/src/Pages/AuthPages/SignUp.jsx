@@ -16,41 +16,47 @@ const SignUp = () => {
   const [password, setPassword] = useState("");
   const [adminInviteToken, setAdminInviteToken] = useState("");
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const { updateUser } = useContext(UserContext);
   const navigate = useNavigate();
 
   const sanitizeImageUrl = (url) => {
-    if (!url) return '';
-    const baseUrl = axiosInstance.defaults.baseURL || 'https://easyloan.onrender.com';
-    return url.replace('http://localhost:3000', baseUrl);
+    if (!url) return "";
+    const baseUrl = import.meta.env.VITE_API_URL || "https://easyloan.onrender.com";
+    return url.replace("http://localhost:3000", baseUrl);
   };
 
   const handleSignUp = async (e) => {
     e.preventDefault();
 
-    let profileImageUrl = '';
+    let profileImageUrl = "";
 
     if (!fullName) {
-      setError("Please Enter your fullname");
+      setError("Please enter your full name");
       return;
     }
     if (!validateEmail(email)) {
-      setError("Please Enter valid email address");
+      setError("Please enter a valid email address");
       return;
     }
-    if (!password) {
-      setError("Please Enter password");
+    if (!password || password.length < 8) {
+      setError("Password must be at least 8 characters long");
       return;
     }
+
     setError("");
+    setLoading(true);
 
     try {
+      // Upload image if selected
       if (profilePic) {
         const imgUploadRes = await uploadImage(profilePic);
-        profileImageUrl = sanitizeImageUrl(imgUploadRes.imageUrl || '');
-        console.log('Sanitized profileImageUrl:', profileImageUrl); // Debug
+        profileImageUrl = sanitizeImageUrl(imgUploadRes?.imageUrl || "");
+        console.log("Sanitized profileImageUrl:", profileImageUrl);
       }
+
+      // Register user
       const response = await axiosInstance.post(API_PATHS.AUTH.REGISTER, {
         name: fullName,
         email,
@@ -62,21 +68,23 @@ const SignUp = () => {
       const { token, role } = response.data;
 
       if (token) {
-        localStorage.setItem('token', token);
+        localStorage.setItem("token", token);
         updateUser(response.data);
 
-        if (role === 'admin') {
-          navigate('/admin/dashboard');
+        if (role === "admin") {
+          navigate("/admin/dashboard");
         } else {
-          navigate('/user/dashboard');
+          navigate("/user/dashboard");
         }
       }
-    } catch (error) {
-      if (error.response && error.response.data.message) {
-        setError(error.response.data.message);
+    } catch (err) {
+      if (err.response?.data?.message) {
+        setError(err.response.data.message);
       } else {
-        setError('Something went wrong. Please try again');
+        setError("Something went wrong. Please try again.");
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -85,12 +93,12 @@ const SignUp = () => {
       <div className="lg:w-[100%] h-auto md:h-full mt-10 md:mt-0 flex flex-col justify-center">
         <h3 className="text-xl font-semibold text-black">Create an Account</h3>
         <p className="text-xs text-slate-700 mt-[5px] mb-6">
-          Join Us Today by Entering Your Details Below
+          Join us today by entering your details below
         </p>
 
         <form onSubmit={handleSignUp}>
           <ProfilePhotoSelector image={profilePic} setImage={setProfilePic} />
-          <div className="grid grid-col-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
               value={fullName}
               onChange={({ target }) => setFullName(target.value)}
@@ -102,28 +110,33 @@ const SignUp = () => {
               value={email}
               onChange={({ target }) => setEmail(target.value)}
               label="Email Address"
-              placeholder="John@mgmail.com"
+              placeholder="john@gmail.com"
               type="text"
             />
             <Input
               value={password}
               onChange={({ target }) => setPassword(target.value)}
               label="Enter Password"
-              placeholder="min 8 characters"
+              placeholder="Minimum 8 characters"
               type="password"
             />
             <Input
               value={adminInviteToken}
               onChange={({ target }) => setAdminInviteToken(target.value)}
               label="Admin Invite Token"
-              placeholder="6 digit code"
+              placeholder="6-digit code (optional)"
               type="text"
             />
           </div>
-          {error && <p className="text-red-600 text-xs pb-2.5">{error}</p>}
 
-          <button type="submit" className="btn-primary">
-            SIGN UP
+          {error && <p className="text-red-600 text-xs pt-2.5">{error}</p>}
+
+          <button
+            type="submit"
+            className="btn-primary mt-4"
+            disabled={loading}
+          >
+            {loading ? "Signing Up..." : "SIGN UP"}
           </button>
 
           <p className="text-[13px] text-slate-800 mt-3">
