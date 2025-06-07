@@ -73,7 +73,7 @@ connectDB()
   });
 
 // === Uploads directory ===
-const uploadsDir = path.join(__dirname, 'uploads');
+const uploadsDir = path.join(__dirname, './uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true })
    console.log("✅ Uploads directory ensured");
