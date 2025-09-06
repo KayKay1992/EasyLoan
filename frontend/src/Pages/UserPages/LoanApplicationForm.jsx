@@ -749,7 +749,7 @@ const LoanApplicationForm = () => {
     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 cursor-not-allowed"
     disabled // 👈 makes the field unclickable
   />
-  <p className="mt-1 text-sm text-gray-500 italic text-red-600">
+  <p className="mt-1 text-sm italic text-red-600">
     Document upload is currently disabled. Please proceed without uploading a file.
   </p>
 </div>
