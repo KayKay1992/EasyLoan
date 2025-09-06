@@ -21,17 +21,13 @@ const SignUp = () => {
   const { updateUser } = useContext(UserContext);
   const navigate = useNavigate();
 
-  const sanitizeImageUrl = (url) => {
-    if (!url) return "";
-    const baseUrl = import.meta.env.VITE_API_URL || "https://easyloan.onrender.com";
-    return url.replace("http://localhost:3000", baseUrl);
-  };
-
   const handleSignUp = async (e) => {
     e.preventDefault();
+    e.stopPropagation(); // Prevent default form navigation
 
     let profileImageUrl = "";
 
+    // Client-side validation
     if (!fullName) {
       setError("Please enter your full name");
       return;
@@ -45,18 +41,20 @@ const SignUp = () => {
       return;
     }
 
-    setError("");
+    setError(null);
     setLoading(true);
 
     try {
       // Upload image if selected
       if (profilePic) {
+        console.log('Attempting to upload profile picture:', profilePic.name);
         const imgUploadRes = await uploadImage(profilePic);
-        profileImageUrl = sanitizeImageUrl(imgUploadRes?.imageUrl || "");
-        console.log("Sanitized profileImageUrl:", profileImageUrl);
+        profileImageUrl = imgUploadRes.imageUrl;
+        console.log("Uploaded profileImageUrl:", profileImageUrl);
       }
 
       // Register user
+      console.log('Sending registration request:', { name: fullName, email, profileImageUrl, adminInviteToken });
       const response = await axiosInstance.post(API_PATHS.AUTH.REGISTER, {
         name: fullName,
         email,
@@ -65,24 +63,29 @@ const SignUp = () => {
         adminInviteToken,
       });
 
+      console.log('Registration response:', response.data);
       const { token, role } = response.data;
 
       if (token) {
         localStorage.setItem("token", token);
         updateUser(response.data);
+        console.log('User registered, navigating to dashboard:', role);
 
         if (role === "admin") {
           navigate("/admin/dashboard");
         } else {
           navigate("/user/dashboard");
         }
+      } else {
+        throw new Error("No token received from server");
       }
     } catch (err) {
-      if (err.response?.data?.message) {
-        setError(err.response.data.message);
-      } else {
-        setError("Something went wrong. Please try again.");
-      }
+      console.error("Signup error:", {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status,
+      });
+      setError(err.message || err.response?.data?.message || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }

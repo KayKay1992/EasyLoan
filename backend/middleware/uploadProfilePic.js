@@ -2,7 +2,8 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-const uploadDir = path.join(__dirname, 'uploads')
+// Use the correct uploads directory relative to the backend directory
+const uploadDir = path.join(__dirname, '..', 'uploads');
 
 // Ensure uploads directory exists **synchronously**
 if (!fs.existsSync(uploadDir)) {

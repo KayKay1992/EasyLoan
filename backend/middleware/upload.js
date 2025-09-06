@@ -2,7 +2,8 @@ const multer = require('multer');
 const fs = require('fs').promises;
 const path = require('path');
 
-const uploadDir = path.join(__dirname, 'uploads');
+// Use the correct uploads directory relative to the backend directory
+const uploadDir = path.join(__dirname, '..', 'uploads');
 
 const createUploadDir = async () => {
   try {
@@ -19,7 +20,7 @@ createUploadDir();
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, uploadDir); // Now purely sync
+    cb(null, uploadDir); // Now points to backend/uploads
   },
   filename: (req, file, cb) => {
     cb(null, `${Date.now()}-${file.originalname}`);

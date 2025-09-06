@@ -33,6 +33,6 @@ router.put('/profile', protect, updateUserProfile);
 // @route   POST /api/auth/upload-image
 // @desc    Upload user profile image
 // @access  Private
-router.post('/upload-image', protect, handleImageUpload);
+router.post('/upload-image', handleImageUpload);
 
 module.exports = router;
