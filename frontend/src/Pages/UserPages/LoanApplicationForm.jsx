@@ -737,24 +737,23 @@ const LoanApplicationForm = () => {
           </div>
 
           {/* Document upload section */}
-          {/* <div>
-            <label htmlFor="documents" className="block text-sm font-medium text-gray-700 mb-1">
-              Upload Supporting Documents:
-            </label>
-            <input
-              type="file"
-              id="documents"
-              name="documents"
-              className={`w-full px-3 py-2 border ${errors.documents ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-amber-500 focus:border-amber-500`}
-              onChange={handleFileChange}
-              accept=".pdf,.jpg,.jpeg,.png"
-              disabled={isSubmitting}
-            />
-            <p className="mt-1 text-xs text-gray-500">PDF, JPG, or PNG (Max 5MB)</p>
-            {errors.documents && (
-              <p className="mt-1 text-sm text-red-600">{errors.documents}</p>
-            )}
-          </div> */}
+         {/* Document upload section (disabled) */}
+<div>
+  <label htmlFor="documents" className="block text-sm font-medium text-gray-700 mb-1">
+    Upload Supporting Documents (Disabled):
+  </label>
+  <input
+    type="file"
+    id="documents"
+    name="documents"
+    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 cursor-not-allowed"
+    disabled // 👈 makes the field unclickable
+  />
+  <p className="mt-1 text-sm text-gray-500 italic text-red-600">
+    Document upload is currently disabled. Please proceed without uploading a file.
+  </p>
+</div>
+
 
           {/* Loan calculation results */}
           {calculation && (

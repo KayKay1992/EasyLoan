@@ -5,3 +5,5 @@ auth.route.js
 uploadProfilePic.js
 
 files that i changed
+
+i disabbled the file input so users can proceed without upload a doc
