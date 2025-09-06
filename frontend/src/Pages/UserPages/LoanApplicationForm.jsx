@@ -736,21 +736,27 @@ const LoanApplicationForm = () => {
             </div>
           </div>
 
-          {/* Document upload section */}
+       
          {/* Document upload section (disabled) */}
 <div>
   <label htmlFor="documents" className="block text-sm font-medium text-gray-700 mb-1">
-    Upload Supporting Documents (Disabled):
+    Upload Supporting Documents (Currently Unavailable):
   </label>
-  <input
-    type="file"
-    id="documents"
-    name="documents"
-    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 cursor-not-allowed"
-    disabled // 👈 makes the field unclickable
-  />
-  <p className="mt-1 text-sm italic text-red-600">
-    Document upload is currently disabled. Please proceed without uploading a file.
+  <div className="relative">
+    <input
+      type="file"
+      id="documents"
+      name="documents"
+      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 opacity-50 cursor-not-allowed"
+      disabled
+      style={{ pointerEvents: 'none' }}
+    />
+    <div className="absolute inset-0 flex items-center justify-center bg-gray-100 bg-opacity-70 rounded-md">
+      <span className="text-sm text-gray-500 italic">Upload feature disabled</span>
+    </div>
+  </div>
+  <p className="mt-1 text-sm italic text-red-500">
+    Document upload is temporarily unavailable. Please proceed without uploading a file.
   </p>
 </div>
 
