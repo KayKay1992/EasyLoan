@@ -737,7 +737,7 @@ const LoanApplicationForm = () => {
           </div>
 
           {/* Document upload section */}
-          <div>
+          {/* <div>
             <label htmlFor="documents" className="block text-sm font-medium text-gray-700 mb-1">
               Upload Supporting Documents:
             </label>
@@ -754,7 +754,7 @@ const LoanApplicationForm = () => {
             {errors.documents && (
               <p className="mt-1 text-sm text-red-600">{errors.documents}</p>
             )}
-          </div>
+          </div> */}
 
           {/* Loan calculation results */}
           {calculation && (
