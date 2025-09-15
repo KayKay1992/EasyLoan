@@ -1,9 +1,9 @@
-signup.jsx
-uploadImage.js
-upload.js
-auth.route.js
-uploadProfilePic.js
+ABOUT THE APP DEPLOYMENT.
 
-files that i changed
+I deployed the backend to render as web service https://easyloan.onrender.com.
 
-i disabbled the file input so users can proceed without upload a doc
+then deployed the frontend to render as static site separately https://easyloan-1.onrender.com.
+
+I am interacting with the site using the backend url. thats what users are using to interact with the site.
+
+So because i am using the backend separately, if i make changes in the frontend code and just redeploy it doesnt reflect in the backend url rather but it reflects in the frontend url. so after making changes in the frontend code just run npm run build in your frontend before pushing it to your github to futher deploy it automatically.
