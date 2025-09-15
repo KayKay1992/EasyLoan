@@ -4,7 +4,7 @@ const cors = require("cors");
 const path = require("path");
 const fs = require("fs");
 const connectDB = require("./config/db");
-const errorHandler = require("./middleware/errorHanlerMiddleware");
+const errorHandler = require("./middleware/errorHanlerMiddleware")
 
 console.log("Starting server.js...");
 console.log("NODE_ENV:", process.env.NODE_ENV);
